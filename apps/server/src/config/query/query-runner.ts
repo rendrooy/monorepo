@@ -8,6 +8,7 @@ export interface FindParams {
   limit?: number;
   selectedColumns?: string;
   conditions?: any[];
+  offset?: number;
   order?: {
     order_by?: string;
     order_dir?: "ASC" | "DESC";
@@ -36,6 +37,7 @@ export const findQuery = async <T = any>(
       ${conditionQuery.bindQuery}
       ${orderQuery}
       LIMIT ${limit}
+      OFFSET ${params.offset || 0}  
     `;
 
     const bindValues = conditionQuery.bindValues;

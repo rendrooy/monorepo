@@ -13,7 +13,12 @@ export const dbConnection = {
     password: 'postgres',
     port: 5432, // Port default PostgreSQL
 };
+
+export const tableNames = {
+    masterUser: "homehub_revamp.m_user",
+};
 export const locales = {
+    request_success: "Request successful",
     resource_not_found: "Resource not found",
     resource_already_exists: "Resource already exists",
     unable_to_handle_request: "Unable to handle request",
