@@ -20,9 +20,6 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <>{children}</>
-        {/* <ThemeProvider attribute="class" enableSystem> */}
-        {/* {children} */}
-        {/* </ThemeProvider> */}
       </body>
     </html>
   );

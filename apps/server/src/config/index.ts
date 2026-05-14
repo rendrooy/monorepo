@@ -16,6 +16,8 @@ export const dbConnection = {
 
 export const tableNames = {
     masterUser: "homehub_revamp.m_user",
+    masterRole: "homehub_revamp.m_role",
+    masterMember: "homehub_revamp.m_member",
 };
 export const locales = {
     request_success: "Request successful",

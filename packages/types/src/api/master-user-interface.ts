@@ -1,6 +1,6 @@
 import type { BaseRequest } from "./base-request";
 
-export interface MasterUserInterface extends BaseRequest {
+export interface MasterUserInterface  {
   id?: string;
   username?: string;
   email?: string;

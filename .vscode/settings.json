@@ -19,7 +19,7 @@
   },
   "tailwindCSS.experimental.configFile": "packages/ui/src/styles/globals.css",
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.typescript-language-features"
   },
   "[json]": {
     "editor.defaultFormatter": "vscode.json-language-features"

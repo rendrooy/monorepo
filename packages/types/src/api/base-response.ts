@@ -6,8 +6,8 @@ export interface BaseResponse<T = any|null> {
 };
 
 export interface BaseResponseDropdown<T = any|null> {
-  id: string | number;
-  name: string;
+  value: string;
+  label: string;
 }
 
 export interface Metadata {

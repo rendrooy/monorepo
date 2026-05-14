@@ -1,33 +1,28 @@
 import { locales, tableNames } from '../config';
-import type {BaseRequest, MasterRoleInterface, MasterUserInterface} from "@monorepo/types";
+import type { BaseRequest, MasterMemberInterface } from "@monorepo/types";
 import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
-import { Query } from 'pg';
 
 
-
-export const getUserService = async (request: BaseRequest) => {
+export const getMemberService = async (request: MasterMemberInterface) => {
     try {
-        const params = request.params as MasterUserInterface;
-        const conditionParams: Condition[] = [
-            
-        ];
+        const conditionParams: Condition[] = [];
         const queryParams: FindParams = {
             conditions: conditionParams,
         };
         conditionParams.push({
             column: "id",
-            value: params.id,
+            value: request.id,
         });
 
-        const user = await findOneQuery(tableNames.masterUser, queryParams);
-        console.info("getUserService user:", user);
-        
-        if (user) {
+        const data = await findOneQuery(tableNames.masterMember, queryParams);
+        console.info("getMemberService Member:", data);
+
+        if (data) {
             return {
                 status: 200,
                 message: locales.request_success,
-                data: user,
+                data: data,
             };
         }
         const BaseResponse = {
@@ -39,16 +34,15 @@ export const getUserService = async (request: BaseRequest) => {
         const BaseResponse = {
             status: 500,
             message: locales.unable_to_handle_request,
-        
+
         };
         return BaseResponse;
     }
 };
 
-export const loadUserService = async (request: BaseRequest) => {
+export const loadMemberService = async (request: BaseRequest) => {
     try {
-
-        const params = request.params as MasterUserInterface;
+        const params = request.params as MasterMemberInterface;
         const page = request.metadata?.page || 1;
         const limit = request.metadata?.pageSize || 100;
         const offset = (page - 1) * limit;
@@ -61,11 +55,11 @@ export const loadUserService = async (request: BaseRequest) => {
         };
         conditionParams.push({
             column: "is_deleted",
-            value:false,
+            value: false,
             operator: OperatorTypes.EQUAL
         });
         for (const key in params) {
-            const value = params[key as keyof MasterUserInterface];
+            const value = params[key as keyof MasterMemberInterface];
             const isMetadata = key !== "metadata";
             if (value && isMetadata) {
                 conditionParams.push({
@@ -75,22 +69,16 @@ export const loadUserService = async (request: BaseRequest) => {
                 });
             }
         }
-        console.info("getUserService conditionParams:", conditionParams);   
-        
-        // conditionParams.push({
-        //     column: "username",
-        //     value: params.username,
-        //     operator: OperatorTypes.LIKE
-        // });
-        const users = await findQuery(tableNames.masterUser, queryParams);
-        console.info("getUserService user:", users);
-        
+        console.info("getMemberService conditionParams:", conditionParams);
+        const data = await findQuery(tableNames.masterMember, queryParams);
+        console.info("getMemberService member:", data);
+
         return {
             status: 200,
             message: locales.request_success,
-            data: users,
+            data: data,
             metaData: {
-                total: users.length,
+                total: data.length,
                 page: page,
                 pageSize: limit,
             }
@@ -104,23 +92,23 @@ export const loadUserService = async (request: BaseRequest) => {
     }
 };
 
-export const createUserService = async (request: BaseRequest) => {
-    // Implementasi logika untuk createUserService
+export const createMemberService = async (request: MasterMemberInterface) => {
+    // Implementasi logika untuk createMemberService
     try {
-        const params = request.params as MasterUserInterface;
+        // const params = request.params as MasterMemberInterface;
         const crateParams: QueryData = {
-            username: params.username,
-            email: params.email,
+            ...request as MasterMemberInterface,
         }
-        const newUser = await insertQuery(tableNames.masterUser, crateParams);
-        console.info("createUserService newUser:", newUser);
+        console.info("createMemberService crate:", crateParams);
+        const newMember = await insertQuery(tableNames.masterMember, crateParams);
+        console.info("createMemberService newMember:", newMember);
         return {
             status: 201,
             message: locales.request_success,
-            data: newUser,
+            data: newMember,
         };
     } catch (error) {
-        console.error("createUserService error:", error);
+        console.error("createMemberService error:", error);
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -129,22 +117,21 @@ export const createUserService = async (request: BaseRequest) => {
     }
 }
 
-export const updateUserService = async (request: BaseRequest) => {
-    // Implementasi logika untuk updateUserService
+export const updateMemberService = async (request: MasterMemberInterface) => {
+    // Implementasi logika untuk updateMemberService
     try {
-        const params = request.params as MasterUserInterface;
+        // const params = request.params as MasterMemberInterface;
         const updateParams: QueryData = {
-            username: params.username,
-            email: params.email,
+            ...request as MasterMemberInterface,
         }
-        const updatedUser = await updateQuery(tableNames.masterUser, updateParams, { id: params.id });
-        console.info("updateUserService updatedUser:", updatedUser);
+        const updatedData = await updateQuery(tableNames.masterMember, updateParams, { id: updateParams.id });
+        console.info("updateMemberService updatedMember:", updatedData);
         return {
             status: 200,
             message: locales.request_success,
         };
     } catch (error) {
-        console.error("updateUserService error:", error);
+        console.error("updateMemberService error:", error);
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -153,21 +140,20 @@ export const updateUserService = async (request: BaseRequest) => {
     }
 }
 
-export const deleteUserService = async (request: BaseRequest) => {
-    // Implementasi logika untuk deleteUserService
+export const deleteMemberService = async (request: MasterMemberInterface) => {
+    // Implementasi logika untuk deleteMemberService
     try {
-        const params = request.params as MasterUserInterface;
-        const paramsQuery:QueryData = {
+        const paramsQuery: QueryData = {
             is_deleted: true,
         }
-        const deletedUser = await updateQuery(tableNames.masterUser, paramsQuery, { id: params.id });
-        console.info("deleteUserService deletedUser:", deletedUser);
+        const deletedMember = await updateQuery(tableNames.masterMember, paramsQuery, { id: request.id });
+        console.info("deleteMemberService deletedMember:", deletedMember);
         return {
             status: 200,
             message: locales.request_success,
         };
     } catch (error) {
-        console.error("deleteUserService error:", error);
+        console.error("deleteMemberService error:", error);
         return {
             status: 500,
             message: locales.unable_to_handle_request,

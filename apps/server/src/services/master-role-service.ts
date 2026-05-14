@@ -1,17 +1,13 @@
 import { locales, tableNames } from '../config';
-import type {BaseRequest, MasterRoleInterface, MasterUserInterface} from "@monorepo/types";
+import type {BaseRequest, MasterRoleInterface} from "@monorepo/types";
 import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
-import { Query } from 'pg';
 
 
-
-export const getUserService = async (request: BaseRequest) => {
+export const getRoleService = async (request: BaseRequest) => {
     try {
-        const params = request.params as MasterUserInterface;
-        const conditionParams: Condition[] = [
-            
-        ];
+        const params = request.params as MasterRoleInterface;
+        const conditionParams: Condition[] = [];
         const queryParams: FindParams = {
             conditions: conditionParams,
         };
@@ -20,14 +16,14 @@ export const getUserService = async (request: BaseRequest) => {
             value: params.id,
         });
 
-        const user = await findOneQuery(tableNames.masterUser, queryParams);
-        console.info("getUserService user:", user);
-        
-        if (user) {
+        const data = await findOneQuery(tableNames.masterRole, queryParams);
+        console.info("getRoleService Role:", data);
+
+        if (data) {
             return {
                 status: 200,
                 message: locales.request_success,
-                data: user,
+                data: data,
             };
         }
         const BaseResponse = {
@@ -39,16 +35,15 @@ export const getUserService = async (request: BaseRequest) => {
         const BaseResponse = {
             status: 500,
             message: locales.unable_to_handle_request,
-        
+
         };
         return BaseResponse;
     }
 };
 
-export const loadUserService = async (request: BaseRequest) => {
+export const loadRoleService = async (request: BaseRequest) => {
     try {
-
-        const params = request.params as MasterUserInterface;
+        const params = request.params as MasterRoleInterface;
         const page = request.metadata?.page || 1;
         const limit = request.metadata?.pageSize || 100;
         const offset = (page - 1) * limit;
@@ -65,7 +60,7 @@ export const loadUserService = async (request: BaseRequest) => {
             operator: OperatorTypes.EQUAL
         });
         for (const key in params) {
-            const value = params[key as keyof MasterUserInterface];
+            const value = params[key as keyof MasterRoleInterface];
             const isMetadata = key !== "metadata";
             if (value && isMetadata) {
                 conditionParams.push({
@@ -75,22 +70,22 @@ export const loadUserService = async (request: BaseRequest) => {
                 });
             }
         }
-        console.info("getUserService conditionParams:", conditionParams);   
-        
+        console.info("getRoleService conditionParams:", conditionParams);
+
         // conditionParams.push({
-        //     column: "username",
-        //     value: params.username,
+        //     column: "rolename",
+        //     value: params.rolename,
         //     operator: OperatorTypes.LIKE
         // });
-        const users = await findQuery(tableNames.masterUser, queryParams);
-        console.info("getUserService user:", users);
-        
+        const data = await findQuery(tableNames.masterRole, queryParams);
+        console.info("getRoleService role:", data);
+
         return {
             status: 200,
             message: locales.request_success,
-            data: users,
+            data: data,
             metaData: {
-                total: users.length,
+                total: data.length,
                 page: page,
                 pageSize: limit,
             }
@@ -104,23 +99,23 @@ export const loadUserService = async (request: BaseRequest) => {
     }
 };
 
-export const createUserService = async (request: BaseRequest) => {
-    // Implementasi logika untuk createUserService
+export const createRoleService = async (request: BaseRequest) => {
+    // Implementasi logika untuk createRoleService
     try {
-        const params = request.params as MasterUserInterface;
+        const params = request.params as MasterRoleInterface;
         const crateParams: QueryData = {
-            username: params.username,
-            email: params.email,
+            name: params.name,
+            code: params.code,
         }
-        const newUser = await insertQuery(tableNames.masterUser, crateParams);
-        console.info("createUserService newUser:", newUser);
+        const newRole = await insertQuery(tableNames.masterRole, crateParams);
+        console.info("createRoleService newRole:", newRole);
         return {
             status: 201,
             message: locales.request_success,
-            data: newUser,
+            data: newRole,
         };
     } catch (error) {
-        console.error("createUserService error:", error);
+        console.error("createRoleService error:", error);
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -129,22 +124,22 @@ export const createUserService = async (request: BaseRequest) => {
     }
 }
 
-export const updateUserService = async (request: BaseRequest) => {
-    // Implementasi logika untuk updateUserService
+export const updateRoleService = async (request: BaseRequest) => {
+    // Implementasi logika untuk updateRoleService
     try {
-        const params = request.params as MasterUserInterface;
+        const params = request.params as MasterRoleInterface;
         const updateParams: QueryData = {
-            username: params.username,
-            email: params.email,
+            rolename: params.name,
+            code: params.code,
         }
-        const updatedUser = await updateQuery(tableNames.masterUser, updateParams, { id: params.id });
-        console.info("updateUserService updatedUser:", updatedUser);
+        const updatedData = await updateQuery(tableNames.masterRole, updateParams, { id: params.id });
+        console.info("updateRoleService updatedRole:", updatedData);
         return {
             status: 200,
             message: locales.request_success,
         };
     } catch (error) {
-        console.error("updateUserService error:", error);
+        console.error("updateRoleService error:", error);
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -153,21 +148,21 @@ export const updateUserService = async (request: BaseRequest) => {
     }
 }
 
-export const deleteUserService = async (request: BaseRequest) => {
-    // Implementasi logika untuk deleteUserService
+export const deleteRoleService = async (request: BaseRequest) => {
+    // Implementasi logika untuk deleteRoleService
     try {
-        const params = request.params as MasterUserInterface;
+        const params = request.params as MasterRoleInterface;
         const paramsQuery:QueryData = {
             is_deleted: true,
         }
-        const deletedUser = await updateQuery(tableNames.masterUser, paramsQuery, { id: params.id });
-        console.info("deleteUserService deletedUser:", deletedUser);
+        const deletedRole = await updateQuery(tableNames.masterRole, paramsQuery, { id: params.id });
+        console.info("deleteRoleService deletedRole:", deletedRole);
         return {
             status: 200,
             message: locales.request_success,
         };
     } catch (error) {
-        console.error("deleteUserService error:", error);
+        console.error("deleteRoleService error:", error);
         return {
             status: 500,
             message: locales.unable_to_handle_request,
