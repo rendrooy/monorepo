@@ -1,6 +1,6 @@
 import { locales, tableNames } from '../config';
-import type {BaseRequest, MasterRoleInterface} from "@monorepo/types";
-import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery } from '../config/query/query-runner';
+import type { BaseRequest, MasterRoleInterface } from "@monorepo/types";
+import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery, countQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
 
 
@@ -56,7 +56,7 @@ export const loadRoleService = async (request: BaseRequest) => {
         };
         conditionParams.push({
             column: "is_deleted",
-            value:false,
+            value: false,
             operator: OperatorTypes.EQUAL
         });
         for (const key in params) {
@@ -72,12 +72,10 @@ export const loadRoleService = async (request: BaseRequest) => {
         }
         console.info("getRoleService conditionParams:", conditionParams);
 
-        // conditionParams.push({
-        //     column: "rolename",
-        //     value: params.rolename,
-        //     operator: OperatorTypes.LIKE
-        // });
-        const data = await findQuery(tableNames.masterRole, queryParams);
+        const [data, total] = await Promise.all([
+            findQuery(tableNames.masterRole, queryParams),
+            countQuery(tableNames.masterRole, { conditions: conditionParams }),
+        ]);
         console.info("getRoleService role:", data);
 
         return {
@@ -85,7 +83,7 @@ export const loadRoleService = async (request: BaseRequest) => {
             message: locales.request_success,
             data: data,
             metaData: {
-                total: data.length,
+                total: total,
                 page: page,
                 pageSize: limit,
             }
@@ -152,7 +150,7 @@ export const deleteRoleService = async (request: BaseRequest) => {
     // Implementasi logika untuk deleteRoleService
     try {
         const params = request.params as MasterRoleInterface;
-        const paramsQuery:QueryData = {
+        const paramsQuery: QueryData = {
             is_deleted: true,
         }
         const deletedRole = await updateQuery(tableNames.masterRole, paramsQuery, { id: params.id });

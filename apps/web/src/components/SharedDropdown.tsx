@@ -34,6 +34,7 @@ type SharedDropdownProps = {
   debounceMs?: number;
   requestKey?: string;
   className?: string;
+  clearable?: boolean;
 };
 
 export function SharedDropdown({
@@ -55,6 +56,7 @@ export function SharedDropdown({
   debounceMs = 500,
   requestKey = '',
   className = '',
+  clearable = false,
 }: Readonly<SharedDropdownProps>) {
   const isAsync = Boolean(fetchOptions);
   const abortRef = useRef<AbortController | null>(null);
@@ -139,7 +141,7 @@ export function SharedDropdown({
         onSearchChange={onSearchChange ?? setInternalSearch}
         clientFilter={resolvedClientFilter}
       >
-        <Select2Trigger id={id} className="bg-white border-slate-200">
+        <Select2Trigger id={id} className="bg-white border-slate-200" clearable={clearable && !!value} onClear={() => onValueChange("")}>
           <span className={`text-sm truncate ${!displayLabel ? 'text-muted-foreground' : ''}`}>
             {resolvedLoading ? 'Loading...' : (displayLabel || placeholder)}
           </span>

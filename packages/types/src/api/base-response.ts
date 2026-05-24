@@ -1,11 +1,11 @@
-export interface BaseResponse<T = any|null> {
+export interface BaseResponse<T = any | null> {
   status?: number;
   message: string;
   data?: T;
   meta?: Metadata;
 };
 
-export interface BaseResponseDropdown<T = any|null> {
+export interface BaseResponseDropdown<T = any | null> {
   value: string;
   label: string;
 }
@@ -13,6 +13,7 @@ export interface BaseResponseDropdown<T = any|null> {
 export interface Metadata {
   page?: number;
   pageSize?: number;
+  total?: number;
   sortBy?: string;
   sortDir?: 'ASC' | 'DESC';
 }

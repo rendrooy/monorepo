@@ -147,6 +147,32 @@ export const updateQuery = async <T = any>(
 };
 
 /**
+ * COUNT
+ */
+export const countQuery = async (
+  tableName: string,
+  params: Pick<FindParams, "conditions">
+): Promise<number> => {
+  try {
+    const conditionQuery = buildConditionQuery(params.conditions);
+
+    const query = `
+      SELECT COUNT(*) AS total
+      FROM ${tableName}
+      ${conditionQuery.bindQuery}
+    `;
+
+    console.info("countQuery SQL:", query);
+
+    const result = await pool.query(query, conditionQuery.bindValues);
+    return parseInt(result.rows?.[0]?.total || "0", 10);
+  } catch (err) {
+    console.error("countQuery error:", err);
+    return 0;
+  }
+};
+
+/**
  * DELETE
  */
 export const deleteQuery = async (

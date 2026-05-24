@@ -1,8 +1,7 @@
 import { locales, tableNames } from '../config';
-import type {BaseRequest, MasterRoleInterface, MasterUserInterface} from "@monorepo/types";
-import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery } from '../config/query/query-runner';
+import type { BaseRequest, MasterUserInterface } from "@monorepo/types";
+import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery, countQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
-import { Query } from 'pg';
 
 
 
@@ -10,7 +9,7 @@ export const getUserService = async (request: BaseRequest) => {
     try {
         const params = request.params as MasterUserInterface;
         const conditionParams: Condition[] = [
-            
+
         ];
         const queryParams: FindParams = {
             conditions: conditionParams,
@@ -22,7 +21,7 @@ export const getUserService = async (request: BaseRequest) => {
 
         const user = await findOneQuery(tableNames.masterUser, queryParams);
         console.info("getUserService user:", user);
-        
+
         if (user) {
             return {
                 status: 200,
@@ -39,7 +38,7 @@ export const getUserService = async (request: BaseRequest) => {
         const BaseResponse = {
             status: 500,
             message: locales.unable_to_handle_request,
-        
+
         };
         return BaseResponse;
     }
@@ -61,7 +60,7 @@ export const loadUserService = async (request: BaseRequest) => {
         };
         conditionParams.push({
             column: "is_deleted",
-            value:false,
+            value: false,
             operator: OperatorTypes.EQUAL
         });
         for (const key in params) {
@@ -75,22 +74,20 @@ export const loadUserService = async (request: BaseRequest) => {
                 });
             }
         }
-        console.info("getUserService conditionParams:", conditionParams);   
-        
-        // conditionParams.push({
-        //     column: "username",
-        //     value: params.username,
-        //     operator: OperatorTypes.LIKE
-        // });
-        const users = await findQuery(tableNames.masterUser, queryParams);
+        console.info("getUserService conditionParams:", conditionParams);
+
+        const [users, total] = await Promise.all([
+            findQuery(tableNames.masterUser, queryParams),
+            countQuery(tableNames.masterUser, { conditions: conditionParams }),
+        ]);
         console.info("getUserService user:", users);
-        
+
         return {
             status: 200,
             message: locales.request_success,
             data: users,
             metaData: {
-                total: users.length,
+                total: total,
                 page: page,
                 pageSize: limit,
             }
@@ -157,7 +154,7 @@ export const deleteUserService = async (request: BaseRequest) => {
     // Implementasi logika untuk deleteUserService
     try {
         const params = request.params as MasterUserInterface;
-        const paramsQuery:QueryData = {
+        const paramsQuery: QueryData = {
             is_deleted: true,
         }
         const deletedUser = await updateQuery(tableNames.masterUser, paramsQuery, { id: params.id });

@@ -90,6 +90,12 @@ function getEndpointServiceKey(params: string): string {
         insertDataMember: "/master/member/insert",
         updateDataMember: "/master/member/update",
         deleteDataMember: "/master/member/delete",
+
+        loadDataRole: "/master/role/load",
+        getDataRole: "/master/role/get",
+        insertDataRole: "/master/role/insert",
+        updateDataRole: "/master/role/update",
+        deleteDataRole: "/master/role/delete",
     }
 
     const url = endpoint[params];

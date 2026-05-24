@@ -1,6 +1,6 @@
 import { locales, tableNames } from '../config';
 import type { BaseRequest, MasterMemberInterface } from "@monorepo/types";
-import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery } from '../config/query/query-runner';
+import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery, countQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
 
 
@@ -70,7 +70,10 @@ export const loadMemberService = async (request: BaseRequest) => {
             }
         }
         console.info("getMemberService conditionParams:", conditionParams);
-        const data = await findQuery(tableNames.masterMember, queryParams);
+        const [data, total] = await Promise.all([
+            findQuery(tableNames.masterMember, queryParams),
+            countQuery(tableNames.masterMember, { conditions: conditionParams }),
+        ]);
         console.info("getMemberService member:", data);
 
         return {
@@ -78,7 +81,7 @@ export const loadMemberService = async (request: BaseRequest) => {
             message: locales.request_success,
             data: data,
             metaData: {
-                total: data.length,
+                total: total,
                 page: page,
                 pageSize: limit,
             }

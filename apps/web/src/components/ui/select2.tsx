@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { CheckIcon, ChevronDownIcon, Search } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, Search, XIcon } from "lucide-react";
 import { cn } from "./utils";
 
 /* ================================
@@ -87,32 +87,52 @@ function Select2({
 type Select2TriggerProps =
   React.ComponentProps<typeof SelectPrimitive.Trigger> & {
     error?: string;
+    clearable?: boolean;
+    onClear?: () => void;
   };
 
 function Select2Trigger({
   className,
   children,
   error,
+  clearable,
+  onClear,
   ...props
 }: Select2TriggerProps) {
   return (
     <div className="w-full">
-      <SelectPrimitive.Trigger
-        aria-invalid={!!error}
-        className={cn(
-          "flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm",
-          error
-            ? "border-red-500 focus:ring-red-500/30"
-            : "border-input",
-          className
+      <div className="relative flex items-center">
+        <SelectPrimitive.Trigger
+          aria-invalid={!!error}
+          className={cn(
+            "flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm pr-8",
+            error
+              ? "border-red-500 focus:ring-red-500/30"
+              : "border-input",
+            className
+          )}
+          {...props}
+        >
+          {children}
+          <SelectPrimitive.Icon asChild>
+            <ChevronDownIcon className="size-4 opacity-50 shrink-0" />
+          </SelectPrimitive.Icon>
+        </SelectPrimitive.Trigger>
+
+        {clearable && onClear && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClear();
+            }}
+            className="absolute right-7 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Clear selection"
+          >
+            <XIcon className="size-3.5" />
+          </button>
         )}
-        {...props}
-      >
-        {children}
-        <SelectPrimitive.Icon asChild>
-          <ChevronDownIcon className="size-4 opacity-50" />
-        </SelectPrimitive.Icon>
-      </SelectPrimitive.Trigger>
+      </div>
 
       {error && (
         <p className="mt-1 text-xs text-red-500">{error}</p>
