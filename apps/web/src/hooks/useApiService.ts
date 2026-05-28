@@ -32,6 +32,7 @@ export function useApiService<T extends ServiceKey>(servicesKey: T) {
     const callApi = useCallback(
         async (body: ServiceMapping[T]["body"], options: CallApiOptions = {}) => {
             try {
+                setState((prev) => ({ ...prev, loading: true }));
                 const endpoint = getEndpointServiceKey(servicesKey)
                 const response = await fetch(`http://localhost:3001/v1${endpoint}`, {
                     method: "POST",
@@ -54,14 +55,16 @@ export function useApiService<T extends ServiceKey>(servicesKey: T) {
                 })
                 options.onSuccess?.(typedData)
             } catch {
-                let errorMessage = "Network Error"
+                const errorMessage = "Network Error"
                 setState((prev) => ({
+                    ...prev,
                     loading: false,
                     error: errorMessage,
                     data: getEmptyResponse()
                 }))
             }
-        }, [servicesKey]
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        }, []
     )
 
     return {
@@ -81,6 +84,7 @@ export function useApiService<T extends ServiceKey>(servicesKey: T) {
 function getEndpointServiceKey(params: string): string {
     const endpoint: Record<string, string> = {
         loadDataUser: "/master/user/load",
+        getDataUser: "/master/user/get",
         insertDataUser: "/master/user/insert",
         updateDataUser: "/master/user/update",
         deleteDataUser: "/master/user/delete",
@@ -96,6 +100,10 @@ function getEndpointServiceKey(params: string): string {
         insertDataRole: "/master/role/insert",
         updateDataRole: "/master/role/update",
         deleteDataRole: "/master/role/delete",
+
+        dropdownRole: "/utils/role",
+        dropdownMember: "/utils/member",
+        dropdownUser: "/utils/user",
     }
 
     const url = endpoint[params];

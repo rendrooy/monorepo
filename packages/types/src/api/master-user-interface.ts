@@ -1,15 +1,15 @@
-import type { BaseRequest } from "./base-request";
-
-export interface MasterUserInterface  {
-  id?: string;
-  username?: string;
-  email?: string;
-  password?: string;
+export interface MasterUserInterface {
+  id?: string | null;
+  username?: string | null;
+  email?: string | null;
+  password?: string | null;
   token?: string | null;
   role_id?: string | null;
+  role_name?: string | null;   // joined from m_role.name
   member_id?: string | null;
-  created_time?: Date;
-  updated_time?: Date;
+  member_name?: string | null; // joined from m_member.name
+  created_time?: Date | null;
+  updated_time?: Date | null;
   created_by_id?: string | null;
   updated_by_id?: string | null;
   is_deleted?: boolean;

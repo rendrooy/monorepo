@@ -45,6 +45,8 @@ export default function PageContent() {
     const [meta, setMeta] = useState<Metadata>({ page: 1, pageSize: 10, total: 0 });
     const [filterParams, setFilterParams] = useState<Partial<MasterMemberInterface>>({});
 
+    const [fetchKey, setFetchKey] = useState(0);
+
     const { callApi: callMemberDataList, loading: loadingMemberDataList } = useApiService("loadDataMember");
     const { callApi: callDeleteMember } = useApiService("deleteDataMember");
 
@@ -53,6 +55,7 @@ export default function PageContent() {
         onSubmit: (values) => {
             setFilterParams(values);
             setMeta((prev) => ({ ...prev, page: 1 }));
+            setFetchKey((k) => k + 1);
         },
     });
 
@@ -63,12 +66,8 @@ export default function PageContent() {
                 {
                     onSuccess(response) {
                         setListData(response.data ?? []);
-                        if (response.metaData) {
-                            setMeta((prev) => ({
-                                ...prev,
-                                total: response.metaData.total ?? 0,
-                            }));
-                        }
+                        const total = response.metaData?.total ?? 0;
+                        setMeta((prev) => prev.total === total ? prev : { ...prev, total });
                     },
                     onError(error) {
                         console.error("loadDataMember error:", error);
@@ -108,7 +107,8 @@ export default function PageContent() {
 
     useEffect(() => {
         handleGetList(filterParams, meta);
-    }, [filterParams, meta.page, meta.pageSize, meta.sortBy, meta.sortDir]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fetchKey, meta.page, meta.pageSize, meta.sortBy, meta.sortDir]);
 
     return (
         <div className="mt-6">

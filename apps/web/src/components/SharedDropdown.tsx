@@ -60,6 +60,8 @@ export function SharedDropdown({
 }: Readonly<SharedDropdownProps>) {
   const isAsync = Boolean(fetchOptions);
   const abortRef = useRef<AbortController | null>(null);
+  const fetchOptionsRef = useRef(fetchOptions);
+  fetchOptionsRef.current = fetchOptions;
   const [internalSearch, setInternalSearch] = useState('');
   const [internalOptions, setInternalOptions] = useState<SharedDropdownOption[]>([]);
   const [internalLoading, setInternalLoading] = useState(false);
@@ -92,7 +94,7 @@ export function SharedDropdown({
         abortRef.current = controller;
         setInternalLoading(true);
 
-        const result = await fetchOptions!(resolvedSearch, controller.signal);
+        const result = await fetchOptionsRef.current!(resolvedSearch, controller.signal);
         setInternalOptions(result ?? []);
       } catch (err) {
         if (
@@ -108,11 +110,12 @@ export function SharedDropdown({
     }, debounceMs);
 
     return () => clearTimeout(timer);
+    // fetchOptions intentionally excluded — stored in ref to avoid re-fetch on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     debounceMs,
     disabled,
     fetchEnabled,
-    fetchOptions,
     id,
     isAsync,
     requestKey,

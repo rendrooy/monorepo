@@ -5,7 +5,7 @@ export interface BaseResponse<T = any | null> {
   meta?: Metadata;
 };
 
-export interface BaseResponseDropdown<T = any | null> {
+export interface BaseResponseDropdown {
   value: string;
   label: string;
 }

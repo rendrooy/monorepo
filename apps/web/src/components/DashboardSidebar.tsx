@@ -6,7 +6,7 @@ import {
   Circle
 } from "lucide-react";
 import * as Icons from "lucide-react";
-import { ElementType, useEffect, useState } from "react";
+import { type ElementType, useEffect, useState } from "react";
 import Link from "next/link";
 
 interface SidebarProps {
@@ -78,14 +78,19 @@ const menuItems: MenuItem[] = [
     icon: 'Settings',
     subItems: [
       {
-        id: "master/instansi",
-        label: "Master Instansi",
-        url: "master/instansi",
+        id: "master/user",
+        label: "Master User",
+        url: "master/user",
       },
       {
-        id: "master/program",
-        label: "Master Program",
-        url: "master/program",
+        id: "master/member",
+        label: "Master Member",
+        url: "master/member",
+      },
+      {
+        id: "master/role",
+        label: "Master Role",
+        url: "master/role",
       },
     ],
   },

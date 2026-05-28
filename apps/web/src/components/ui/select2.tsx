@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
-import { CheckIcon, ChevronDownIcon, Search, XIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, Search, X, XIcon } from "lucide-react";
 import { cn } from "./utils";
 
 /* ================================
@@ -126,10 +126,10 @@ function Select2Trigger({
               e.stopPropagation();
               onClear();
             }}
-            className="absolute right-7 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+            className="px-6 right-7 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Clear selection"
           >
-            <XIcon className="size-3.5" />
+            <X className="size-3.5" />
           </button>
         )}
       </div>

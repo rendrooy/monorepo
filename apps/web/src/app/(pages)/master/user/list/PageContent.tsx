@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useFormik } from "formik";
-import type { BaseResponse, MasterRoleInterface, Metadata } from "@monorepo/types";
+import type { BaseResponse, MasterUserInterface, Metadata } from "@monorepo/types";
+import { FilterPanel } from "@/components/FilterPanel";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -26,28 +27,29 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { EllipsisVertical, PencilLineIcon, Trash2 } from "lucide-react";
-import { FilterPanel } from "@/components/FilterPanel";
 
-const columns: ColumnDef<MasterRoleInterface>[] = [
-    { key: "name", label: "Nama Role", sortable: true },
-    { key: "code", label: "Kode", sortable: true },
+const columns: ColumnDef<MasterUserInterface>[] = [
+    { key: "username", label: "Username", sortable: true },
+    { key: "email", label: "Email", sortable: true },
+    { key: "role_name", label: "Role", sortable: true },
+    { key: "member_name", label: "Member" },
 ];
 
 export default function PageContent() {
     const router = useRouter();
-    const [listData, setListData] = useState<MasterRoleInterface[]>([]);
+    const [listData, setListData] = useState<MasterUserInterface[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [selectedItem, setSelectedItem] = useState<MasterRoleInterface>();
+    const [selectedItem, setSelectedItem] = useState<MasterUserInterface>();
     const [meta, setMeta] = useState<Metadata>({ page: 1, pageSize: 10, total: 0 });
-    const [filterParams, setFilterParams] = useState<Partial<MasterRoleInterface>>({});
+    const [filterParams, setFilterParams] = useState<Partial<MasterUserInterface>>({});
 
     const [fetchKey, setFetchKey] = useState(0);
 
-    const { callApi: callRoleDataList, loading: loadingRoleDataList } = useApiService("loadDataRole");
-    const { callApi: callDeleteRole } = useApiService("deleteDataRole");
+    const { callApi: callUserDataList, loading: loadingUserDataList } = useApiService("loadDataUser");
+    const { callApi: callDeleteUser } = useApiService("deleteDataUser");
 
-    const formik = useFormik<Partial<MasterRoleInterface>>({
-        initialValues: { name: "", code: "" },
+    const formik = useFormik<Partial<MasterUserInterface>>({
+        initialValues: { username: "", email: "" },
         onSubmit: (values) => {
             setFilterParams(values);
             setMeta((prev) => ({ ...prev, page: 1 }));
@@ -56,9 +58,9 @@ export default function PageContent() {
     });
 
     const handleGetList = useCallback(
-        async (params: Partial<MasterRoleInterface>, pagination: Metadata) => {
-            await callRoleDataList(
-                { params, metadata: pagination },
+        async (params: Partial<MasterUserInterface>, pagination: Metadata) => {
+            await callUserDataList(
+                { params: params as MasterUserInterface, metadata: pagination },
                 {
                     onSuccess(response) {
                         setListData(response.data ?? []);
@@ -66,18 +68,18 @@ export default function PageContent() {
                         setMeta((prev) => prev.total === total ? prev : { ...prev, total });
                     },
                     onError(error) {
-                        console.error("loadDataRole error:", error);
+                        console.error("loadDataUser error:", error);
                     },
                 }
             );
         },
-        [callRoleDataList]
+        [callUserDataList]
     );
 
     const handleDelete = useCallback(
         async (id: string) => {
-            await callDeleteRole(
-                { id },
+            await callDeleteUser(
+                { id } as unknown as MasterUserInterface,
                 {
                     onSuccess(response: BaseResponse) {
                         setIsDialogOpen(false);
@@ -85,19 +87,19 @@ export default function PageContent() {
                         handleGetList(filterParams, meta);
                     },
                     onError(error) {
-                        console.error("deleteDataRole error:", error);
+                        console.error("deleteDataUser error:", error);
                     },
                 }
             );
         },
-        [callDeleteRole, filterParams, meta]
+        [callDeleteUser, filterParams, meta]
     );
 
-    function handleNavigation(type: string, item: MasterRoleInterface | null) {
+    function handleNavigation(type: string, item: MasterUserInterface | null) {
         setSelectedItem(item ?? undefined);
-        if (type === "CREATE") router.push("../master/role/create");
+        if (type === "CREATE") router.push("../master/user/create");
         else if (type === "DELETE") setIsDialogOpen(true);
-        else if (type === "UPDATE") router.push(`../master/role/edit/${item?.id}`);
+        else if (type === "UPDATE") router.push(`../master/user/edit/${item?.id}`);
     }
 
     useEffect(() => {
@@ -109,15 +111,15 @@ export default function PageContent() {
         <div className="mt-6">
             <Card>
                 <CardContent>
-                    <h1 className="text-2xl font-bold my-4">Role Management</h1>
+                    <h1 className="text-2xl font-bold my-4">User Management</h1>
                     <p className="text-gray-600">
-                        Di halaman ini, Anda dapat mengelola data role pengguna.
+                        Di halaman ini, Anda dapat mengelola data pengguna sistem.
                     </p>
                 </CardContent>
             </Card>
 
             <FilterPanel
-                title="Cari Data Role"
+                title="Cari Data User"
                 columns={2}
                 onSubmit={formik.submitForm}
                 onReset={() => {
@@ -126,23 +128,23 @@ export default function PageContent() {
                 }}
             >
                 <div>
-                    <Label>Nama Role</Label>
+                    <Label>Username</Label>
                     <Input
                         className="w-full mt-2"
-                        name="name"
-                        value={formik.values.name ?? ""}
+                        name="username"
+                        value={formik.values.username ?? ""}
                         onChange={formik.handleChange}
-                        placeholder="Masukkan nama role"
+                        placeholder="Masukkan username"
                     />
                 </div>
                 <div>
-                    <Label>Kode</Label>
+                    <Label>Email</Label>
                     <Input
                         className="w-full mt-2"
-                        name="code"
-                        value={formik.values.code ?? ""}
+                        name="email"
+                        value={formik.values.email ?? ""}
                         onChange={formik.handleChange}
-                        placeholder="Masukkan kode role"
+                        placeholder="Masukkan email"
                     />
                 </div>
             </FilterPanel>
@@ -150,7 +152,7 @@ export default function PageContent() {
             <DataTable
                 columns={columns}
                 data={listData}
-                isLoading={loadingRoleDataList}
+                isLoading={loadingUserDataList}
                 meta={meta}
                 onMetaChange={(changes) => setMeta((prev) => ({ ...prev, ...changes }))}
                 onAdd={() => handleNavigation("CREATE", null)}
@@ -187,7 +189,7 @@ export default function PageContent() {
                         <DialogTitle>Konfirmasi</DialogTitle>
                     </DialogHeader>
                     <DialogDescription>
-                        Yakin menghapus role {selectedItem?.name}?
+                        Yakin menghapus user {selectedItem?.username}?
                     </DialogDescription>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsDialogOpen(false)}>

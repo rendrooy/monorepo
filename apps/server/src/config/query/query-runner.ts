@@ -4,10 +4,18 @@ import { pool } from "../../connection/db";
 /**
  * TYPES
  */
+export interface JoinClause {
+  type?: "INNER" | "LEFT" | "RIGHT";
+  table: string;
+  alias: string;
+  on: string; // e.g. "u.role_id = r.id"
+}
+
 export interface FindParams {
   limit?: number;
   selectedColumns?: string;
   conditions?: any[];
+  joins?: JoinClause[];
   offset?: number;
   order?: {
     order_by?: string;
@@ -31,9 +39,14 @@ export const findQuery = async <T = any>(
     const orderQuery = buildOrderQuery(params.order);
     const selectedColumns = params.selectedColumns || "*";
 
+    const joinClause = (params.joins ?? [])
+      .map((j) => `${j.type ?? "LEFT"} JOIN ${j.table} ${j.alias} ON ${j.on}`)
+      .join("\n");
+
     const query = `
       SELECT ${selectedColumns}
       FROM ${tableName}
+      ${joinClause}
       ${conditionQuery.bindQuery}
       ${orderQuery}
       LIMIT ${limit}
@@ -151,14 +164,19 @@ export const updateQuery = async <T = any>(
  */
 export const countQuery = async (
   tableName: string,
-  params: Pick<FindParams, "conditions">
+  params: Pick<FindParams, "conditions" | "joins">
 ): Promise<number> => {
   try {
     const conditionQuery = buildConditionQuery(params.conditions);
 
+    const joinClause = (params.joins ?? [])
+      .map((j) => `${j.type ?? "LEFT"} JOIN ${j.table} ${j.alias} ON ${j.on}`)
+      .join("\n");
+
     const query = `
       SELECT COUNT(*) AS total
       FROM ${tableName}
+      ${joinClause}
       ${conditionQuery.bindQuery}
     `;
 

@@ -2,8 +2,8 @@ import { Router } from "express";
 
 import testRouter from "./test";
 import { createUser, deleteUser, getUser, loadUser, updateUser } from "../controller/master-user-controller";
-import {createRole, deleteRole, getRole, loadRole, updateRole} from "../controller/master-role-controller";
-import {getDropdownRole} from "../controller/utitlities-controller";
+import { createRole, deleteRole, getRole, loadRole, updateRole } from "../controller/master-role-controller";
+import { getDropdownRole, getDropdownMember, getDropdownUser } from "../controller/utitlities-controller";
 import {
   createMember,
   deleteMember,
@@ -39,6 +39,8 @@ router.post('/master/member/update', updateMember);
 router.post('/master/member/delete', deleteMember);
 
 router.post('/utils/role', getDropdownRole);
+router.post('/utils/member', getDropdownMember);
+router.post('/utils/user', getDropdownUser);
 
 
 export default router;

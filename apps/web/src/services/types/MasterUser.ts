@@ -6,6 +6,10 @@ export interface MasterUserMapping {
         body: BaseRequest<MasterUserInterface>;
         response: BaseResponse<MasterUserInterface>
     }>,
+    getDataUser: ServiceStructure<{
+        body: MasterUserInterface;
+        response: BaseResponse<MasterUserInterface>
+    }>,
     insertDataUser: ServiceStructure<{
         body: MasterUserInterface;
         response: BaseResponse

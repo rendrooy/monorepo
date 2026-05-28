@@ -1,65 +1,98 @@
 import { locales, tableNames } from '../config';
-import type {BaseRequest, BaseResponseDropdown, MasterRoleInterface} from "@monorepo/types";
-import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery } from '../config/query/query-runner';
-import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
+import type { BaseRequest, BaseResponseDropdown } from "@monorepo/types";
+import { findQuery, FindParams } from '../config/query/query-runner';
+import { Condition, OperatorTypes } from '../config/query/query-builder';
 
+const buildDropdown = (data: any[], valueKey: string, labelKey: string): BaseResponseDropdown[] =>
+    data.map((item) => ({ value: item[valueKey], label: item[labelKey] }));
 
-export const loadRoleService = async (request: BaseRequest) => {
+const baseConditions = (): Condition[] => [
+    { column: "is_deleted", value: false, operator: OperatorTypes.EQUAL },
+];
+
+// ─── ROLE DROPDOWN ───────────────────────────────────────────────────────────
+
+export const dropdownRoleService = async (request: BaseRequest) => {
     try {
-        const params = request.params as MasterRoleInterface;
-        const page = params.metadata?.page || 1;
-        const limit = params.metadata?.pageSize || 100;
-        const offset = (page - 1) * limit;
-        const conditionParams: Condition[] = [];
+        const search = (request.params as any)?.search ?? "";
+        const conditions: Condition[] = baseConditions();
+        if (search) {
+            conditions.push({ column: "name", value: search, operator: OperatorTypes.LIKE });
+        }
 
         const queryParams: FindParams = {
-            conditions: conditionParams,
-            limit: limit,
-            offset: offset,
+            selectedColumns: "id, name",
+            conditions,
+            limit: 100,
+            offset: 0,
         };
-        conditionParams.push({
-            column: "is_deleted",
-            value:false,
-            operator: OperatorTypes.EQUAL
-        });;
-        for (const key in params) {
-            const value = params[key as keyof MasterRoleInterface];
-            const isMetadata = key !== "metadata";
-            if (value && isMetadata) {
-                conditionParams.push({
-                    column: key,
-                    value: value,
-                    operator: OperatorTypes.LIKE
-                });
-            }
-        }
-        console.info("getRoleService conditionParams:", conditionParams);
 
         const data = await findQuery(tableNames.masterRole, queryParams);
-        let result: BaseResponseDropdown[] = [];
-        data.map((item) => {
-            result.push({
-                value: item.id,
-                label: item.name
-            })
-        })
-        console.info("getRoleService role:", result);
-
         return {
             status: 200,
             message: locales.request_success,
-            data: result,
-            metaData: {
-                total: data.length,
-                page: page,
-                pageSize: limit,
-            }
+            data: buildDropdown(data, "id", "name"),
         };
-    } catch (error) {
-        return {
-            status: 500,
-            message: locales.unable_to_handle_request,
-            data: null,
-        };
+    } catch {
+        return { status: 500, message: locales.unable_to_handle_request, data: [] };
     }
 };
+
+// ─── MEMBER DROPDOWN ─────────────────────────────────────────────────────────
+
+export const dropdownMemberService = async (request: BaseRequest) => {
+    try {
+        const search = (request.params as any)?.search ?? "";
+        const conditions: Condition[] = baseConditions();
+        if (search) {
+            conditions.push({ column: "name", value: search, operator: OperatorTypes.LIKE });
+        }
+
+        const queryParams: FindParams = {
+            selectedColumns: "id, name",
+            conditions,
+            limit: 100,
+            offset: 0,
+        };
+
+        const data = await findQuery(tableNames.masterMember, queryParams);
+        return {
+            status: 200,
+            message: locales.request_success,
+            data: buildDropdown(data, "id", "name"),
+        };
+    } catch {
+        return { status: 500, message: locales.unable_to_handle_request, data: [] };
+    }
+};
+
+// ─── USER DROPDOWN ───────────────────────────────────────────────────────────
+
+export const dropdownUserService = async (request: BaseRequest) => {
+    try {
+        const search = (request.params as any)?.search ?? "";
+        const conditions: Condition[] = baseConditions();
+        if (search) {
+            conditions.push({ column: "username", value: search, operator: OperatorTypes.LIKE });
+        }
+
+        const queryParams: FindParams = {
+            selectedColumns: "id, username",
+            conditions,
+            limit: 100,
+            offset: 0,
+        };
+
+        const data = await findQuery(tableNames.masterUser, queryParams);
+        return {
+            status: 200,
+            message: locales.request_success,
+            data: buildDropdown(data, "id", "username"),
+        };
+    } catch {
+        return { status: 500, message: locales.unable_to_handle_request, data: [] };
+    }
+};
+
+// ─── LEGACY (keep for backward compat) ───────────────────────────────────────
+export const loadRoleService = dropdownRoleService;

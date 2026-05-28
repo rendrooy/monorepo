@@ -1,6 +1,6 @@
-import type { MasterUserMapping, MasterMemberMapping, MasterRoleMapping } from "./types";
+import type { MasterUserMapping, MasterMemberMapping, MasterRoleMapping, DropdownMapping } from "./types";
 
-export type ServiceMapping = MasterUserMapping & MasterMemberMapping & MasterRoleMapping
+export type ServiceMapping = MasterUserMapping & MasterMemberMapping & MasterRoleMapping & DropdownMapping
 
 export type ServiceKey = keyof ServiceMapping;
 
