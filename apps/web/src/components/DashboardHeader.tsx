@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "../components/ui/dropdown-menu";
+} from "@monorepo/ui/components/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +19,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../components/ui/alert-dialog";
+} from "@monorepo/ui/components/alert-dialog";
 // import svgPaths from "../imports/svg-xedcjmpdg8";
 import { type MasterUserInterface } from "@monorepo/types";
 

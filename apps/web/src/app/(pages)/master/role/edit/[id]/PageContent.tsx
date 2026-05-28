@@ -1,9 +1,9 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@monorepo/ui/components/card";
+import { Input } from "@monorepo/ui/components/input";
+import { Label } from "@monorepo/ui/components/label";
+import { Button } from "@monorepo/ui/components/button";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ import { useApiService } from "@/hooks";
 import type { BaseResponse, MasterRoleInterface } from "@monorepo/types";
 import { useCallback, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@monorepo/ui/components/separator";
 
 const validationSchema = Yup.object({
     name: Yup.string().required("Nama role wajib diisi").min(3, "Minimal 3 karakter"),

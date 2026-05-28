@@ -1,9 +1,9 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Card, CardContent } from "@monorepo/ui/components/card";
+import { Button } from "@monorepo/ui/components/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@monorepo/ui/components/collapsible";
 import { ChevronDown } from "lucide-react";
 
 interface FilterPanelProps {

@@ -1,9 +1,9 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@monorepo/ui/components/card";
+import { Input } from "@monorepo/ui/components/input";
+import { Label } from "@monorepo/ui/components/label";
+import { Button } from "@monorepo/ui/components/button";
 import { useFormik } from "formik";
 import type { BaseResponse, MasterRoleInterface, Metadata } from "@monorepo/types";
 import { useCallback, useEffect, useState } from "react";
@@ -18,13 +18,13 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from "@/components/ui/dialog";
+} from "@monorepo/ui/components/dialog";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@monorepo/ui/components/dropdown-menu";
 import { EllipsisVertical, PencilLineIcon, Trash2 } from "lucide-react";
 import { FilterPanel } from "@/components/FilterPanel";
 

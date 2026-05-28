@@ -5,7 +5,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "./ui/dialog";
+} from "@monorepo/ui/components/dialog";
 
 interface DownloadDialogProps {
   open: boolean;

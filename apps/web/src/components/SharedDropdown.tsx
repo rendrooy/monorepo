@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Label } from '../components/ui/label';
+import { Label } from '@monorepo/ui/components/label';
 import {
   Select2,
   Select2Content,
   Select2Item,
   Select2Trigger,
-} from '../components/ui/select2';
+} from '@monorepo/ui/components/select2';
 
 export type SharedDropdownOption = {
   id: string;

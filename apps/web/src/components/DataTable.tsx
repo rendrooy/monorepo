@@ -1,8 +1,8 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@monorepo/ui/components/card";
+import { Button } from "@monorepo/ui/components/button";
 import {
     Table,
     TableBody,
@@ -10,7 +10,7 @@ import {
     TableHead,
     TableHeader,
     TableRow,
-} from "@/components/ui/table";
+} from "@monorepo/ui/components/table";
 import {
     Pagination,
     PaginationContent,
@@ -21,16 +21,17 @@ import {
     PaginationFirst,
     PaginationLast,
     PaginationEllipsis,
-} from "@/components/ui/pagination";
+} from "@monorepo/ui/components/pagination";
 import {
     Select2,
     Select2Content,
     Select2Item,
     Select2Trigger,
     Select2Value,
-} from "@/components/ui/select2";
+} from "@monorepo/ui/components/select2";
 import { ArrowUpDown, ArrowUp, ArrowDown, Loader2, PlusIcon } from "lucide-react";
 import type { Metadata } from "@monorepo/types";
+// import { Card } from "@@monorepo/ui/components/card";
 
 export interface ColumnDef<T> {
     key: string;

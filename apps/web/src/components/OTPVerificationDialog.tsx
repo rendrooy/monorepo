@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
+import { Button } from '@monorepo/ui/components/button';
+import { Input } from '@monorepo/ui/components/input';
 import { Loader2 } from 'lucide-react';
 
 /* ============================= */
@@ -286,7 +286,7 @@ export function OTPVerificationDialog({
                                     {`${String(Math.floor(resendTimer / 60)).padStart(2, '0')}:${String(resendTimer % 60).padStart(2, '0')}`}
                                 </span>
                             </div>
-                            
+
                             {/* OTP Input */}
                             <OTPInput
                                 value={otp}
@@ -296,7 +296,7 @@ export function OTPVerificationDialog({
                                 error={error}
                             />
                         </div>
-                        
+
                         {/* Resend */}
                         {canResend && (
                             <div className="text-center">
@@ -304,11 +304,10 @@ export function OTPVerificationDialog({
                                     Tidak menerima kode OTP?{' '}
                                     <button
                                         type="button"
-                                        className={`inline-flex items-center gap-1.5 font-medium underline ${
-                                            isResending 
-                                                ? 'text-blue-400 cursor-not-allowed' 
+                                        className={`inline-flex items-center gap-1.5 font-medium underline ${isResending
+                                                ? 'text-blue-400 cursor-not-allowed'
                                                 : 'text-blue-600 hover:text-blue-700 cursor-pointer'
-                                        }`}
+                                            }`}
                                         onClick={handleResendOTP}
                                         disabled={isResending}
                                     >
