@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@monorepo/ui/components/card";
 
 export default function PageContent() {
   return (

@@ -34,7 +34,7 @@ export function FilterPanel({
     columns = 3,
 }: FilterPanelProps) {
     return (
-        <Card className="border-slate-200 shadow-sm mt-6">
+        <Card className="border-slate-200 mt-6">
             <CardContent className="pt-6">
                 <Collapsible defaultOpen>
                     <CollapsibleTrigger className="flex w-full items-center justify-between">
