@@ -1,8 +1,8 @@
 "use client";
 
+import React from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { Paginator } from "primereact/paginator";
 import { Button } from "@monorepo/ui/components/button";
 import {
     DropdownMenu,
@@ -10,57 +10,153 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
 } from "@monorepo/ui/components/dropdown-menu";
-import { EllipsisVertical, PencilLineIcon, Trash2 } from "lucide-react";
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationFirst, PaginationItem, PaginationLast, PaginationLink, PaginationNext, PaginationPrevious } from "@monorepo/ui/components/pagination";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationFirst,
+    PaginationItem,
+    PaginationLast,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@monorepo/ui/components/pagination";
+import { EllipsisVertical, LucideEye, PencilLineIcon, Trash2 } from "lucide-react";
+import { Select2, Select2Trigger, Select2Value, Select2Content, Select2Item } from "@monorepo/ui/components/select2";
+import type { Metadata } from "@monorepo/types";
 
-export function AppDataTable({
+const PAGE_SIZE_OPTIONS = ["10", "25", "50", "100"];
+
+type ColumnType<T> = {
+    field?: keyof T;
+    header: string;
+    sortable?: boolean;
+    body?: (row: T) => React.ReactNode;
+    style?: React.CSSProperties;
+    bodyClassName?: string;
+    skeletonWidth?: string;
+};
+
+type Props<T> = {
+    data: T[];
+    loading?: boolean;
+    meta: Metadata;
+    columns: ColumnType<T>[];
+
+    onMetaChange: (meta: Metadata) => void;
+
+    onEdit?: (row: T) => void;
+    onDelete?: (row: T) => void;
+    onDetail?: (row: T) => void;
+
+    actions?: (row: T) => React.ReactNode;
+};
+
+export function AppDataTable<T>({
     data,
-    loading,
-    first,
-    rows,
+    loading = false,
     meta,
-    onPageChange,
+    columns,
+    onMetaChange,
     onEdit,
     onDelete,
-}) {
+    onDetail,
+    actions,
+}: Props<T>) {
     const currentPage = meta.page ?? 1;
     const pageSize = meta.pageSize ?? 10;
     const total = meta.total ?? 0;
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
-    const totalRecords = meta.total
-    // const handleSort = (key: string) => {
-    //     if (meta.sortBy === key) {
-    //         onMetaChange({ sortBy: key, sortDir: meta.sortDir === "ASC" ? "DESC" : "ASC", page: 1 });
-    //     } else {
-    //         onMetaChange({ sortBy: key, sortDir: "ASC", page: 1 });
-    //     }
-    // };
 
-    // Build visible page numbers with ellipsis
+    // Skeleton generator
+    const renderSkeleton = (width = "80%") => (
+        <div
+            className="h-4 bg-gray-200 rounded animate-pulse"
+            style={{ width }}
+        />
+    );
+
+    // Fake rows for skeleton
+    const skeletonRows = Array.from({ length: pageSize || 5 }).map((_, i) => ({
+        id: `skeleton-${i}`,
+    }));
+
+    // Pagination numbers
     const getPageNumbers = (): (number | "...")[] => {
-        if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+        if (totalPages <= 7)
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+
         const pages: (number | "...")[] = [1];
+
         if (currentPage > 3) pages.push("...");
-        for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+
+        for (
+            let i = Math.max(2, currentPage - 1);
+            i <= Math.min(totalPages - 1, currentPage + 1);
+            i++
+        ) {
             pages.push(i);
         }
+
         if (currentPage < totalPages - 2) pages.push("...");
+
         pages.push(totalPages);
         return pages;
     };
+
+    const updateMeta = (changes: Partial<Metadata>) => {
+        onMetaChange({
+            ...meta,
+            ...changes,
+        });
+    };
+
+    const currentCount = Math.min(
+        meta.pageSize ?? 0,
+        meta.total ?? 0
+    );
+
     return (
         <div className="space-y-4">
             {/* TABLE */}
-            <div className="pt-6">
+            <div className="pt-6 relative">
+                {/* Overlay Loader */}
+                {loading && (
+                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
+                        <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                )}
+
                 <DataTable
-                    value={data}
-                    loading={loading}
+                    value={loading ? (skeletonRows as T[]) : data}
+                    loading={false}
                     removableSort
+                    sortField={meta.sortBy}
+                    sortOrder={meta.sortDir === "ASC" ? 1 : meta.sortDir === "DESC" ? -1 : 0}
+                    emptyMessage={
+                        !loading && (
+                            <div className="text-center py-6 text-gray-400">
+                                No data found
+                            </div>
+                        )
+                    }
+                    onSort={(e) => {
+                        updateMeta({
+                            page: 1,
+                            sortBy: e.sortField,
+                            sortDir:
+                                e.sortOrder === 1
+                                    ? "ASC"
+                                    : e.sortOrder === -1
+                                        ? "DESC"
+                                        : undefined,
+                        });
+                    }}
                     className="
                         [&_.p-datatable-wrapper]:overflow-visible
                         border-separate border-spacing-y-2
                         text-sm
-                        
+
                         [&_.p-datatable-thead>tr>th]:px-4
                         [&_.p-datatable-thead>tr>th]:py-3
                         [&_.p-datatable-thead>tr>th]:text-gray-500
@@ -78,130 +174,223 @@ export function AppDataTable({
                         [&_.p-datatable-tbody>tr>td]:py-4
                     "
                 >
-                    <Column
-                        field="code"
-                        header="Code"
-                        sortable
-                        body={(row) => (
-                            <span className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">
-                                {row.code}
-                            </span>
-                        )}
-                    />
+                    {/* Dynamic Columns */}
+                    {columns?.map((col, index) => (
+                        <Column
+                            key={index}
+                            field={col.field as string}
+                            header={col.header}
+                            sortable={col.sortable}
+                            body={(row: T) => {
+                                if (loading) {
+                                    return renderSkeleton(
+                                        col.skeletonWidth || "80%"
+                                    );
+                                }
+                                return col.body
+                                    ? col.body(row)
+                                    : (row as any)[col.field as string];
+                            }}
+                            style={col.style}
+                            bodyClassName={col.bodyClassName}
+                        />
+                    ))}
 
-                    <Column
-                        field="name"
-                        header="Name"
-                        sortable
-                        body={(row) => (
-                            <div className="font-medium text-gray-900">
-                                {row.name}
-                            </div>
-                        )}
-                    />
+                    {/* Custom Actions */}
+                    {actions && (
+                        <Column
+                            body={(row: T) =>
+                                loading ? renderSkeleton("20px") : actions(row)
+                            }
+                            bodyClassName="w-[60px]"
+                        />
+                    )}
 
-                    <Column
-                        field="description"
-                        header="Description"
-                        body={(row) => (
-                            <div className="text-gray-500 truncate max-w-md">
-                                {row.description}
-                            </div>
-                        )}
-                    />
+                    {/* Default Actions */}
+                    {!actions && (onEdit || onDelete) && (
+                        <Column
+                            header="Action"
+                            body={(row: T) => {
+                                if (loading) return renderSkeleton("20px");
 
-                    <Column
-                        header=""
-                        body={(row) => (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <EllipsisVertical className="w-4 h-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
+                                return (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                            >
+                                                <EllipsisVertical className="w-4 h-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
 
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                        onClick={() => onEdit(row)}
-                                        className="flex gap-2"
-                                    >
-                                        <PencilLineIcon className="w-4 h-4" />
-                                        Edit
-                                    </DropdownMenuItem>
+                                        <DropdownMenuContent align="end">
+                                            {onDetail && (
+                                                <DropdownMenuItem
+                                                    onClick={() => onDetail(row)}
+                                                >
+                                                    <LucideEye className="w-4 h-4 mr-2" />
+                                                    View
+                                                </DropdownMenuItem>
+                                            )}
 
-                                    <DropdownMenuItem
-                                        onClick={() => onDelete(row)}
-                                        className="flex gap-2 text-red-500"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                        Delete
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
-                        bodyClassName="w-[60px]"
-                    />
+                                            {onEdit && (
+                                                <DropdownMenuItem
+                                                    onClick={() => onEdit(row)}
+                                                >
+                                                    <PencilLineIcon className="w-4 h-4 mr-2" />
+                                                    Edit
+                                                </DropdownMenuItem>
+                                            )}
+
+                                            {onDelete && (
+                                                <DropdownMenuItem
+                                                    onClick={() =>
+                                                        onDelete(row)
+                                                    }
+                                                    className="text-red-500"
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                );
+                            }}
+                            bodyClassName="w-[60px]"
+                        />
+                    )}
                 </DataTable>
             </div>
 
-            {/* PAGINATOR */}
-            <div className="flex items-center justify-between px-4 py-3 bg-white ">
-                <span className="text-sm text-gray-500">
-                    {first + 1} - {Math.min(first + rows, totalRecords)} of{" "}
-                    {totalRecords}
-                </span>
-                <Pagination className="w-auto mx-0">
+            {/* PAGINATION */}
+            <div className="flex items-center justify-between px-4 py-3 bg-white">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>Menampilkan</span>
+                    <Select2
+                        value={(meta.pageSize ?? 10).toString()}
+                        disabled={
+                            !meta.total ||
+                            !meta.pageSize ||
+                            meta.total <= meta.pageSize
+                        }
+                        className="border-slate-200 border-2"
+                        searchable={false}
+                        onValueChange={(val) =>
+                            updateMeta({
+                                page: 1,
+                                pageSize: Number(val),
+                            })
+                        }
+                    >
+                        <Select2Trigger>
+                            {/* 👇 ini yang diubah */}
+                            <span className="font-medium">
+                                {currentCount}
+                            </span>
+                        </Select2Trigger>
+
+                        <Select2Content>
+                            {PAGE_SIZE_OPTIONS.map((s) => (
+                                <Select2Item key={s} value={s}>
+                                    {s}
+                                </Select2Item>
+                            ))}
+                        </Select2Content>
+                    </Select2>
+
+                    <span>
+                        dari
+                    </span>
+                    <span className="font-medium">{total}</span>
+                    <span>
+                        data
+                    </span>
+                </div>
+
+                <Pagination>
                     <PaginationContent>
                         <PaginationItem>
                             <PaginationFirst
-                                onClick={() => onPageChange({ page: 1 })}
-                                aria-disabled={currentPage === 1}
-                                className={currentPage === 1 ? "pointer-events-none opacity-40" : ""}
-                            />
-                        </PaginationItem>
-                        <PaginationItem>
-                            <PaginationPrevious
-                                onClick={() => onPageChange({ page: Math.max(currentPage - 1, 1) })}
-                                aria-disabled={currentPage === 1}
-                                className={currentPage === 1 ? "pointer-events-none opacity-40" : ""}
+                                onClick={() => updateMeta({ page: 1 })}
+                                className={
+                                    currentPage === 1
+                                        ? "pointer-events-none opacity-40"
+                                        : ""
+                                }
                             />
                         </PaginationItem>
 
-                        {getPageNumbers().map((p, i) =>
-                            p === "..." ? (
-                                <PaginationItem key={`ellipsis-${i}`}>
+                        <PaginationItem>
+                            <PaginationPrevious
+                                onClick={() =>
+                                    updateMeta({
+                                        page: Math.max(currentPage - 1, 1)
+                                    })
+                                }
+                                className={
+                                    currentPage === 1
+                                        ? "pointer-events-none opacity-40"
+                                        : ""
+                                }
+                            />
+                        </PaginationItem>
+
+                        {getPageNumbers().map((p, i) => {
+                            const key = `${p}-${i}`; // 🔥 fix utama
+
+                            return p === "..." ? (
+                                <PaginationItem key={key}>
                                     <PaginationEllipsis />
                                 </PaginationItem>
                             ) : (
-                                <PaginationItem key={p}>
+                                <PaginationItem key={key}>
                                     <PaginationLink
                                         isActive={currentPage === p}
-                                        onClick={() => onMetaChange({ page: p })}
+                                        onClick={() =>
+                                            updateMeta({ page: p as number, pageSize })
+                                        }
                                     >
                                         {p}
                                     </PaginationLink>
                                 </PaginationItem>
-                            )
-                        )}
+                            );
+                        })}
 
                         <PaginationItem>
                             <PaginationNext
-                                onClick={() => onPageChange({ page: Math.min(currentPage + 1, totalPages) })}
-                                aria-disabled={currentPage === totalPages}
-                                className={currentPage === totalPages ? "pointer-events-none opacity-40" : ""}
+                                onClick={() =>
+                                    updateMeta({
+                                        page: Math.min(
+                                            currentPage + 1,
+                                            totalPages
+                                        )
+                                    })
+                                }
+                                className={
+                                    currentPage === totalPages
+                                        ? "pointer-events-none opacity-40"
+                                        : ""
+                                }
                             />
                         </PaginationItem>
+
                         <PaginationItem>
                             <PaginationLast
-                                onClick={() => onPageChange({ page: totalPages })}
-                                aria-disabled={currentPage === totalPages}
-                                className={currentPage === totalPages ? "pointer-events-none opacity-40" : ""}
+                                onClick={() =>
+                                    updateMeta({ page: totalPages })
+                                }
+                                className={
+                                    currentPage === totalPages
+                                        ? "pointer-events-none opacity-40"
+                                        : ""
+                                }
                             />
                         </PaginationItem>
                     </PaginationContent>
                 </Pagination>
-
             </div>
-        </div>
+        </div >
     );
 }

@@ -115,29 +115,7 @@ export function Header({
             className="hidden lg:flex text-[#717680] hover:bg-slate-100 rounded-lg p-2 transition-colors"
           >
             <Menu />
-            {/* <svg
-              className="block size-6"
-              fill="none"
-              preserveAspectRatio="none"
-              viewBox="0 0 24 24"
-            >
-              <path d={svgPaths.p767f100} fill="#717680" /> */}
-            {/* </svg> */}
           </button>
-          {/* Mobile menu icon */}
-          {/* <button
-            onClick={onMenuClick}
-            className="lg:hidden text-[#717680] hover:bg-slate-100 rounded-lg p-2 transition-colors"
-          >
-            <svg
-              className="block size-6"
-              fill="none"
-              preserveAspectRatio="none"
-              viewBox="0 0 24 24"
-            >
-              <path d={svgPaths.p767f100} fill="#717680" />
-            </svg>
-          </button> */}
         </div>
         {/* Right Section - Date and User */}
         <div className="absolute right-0 top-0 h-16 flex items-center gap-3.5 px-6">

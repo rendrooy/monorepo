@@ -45,6 +45,8 @@ export const loadMemberService = async (request: BaseRequest) => {
         const params = request.params as MasterMemberInterface;
         const page = request.metadata?.page || 1;
         const limit = request.metadata?.pageSize || 100;
+        const sortBy = request.metadata?.sortBy || "created_time"
+        const sortDir = request.metadata?.sortDir || "DESC"
         const offset = (page - 1) * limit;
         const conditionParams: Condition[] = [];
 
@@ -52,12 +54,14 @@ export const loadMemberService = async (request: BaseRequest) => {
             conditions: conditionParams,
             limit: limit,
             offset: offset,
+            order: { order_by: sortBy, order_dir: sortDir },
         };
         conditionParams.push({
             column: "is_deleted",
             value: false,
             operator: OperatorTypes.EQUAL
         });
+
         for (const key in params) {
             const value = params[key as keyof MasterMemberInterface];
             const isMetadata = key !== "metadata";
@@ -74,7 +78,6 @@ export const loadMemberService = async (request: BaseRequest) => {
             findQuery(tableNames.masterMember, queryParams),
             countQuery(tableNames.masterMember, { conditions: conditionParams }),
         ]);
-        console.info("getMemberService member:", data);
 
         return {
             status: 200,
@@ -84,6 +87,8 @@ export const loadMemberService = async (request: BaseRequest) => {
                 total: total,
                 page: page,
                 pageSize: limit,
+                sortBy: request.metadata?.sortBy,
+                sortDir: request.metadata?.sortDir
             }
         };
     } catch (error) {
@@ -104,7 +109,6 @@ export const createMemberService = async (request: MasterMemberInterface) => {
         }
         console.info("createMemberService crate:", crateParams);
         const newMember = await insertQuery(tableNames.masterMember, crateParams);
-        console.info("createMemberService newMember:", newMember);
         return {
             status: 201,
             message: locales.request_success,
@@ -127,11 +131,12 @@ export const updateMemberService = async (request: MasterMemberInterface) => {
         const updateParams: QueryData = {
             ...request as MasterMemberInterface,
         }
+        console.info("createMemberService update:", updateParams);
         const updatedData = await updateQuery(tableNames.masterMember, updateParams, { id: updateParams.id });
-        console.info("updateMemberService updatedMember:", updatedData);
         return {
             status: 200,
             message: locales.request_success,
+            data: updatedData,
         };
     } catch (error) {
         console.error("updateMemberService error:", error);
@@ -149,8 +154,8 @@ export const deleteMemberService = async (request: MasterMemberInterface) => {
         const paramsQuery: QueryData = {
             is_deleted: true,
         }
+        console.info("createMemberService update:", paramsQuery);
         const deletedMember = await updateQuery(tableNames.masterMember, paramsQuery, { id: request.id });
-        console.info("deleteMemberService deletedMember:", deletedMember);
         return {
             status: 200,
             message: locales.request_success,
