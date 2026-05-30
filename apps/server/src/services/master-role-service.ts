@@ -6,7 +6,7 @@ import { Condition, OperatorTypes, QueryData } from '../config/query/query-build
 
 export const getRoleService = async (request: BaseRequest) => {
     try {
-        const params = request.params as MasterRoleInterface;
+        const params = request as MasterRoleInterface;
         const conditionParams: Condition[] = [];
         const queryParams: FindParams = {
             conditions: conditionParams,
@@ -100,7 +100,7 @@ export const loadRoleService = async (request: BaseRequest) => {
 export const createRoleService = async (request: BaseRequest) => {
     // Implementasi logika untuk createRoleService
     try {
-        const params = request.params as MasterRoleInterface;
+        const params = request as MasterRoleInterface;
         const crateParams: QueryData = {
             name: params.name,
             code: params.code,
@@ -125,9 +125,9 @@ export const createRoleService = async (request: BaseRequest) => {
 export const updateRoleService = async (request: BaseRequest) => {
     // Implementasi logika untuk updateRoleService
     try {
-        const params = request.params as MasterRoleInterface;
+        const params = request as MasterRoleInterface;
         const updateParams: QueryData = {
-            rolename: params.name,
+            name: params.name,
             code: params.code,
         }
         const updatedData = await updateQuery(tableNames.masterRole, updateParams, { id: params.id });
@@ -149,7 +149,7 @@ export const updateRoleService = async (request: BaseRequest) => {
 export const deleteRoleService = async (request: BaseRequest) => {
     // Implementasi logika untuk deleteRoleService
     try {
-        const params = request.params as MasterRoleInterface;
+        const params = request as MasterRoleInterface;
         const paramsQuery: QueryData = {
             is_deleted: true,
         }

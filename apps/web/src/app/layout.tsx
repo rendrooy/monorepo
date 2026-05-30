@@ -19,9 +19,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ThemeProvider>
-          {children}
-        </ThemeProvider>
+        {/* <ThemeProvider> */}
+        {children}
+        {/* </ThemeProvider> */}
         <Toaster position="top-right" richColors />
       </body>
     </html>

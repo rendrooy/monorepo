@@ -23,13 +23,28 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             data-slot="input"
             aria-invalid={!!error}
             className={cn(
-              "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground ",
-              "dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border py-1 text-base bg-white border-slate-200",
-              "transition-[color,box-shadow] outline-none md:text-sm",
-              "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] border-blue",
-              "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+              "file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground",
+              "flex h-9 w-full min-w-0 rounded-md border py-1 text-base md:text-sm",
+
+              // base
+              "bg-white border-slate-200 text-black",
+
+              // focus
+              "transition-[color,box-shadow] outline-none",
+              "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]",
+
+              // autofill fix 🔥
+              "[&:-webkit-autofill]:shadow-[0_0_0px_1000px_white_inset]",
+              "[&:-webkit-autofill]:text-black",
+
+              // disabled (optional, tapi jangan opacity)
+              "disabled:pointer-events-none disabled:cursor-not-allowed",
+              "disabled:bg-gray-100 disabled:text-gray-400",
+
               startAdornment ? "pl-10 pr-3" : "px-3",
+
               error && "border-red-500 focus-visible:ring-red-500/30 focus-visible:border-red-500",
+
               className
             )}
             {...props}

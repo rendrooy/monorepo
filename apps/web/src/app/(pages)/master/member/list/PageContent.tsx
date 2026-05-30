@@ -4,6 +4,7 @@
 import SwalDialog from "@/components/ConfirmationDialog";
 import { AppDataTable } from "@/components/DataTable";
 import { FilterPanel } from "@/components/FilterPanel";
+import { MESSAGES } from "@/constants";
 import { useApiService } from "@/hooks";
 import type { MasterMemberInterface, MasterRoleInterface, Metadata } from "@monorepo/types";
 import { Button } from "@monorepo/ui/components/button";
@@ -14,9 +15,11 @@ import { useFormik } from "formik";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { use, useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function PageContent() {
     const router = useRouter();
+    const [selectedItem, setSelectedItem] = useState<MasterMemberInterface>();
     const [listData, setListData] = useState<MasterMemberInterface[]>([]);
     const [meta, setMeta] = useState<Metadata>({
         page: 1,
@@ -26,9 +29,11 @@ export default function PageContent() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const { callApi: callMemberDataList, loading: loadingMemberDataList } =
         useApiService("loadDataMember");
-    /**
-         * 🔥 Fetch Data
-         */
+    const { callApi: callDeleteMember, loading: loadingDeleteMember } =
+        useApiService("deleteDataMember")
+
+
+    /** 🔥 Fetch Data */
     const handleGetList = useCallback(
         async (params: Partial<MasterMemberInterface>, pagination: Metadata) => {
             await callMemberDataList(
@@ -53,6 +58,23 @@ export default function PageContent() {
         []
     );
 
+    const handleDelete = useCallback(async (data: MasterMemberInterface) => {
+        await callDeleteMember(
+            {
+                id: data.id ?? ""
+            },
+            {
+                onSuccess(data) {
+                    toast.success(MESSAGES.SUCCESS.DELETE);
+                    handleGetList(filterParams, meta);
+                },
+                onError(data) {
+                    toast.error(MESSAGES.ERROR.DELETE);
+                }
+            }
+        )
+    }, []);
+
     const [filterParams, setFilterParams] =
         useState<Partial<MasterMemberInterface>>({});
 
@@ -67,7 +89,7 @@ export default function PageContent() {
     });
 
     function handleNavigation(type: string, item: MasterMemberInterface | null) {
-        // setSelectedItem(item ?? undefined);
+        setSelectedItem(item ?? undefined);
         if (type === "CREATE") router.push("../master/member/create");
         else if (type === "DELETE") setIsDialogOpen(true);
         else if (type === "UPDATE") router.push(`../master/member/edit/${item?.id}`);
@@ -77,6 +99,7 @@ export default function PageContent() {
     useEffect(() => {
         handleGetList(filterParams, meta);
     }, [meta.page, meta.pageSize, meta.sortBy, meta.sortDir, filterParams]);
+
     return (
         <div className="mt-6">
             <Card>
@@ -190,7 +213,7 @@ export default function PageContent() {
                 cancelText="Batal"
                 onCancel={() => setIsDialogOpen(false)}
                 onConfirm={() => {
-                    console.log("deleted");
+                    handleDelete(selectedItem!)
                     setIsDialogOpen(false);
                 }}
             />
