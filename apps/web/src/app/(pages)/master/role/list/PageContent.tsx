@@ -179,8 +179,9 @@ export default function PageContent() {
             {/* Dialog Component */}
             <SwalDialog
                 open={isDialogOpen}
+                isLoading={loadingDeleteRole}
                 title="Hapus Data?"
-                message="Data yang sudah dihapus tidak bisa dikembalikan."
+                message={`Data yang sudah dihapus tidak bisa dikembalikan.`}
                 variant="warning"
                 confirmText="Hapus"
                 cancelText="Batal"

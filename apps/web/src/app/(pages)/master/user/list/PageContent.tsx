@@ -1,45 +1,44 @@
 "use client"
 
-
 import SwalDialog from "@/components/ConfirmationDialog";
 import { AppDataTable } from "@/components/DataTable";
 import { FilterPanel } from "@/components/FilterPanel";
+import { SharedDropdown } from "@/components/SharedDropdown";
 import { MESSAGES } from "@/constants";
 import { useApiService } from "@/hooks";
-import type { MasterMemberInterface, MasterRoleInterface, Metadata } from "@monorepo/types";
+import type { MasterUserInterface, Metadata } from "@monorepo/types";
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent } from "@monorepo/ui/components/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@monorepo/ui/components/dropdown-menu";
 import { Input } from "@monorepo/ui/components/input";
 import { Label } from "@monorepo/ui/components/label";
-import loading from "@monorepo/ui/components/loading";
 import { useFormik } from "formik";
-import { EllipsisVertical, LucideEye, PencilLineIcon, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Column } from "primereact/column";
-import { use, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export default function PageContent() {
     const router = useRouter();
-    const [selectedItem, setSelectedItem] = useState<MasterMemberInterface>();
-    const [listData, setListData] = useState<MasterMemberInterface[]>([]);
+    const [selectedItem, setSelectedItem] = useState<MasterUserInterface>();
+    const [listData, setListData] = useState<MasterUserInterface[]>([]);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [meta, setMeta] = useState<Metadata>({
         page: 1,
         pageSize: 10,
         total: 0,
     });
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const { callApi: callMemberDataList, loading: loadingMemberDataList } =
-        useApiService("loadDataMember");
-    const { callApi: callDeleteMember, loading: loadingDeleteMember } =
-        useApiService("deleteDataMember")
+    const [filterParams, setFilterParams] =
+        useState<Partial<MasterUserInterface>>({});
 
+    const { callApi: callRoleDataList, loading: loadingUserDataList } =
+        useApiService("loadDataUser");
+    const { callApi: callDeleteRole, loading: loadingDeleteUser } =
+        useApiService("deleteDataUser")
 
     /** 🔥 Fetch Data */
     const handleGetList = useCallback(
-        async (params: Partial<MasterMemberInterface>, pagination: Metadata) => {
-            await callMemberDataList(
+        async (params: Partial<MasterUserInterface>, pagination: Metadata) => {
+            await callRoleDataList(
                 {
                     params,
                     metadata: pagination,
@@ -61,8 +60,8 @@ export default function PageContent() {
         []
     );
 
-    const handleDelete = useCallback(async (data: MasterMemberInterface) => {
-        await callDeleteMember(
+    const handleDelete = useCallback(async (data: MasterUserInterface) => {
+        await callDeleteRole(
             {
                 id: data.id ?? ""
             },
@@ -78,83 +77,82 @@ export default function PageContent() {
         )
     }, []);
 
-    const [filterParams, setFilterParams] =
-        useState<Partial<MasterMemberInterface>>({});
-
-
-    const filterForm = useFormik<MasterMemberInterface>({
+    function handleNavigation(type: string, item: MasterUserInterface | null) {
+        setSelectedItem(item ?? undefined);
+        if (type === "CREATE") router.push("../master/user/create");
+        else if (type === "DELETE") setIsDialogOpen(true);
+        else if (type === "UPDATE") router.push(`../master/user/edit/${item?.id}`);
+        else if (type === "DETAIL") router.push(`../master/user/view/${item?.id}`);
+    }
+    const filterForm = useFormik<MasterUserInterface>({
         initialValues: {
-            name: "",
-            nik: "",
-            religion: "",
+            username: "",
+            email: "",
+            role_id: ""
         },
         onSubmit: () => { }
     });
-
-    function handleNavigation(type: string, item: MasterMemberInterface | null) {
-        setSelectedItem(item ?? undefined);
-        if (type === "CREATE") router.push("../master/member/create");
-        else if (type === "DELETE") setIsDialogOpen(true);
-        else if (type === "UPDATE") router.push(`../master/member/edit/${item?.id}`);
-        else if (type === "DETAIL") router.push(`../master/member/view/${item?.id}`);
-    }
 
     useEffect(() => {
         handleGetList(filterParams, meta);
     }, [meta.page, meta.pageSize, meta.sortBy, meta.sortDir, filterParams]);
 
+
+
+
     return (
         <div className="mt-6">
             <Card>
                 <CardContent>
-                    <h1 className="text-2xl font-bold my-4">Role Management</h1>
+                    <h1 className="text-2xl font-bold my-4">User Management</h1>
                     <p className="text-gray-600">
-                        Di halaman ini, Anda dapat mengelola data role pengguna.
+                        Di halaman ini, Anda dapat mengelola data user pengguna.
                     </p>
                 </CardContent>
             </Card>
-
             <FilterPanel
-                onSubmit={() => { setFilterParams(filterForm.values) }}
-                onReset={() => {
-                    filterForm.resetForm();
-                    setFilterParams({});
-                }}>
+                onSubmit={function (): void {
+                    throw new Error("Function not implemented.");
+                }}
+                onReset={function (): void {
+                    throw new Error("Function not implemented.");
+                }} >
+
                 <div>
                     <Label>
-                        Nama
+                        Username
                     </Label>
                     <Input
-                        id="name"
+                        id="username"
                         className="mt-2"
-                        value={filterForm.values.name ?? ""}
-                        placeholder="Masukan Filter Nama"
+                        value={filterForm.values.username ?? ""}
+                        placeholder="Masukan Filter Username"
                         onChange={filterForm.handleChange}
                     />
                 </div>
                 <div>
                     <Label>
-                        NIK
+                        Email
                     </Label>
                     <Input
-                        id="nik"
+                        id="email"
                         className="mt-2"
-                        value={filterForm.values.nik ?? ""}
-                        placeholder="Masukan Filter NIK"
+                        value={filterForm.values.email ?? ""}
+                        placeholder="Masukan Filter Email"
                         onChange={filterForm.handleChange}
                     />
                 </div>
                 <div>
-                    <Label>
-                        Agama
-                    </Label>
-                    <Input
-                        id="religion"
-                        className="mt-2"
-                        value={filterForm.values.religion ?? ""}
-                        placeholder="Masukan Filter Agama"
-                        onChange={filterForm.handleChange}
-                    />
+                    <SharedDropdown
+                        id={"role_id"}
+                        label="Role"
+                        value={filterForm.values.role_id ?? ""}
+                        onValueChange={function (value: string): void {
+                            throw new Error("Function not implemented.");
+                        }}
+                        placeholder="Masukan Filter Role"
+                    >
+                    </SharedDropdown>
                 </div>
             </FilterPanel>
 
@@ -170,47 +168,43 @@ export default function PageContent() {
                     <AppDataTable
                         columns={[
                             {
-                                field: "name",
-                                header: "Name",
-                                sortable: true,
+                                field: "username",
+                                header: "Username",
                                 skeletonWidth: "60%",
                             },
                             {
-                                field: "nik",
-                                header: "NIK",
-                                sortable: true,
+                                field: "email",
+                                header: "Email",
                                 skeletonWidth: "80%",
                             },
                             {
-                                field: "religion",
-                                header: "Agama",
-                                sortable: true,
-                                skeletonWidth: "80%",
-                            },
-                            {
-                                field: "phone",
-                                header: "Phone",
+                                field: "member_name",
+                                header: "Nama",
                                 skeletonWidth: "100%",
+                            },
+                            {
+                                field: "role_name",
+                                header: "Role",
+                                skeletonWidth: "100%",
+                                sortable: true,
                             },
                         ]}
                         data={listData}
-                        loading={loadingMemberDataList}
+                        loading={loadingUserDataList}
                         meta={meta}
-                        onMetaChange={(val) => {
-                            console.info(val)
-                            setMeta(val)
-                        }}
+                        onMetaChange={setMeta}
                         onEdit={(row) => handleNavigation("UPDATE", row)}
-                        onDelete={(row) => handleNavigation("DELETE", row)}
                         onDetail={(row) => handleNavigation("DETAIL", row)}
+                        onDelete={(row) => handleNavigation("DELETE", row)}
                     />
                 </CardContent>
             </Card>
             {/* Dialog Component */}
             <SwalDialog
                 open={isDialogOpen}
+                isLoading={loadingDeleteUser}
                 title="Hapus Data?"
-                message="Data yang sudah dihapus tidak bisa dikembalikan."
+                message={`Data yang sudah dihapus tidak bisa dikembalikan.`}
                 variant="warning"
                 confirmText="Hapus"
                 cancelText="Batal"
@@ -221,5 +215,5 @@ export default function PageContent() {
                 }}
             />
         </div>
-    )
+    );
 }

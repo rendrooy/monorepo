@@ -2,11 +2,13 @@
 import React from "react";
 import { AlertTriangle, CheckCircle2, Info } from "lucide-react";
 import { Button } from "@monorepo/ui/components/button";
+import { LoadingButton } from "@monorepo/ui/components/loading-button";
 
 type Variant = "warning" | "success" | "info" | "error";
 
 type SwalDialogProps = {
     open: boolean;
+    isLoading?: boolean;
     title?: string;
     message?: string;
     variant?: Variant;
@@ -41,6 +43,7 @@ const variantConfig = {
 
 const SwalDialog: React.FC<SwalDialogProps> = ({
     open,
+    isLoading = false,
     title = "Konfirmasi",
     message = "Apakah Anda yakin?",
     variant = "warning",
@@ -73,15 +76,19 @@ const SwalDialog: React.FC<SwalDialogProps> = ({
 
                 {/* ACTION */}
                 <div className="flex justify-center gap-3">
-                    <Button variant="outline" onClick={onCancel}>
+                    <LoadingButton
+                        isLoading={isLoading}
+                        variant="outline"
+                        onClick={onCancel}>
                         {cancelText}
-                    </Button>
-                    <Button
+                    </LoadingButton>
+                    <LoadingButton
+                        isLoading={isLoading}
                         className="bg-red-500 hover:bg-red-600 text-white"
                         onClick={onConfirm}
                     >
                         {confirmText}
-                    </Button>
+                    </LoadingButton>
                 </div>
             </div>
         </div>

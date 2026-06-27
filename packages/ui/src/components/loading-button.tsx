@@ -1,5 +1,6 @@
-import { Button } from '@/components/ui/button';
-import { ReactNode } from 'react';
+// import { Button } from '@/components/ui/button';
+import type { ReactNode } from 'react';
+import { Button } from './button';
 
 interface LoadingButtonProps {
     isLoading: boolean;

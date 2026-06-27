@@ -1,6 +1,7 @@
 import type { BaseRequest } from "./base-request";
 
 export interface MasterRoleInterface {
+    map(arg0: (item: any) => void): unknown;
     id?: string;
     name?: string;
     code?: string;
