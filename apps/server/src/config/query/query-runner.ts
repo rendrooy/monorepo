@@ -2,6 +2,9 @@ import { queryOption, buildConditionQuery, buildOrderQuery } from "./query-build
 import type { Condition, QueryData } from "./query-builder";
 import { resultMapper } from "./result-mapper";
 import { pool } from "../../connection/db";
+import { createQueryLogger } from "../../utils/query-logger";
+
+const { logQuery } = createQueryLogger("query-runner");
 /**
  * TYPES
  */
@@ -54,8 +57,7 @@ export const findQuery = async <T = unknown>(
 
     const bindValues = conditionQuery.bindValues;
 
-    console.info("findQuery SQL:", query);
-    console.info("bindValues:", bindValues);
+    logQuery("findQuery", query, bindValues);
 
     const result = await pool.query(query, bindValues);
 
@@ -100,8 +102,7 @@ export const insertQuery = async <T = unknown>(
       RETURNING *
     `;
 
-    console.info("insertQuery SQL:", query);
-    console.info("values:", values);
+    logQuery("insertQuery", query, values);
 
     const result = await pool.query(query, values);
 
@@ -146,8 +147,7 @@ export const updateQuery = async <T = unknown>(
       RETURNING *
     `;
 
-    console.info("updateQuery SQL:", query);
-    console.info("values:", values);
+    logQuery("updateQuery", query, values);
 
     const result = await pool.query(query, values);
 
@@ -179,7 +179,7 @@ export const countQuery = async (
       ${conditionQuery.bindQuery}
     `;
 
-    console.info("countQuery SQL:", query);
+    logQuery("countQuery", query, conditionQuery.bindValues);
 
     const result = await pool.query(query, conditionQuery.bindValues);
     return parseInt(result.rows?.[0]?.total || "0", 10);
@@ -204,7 +204,7 @@ export const deleteQuery = async (
       ${conditionQuery.bindQuery}
     `;
 
-    console.info("deleteQuery SQL:", query);
+    logQuery("deleteQuery", query, conditionQuery.bindValues);
 
     await pool.query(query, conditionQuery.bindValues);
 

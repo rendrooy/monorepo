@@ -1,5 +1,11 @@
 import { build } from "../controller/app-response";
-import { dropdownRoleService, dropdownMemberService, dropdownUserService } from "../services/utilities-service";
+import {
+    dropdownFamilyService,
+    dropdownIplBillService,
+    dropdownRoleService,
+    dropdownMemberService,
+    dropdownUserService
+} from "../services/utilities-service";
 import type { BaseRequest } from "@monorepo/types";
 import type { Request, Response } from "express";
 
@@ -16,4 +22,12 @@ export const getDropdownMember = async (req: RequestBody<DropdownRequest>, res: 
 
 export const getDropdownUser = async (req: RequestBody<DropdownRequest>, res: Response) => {
     build(res, await dropdownUserService(req.body));
+};
+
+export const getDropdownFamily = async (req: RequestBody<DropdownRequest>, res: Response) => {
+    build(res, await dropdownFamilyService(req.body));
+};
+
+export const getDropdownIplBill = async (req: RequestBody<DropdownRequest>, res: Response) => {
+    build(res, await dropdownIplBillService(req.body));
 };

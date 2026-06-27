@@ -88,9 +88,56 @@ const menuItems: MenuItem[] = [
         url: "master/member",
       },
       {
+        id: "master/family",
+        label: "Master Family",
+        url: "master/family",
+      },
+      {
         id: "master/role",
         label: "Master Role",
         url: "master/role",
+      },
+    ],
+  },
+  {
+    id: "ipl",
+    label: "IPL",
+    icon: "ReceiptText",
+    subItems: [
+      {
+        id: "ipl/dashboard",
+        label: "Dashboard IPL",
+        url: "ipl/dashboard",
+      },
+      {
+        id: "ipl/setting",
+        label: "Setting Tarif",
+        url: "ipl/setting",
+      },
+      {
+        id: "ipl/bill",
+        label: "Tagihan",
+        url: "ipl/bill",
+      },
+      {
+        id: "ipl/payment",
+        label: "Pembayaran",
+        url: "ipl/payment",
+      },
+      {
+        id: "ipl/arrears",
+        label: "Tunggakan",
+        url: "ipl/arrears",
+      },
+      {
+        id: "ipl/expense",
+        label: "Pengeluaran",
+        url: "ipl/expense",
+      },
+      {
+        id: "ipl/report",
+        label: "Laporan Kas",
+        url: "ipl/report",
       },
     ],
   },

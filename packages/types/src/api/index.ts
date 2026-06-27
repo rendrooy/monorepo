@@ -4,3 +4,4 @@ export * from "./base-request";
 export * from "./master-user-interface";
 export * from "./master-role-interface";
 export * from "./master-member-interface";
+export * from "./homehub-ipl-interface";

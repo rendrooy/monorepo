@@ -18,7 +18,13 @@ export const tableNames = {
     masterUser: "homehub_revamp.m_user",
     masterRole: "homehub_revamp.m_role",
     masterMember: "homehub_revamp.m_member",
+    masterFamily: "homehub_revamp.m_family",
+    iplSetting: "homehub_revamp.m_ipl_setting",
+    iplBill: "homehub_revamp.t_ipl_bill",
+    iplPayment: "homehub_revamp.t_ipl_payment",
+    expense: "homehub_revamp.t_expense",
 };
+
 export const locales = {
     request_success: "Request successful",
     resource_not_found: "Resource not found",
