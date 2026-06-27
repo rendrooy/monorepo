@@ -1,10 +1,10 @@
 'use strict';
 
-const resultMapper = (result: { rows: any[]; }) => {
+const resultMapper = <T = unknown>(result: { rows: T[]; }): T[] => {
     try {
         if (result.rows) {
-            const rows: any[] = [];
-            result.rows.forEach((values: any) => {
+            const rows: T[] = [];
+            result.rows.forEach((values) => {
                 rows.push(values);
             });
             return rows;

@@ -35,9 +35,9 @@ const selectedColumns = [
     `${USER_ALIAS}.updated_time`,
 ].join(", ");
 
-export const getUserService = async (request: BaseRequest) => {
+export const getUserService = async (request: MasterUserInterface) => {
     try {
-        const params = request.params as MasterUserInterface;
+        const params = request;
         const conditionParams: Condition[] = [
             {
                 column: `${USER_ALIAS}.id`,
@@ -64,7 +64,7 @@ export const getUserService = async (request: BaseRequest) => {
     }
 };
 
-export const loadUserService = async (request: BaseRequest) => {
+export const loadUserService = async (request: BaseRequest<MasterUserInterface>) => {
     try {
         const params = request.params as MasterUserInterface;
         const page = request.metadata?.page || 1;
@@ -116,9 +116,9 @@ export const loadUserService = async (request: BaseRequest) => {
     }
 };
 
-export const createUserService = async (request: BaseRequest) => {
+export const createUserService = async (request: MasterUserInterface) => {
     try {
-        const params = request.params as MasterUserInterface;
+        const params = request;
         const crateParams: QueryData = {
             username: params.username,
             email: params.email,
@@ -135,9 +135,9 @@ export const createUserService = async (request: BaseRequest) => {
     }
 };
 
-export const updateUserService = async (request: BaseRequest) => {
+export const updateUserService = async (request: MasterUserInterface) => {
     try {
-        const params = request.params as MasterUserInterface;
+        const params = request;
         const updateParams: QueryData = {
             username: params.username,
             email: params.email,
@@ -155,9 +155,9 @@ export const updateUserService = async (request: BaseRequest) => {
     }
 };
 
-export const deleteUserService = async (request: BaseRequest) => {
+export const deleteUserService = async (request: MasterUserInterface) => {
     try {
-        const params = request.params as MasterUserInterface;
+        const params = request;
         const deletedUser = await updateQuery(tableNames.masterUser, { is_deleted: true }, { id: params.id });
         console.info("deleteUserService deletedUser:", deletedUser);
         return { status: 200, message: locales.request_success };

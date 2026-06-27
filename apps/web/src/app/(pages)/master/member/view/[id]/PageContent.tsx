@@ -17,8 +17,8 @@ import { toast } from "sonner";
 import { MESSAGES } from "@/constants";
 
 const SEX_OPTIONS = [
-    { id: "MALE", label: "Laki-laki" },
-    { id: "FEMALE", label: "Perempuan" },
+    { id: "L", label: "Laki-laki" },
+    { id: "P", label: "Perempuan" },
 ];
 
 const BLOOD_TYPE_OPTIONS = [
@@ -222,6 +222,7 @@ export default function PageContent() {
                                 <div className="md:col-span-2 space-y-2">
                                     <Label htmlFor="address">Alamat</Label>
                                     <Input
+                                        disabled
                                         id="address"
                                         name="address"
                                         placeholder="Masukkan alamat lengkap"

@@ -4,9 +4,9 @@ import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery, countQue
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
 
 
-export const getRoleService = async (request: BaseRequest) => {
+export const getRoleService = async (request: MasterRoleInterface) => {
     try {
-        const params = request as MasterRoleInterface;
+        const params = request;
         const conditionParams: Condition[] = [];
         const queryParams: FindParams = {
             conditions: conditionParams,
@@ -41,7 +41,7 @@ export const getRoleService = async (request: BaseRequest) => {
     }
 };
 
-export const loadRoleService = async (request: BaseRequest) => {
+export const loadRoleService = async (request: BaseRequest<MasterRoleInterface>) => {
     try {
         const params = request.params as MasterRoleInterface;
         const page = request.metadata?.page || 1;
@@ -97,10 +97,10 @@ export const loadRoleService = async (request: BaseRequest) => {
     }
 };
 
-export const createRoleService = async (request: BaseRequest) => {
+export const createRoleService = async (request: MasterRoleInterface) => {
     // Implementasi logika untuk createRoleService
     try {
-        const params = request as MasterRoleInterface;
+        const params = request;
         const crateParams: QueryData = {
             name: params.name,
             code: params.code,
@@ -122,10 +122,10 @@ export const createRoleService = async (request: BaseRequest) => {
     }
 }
 
-export const updateRoleService = async (request: BaseRequest) => {
+export const updateRoleService = async (request: MasterRoleInterface) => {
     // Implementasi logika untuk updateRoleService
     try {
-        const params = request as MasterRoleInterface;
+        const params = request;
         const updateParams: QueryData = {
             name: params.name,
             code: params.code,
@@ -146,10 +146,10 @@ export const updateRoleService = async (request: BaseRequest) => {
     }
 }
 
-export const deleteRoleService = async (request: BaseRequest) => {
+export const deleteRoleService = async (request: MasterRoleInterface) => {
     // Implementasi logika untuk deleteRoleService
     try {
-        const params = request as MasterRoleInterface;
+        const params = request;
         const paramsQuery: QueryData = {
             is_deleted: true,
         }

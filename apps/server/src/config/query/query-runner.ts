@@ -1,4 +1,5 @@
 import { queryOption, buildConditionQuery, buildOrderQuery } from "./query-builder";
+import type { Condition, QueryData } from "./query-builder";
 import { resultMapper } from "./result-mapper";
 import { pool } from "../../connection/db";
 /**
@@ -14,7 +15,7 @@ export interface JoinClause {
 export interface FindParams {
   limit?: number;
   selectedColumns?: string;
-  conditions?: any[];
+  conditions?: Condition[];
   joins?: JoinClause[];
   offset?: number;
   order?: {
@@ -23,12 +24,10 @@ export interface FindParams {
   };
 }
 
-export type QueryData = Record<string, any>;
-
 /**
  * FIND MANY
  */
-export const findQuery = async <T = any>(
+export const findQuery = async <T = unknown>(
   tableName: string,
   params: FindParams
 ): Promise<T[]> => {
@@ -70,7 +69,7 @@ export const findQuery = async <T = any>(
 /**
  * FIND ONE
  */
-export const findOneQuery = async <T = any>(
+export const findOneQuery = async <T = unknown>(
   tableName: string,
   params: FindParams
 ): Promise<T | null> => {
@@ -85,7 +84,7 @@ export const findOneQuery = async <T = any>(
 /**
  * INSERT
  */
-export const insertQuery = async <T = any>(
+export const insertQuery = async <T = unknown>(
   tableName: string,
   params: QueryData
 ): Promise<T | null> => {
@@ -116,7 +115,7 @@ export const insertQuery = async <T = any>(
 /**
  * UPDATE
  */
-export const updateQuery = async <T = any>(
+export const updateQuery = async <T = unknown>(
   tableName: string,
   params: QueryData,
   conditions: QueryData
@@ -195,7 +194,7 @@ export const countQuery = async (
  */
 export const deleteQuery = async (
   tableName: string,
-  params: { conditions?: any[] }
+  params: { conditions?: Condition[] }
 ) => {
   try {
     const conditionQuery = buildConditionQuery(params.conditions);

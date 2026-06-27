@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
-import { Label } from '@monorepo/ui/components/label';
+import { useEffect, useRef, useState } from "react";
+import { Label } from "@monorepo/ui/components/label";
 import {
   Select2,
   Select2Content,
   Select2Item,
   Select2Trigger,
-} from '@monorepo/ui/components/select2';
+} from "@monorepo/ui/components/select2";
 
 export type SharedDropdownOption = {
   id: string;
@@ -54,28 +54,31 @@ export function SharedDropdown({
   fetchOptions,
   fetchEnabled = true,
   debounceMs = 500,
-  requestKey = '',
-  className = '',
+  requestKey = "",
+  className = "",
   clearable = false,
 }: Readonly<SharedDropdownProps>) {
   const isAsync = Boolean(fetchOptions);
   const abortRef = useRef<AbortController | null>(null);
   const fetchOptionsRef = useRef(fetchOptions);
+
   fetchOptionsRef.current = fetchOptions;
-  const [internalSearch, setInternalSearch] = useState('');
-  const [internalOptions, setInternalOptions] = useState<SharedDropdownOption[]>([]);
+
+  const [internalSearch, setInternalSearch] = useState("");
+  const [internalOptions, setInternalOptions] = useState<
+    SharedDropdownOption[]
+  >([]);
   const [internalLoading, setInternalLoading] = useState(false);
 
   const resolvedSearch = searchValue ?? internalSearch;
-  const resolvedOptions = isAsync ? internalOptions : (options ?? []);
+  const resolvedOptions = isAsync ? internalOptions : options ?? [];
   const resolvedLoading = isAsync ? internalLoading : loading;
   const resolvedClientFilter = isAsync ? false : clientFilter;
 
-  // Compute display label directly from props — no portal, no timing issue
   const displayLabel =
-    value === 'all'
-      ? (allLabel ?? '')
-      : (resolvedOptions.find((o) => o.id === value)?.label ?? (value || ''));
+    value === "all"
+      ? allLabel ?? ""
+      : resolvedOptions.find((item) => item.id === value)?.label ?? value ?? "";
 
   useEffect(() => {
     if (!isAsync) return;
@@ -90,19 +93,26 @@ export function SharedDropdown({
     const timer = setTimeout(async () => {
       try {
         abortRef.current?.abort();
+
         const controller = new AbortController();
         abortRef.current = controller;
+
         setInternalLoading(true);
 
-        const result = await fetchOptionsRef.current!(resolvedSearch, controller.signal);
+        const result = await fetchOptionsRef.current!(
+          resolvedSearch,
+          controller.signal,
+        );
+
         setInternalOptions(result ?? []);
       } catch (err) {
         if (
           err instanceof Error &&
-          (err.name === 'AbortError' || err.message.includes('aborted'))
+          (err.name === "AbortError" || err.message.includes("aborted"))
         ) {
           return;
         }
+
         console.error(`Failed fetch dropdown ${id}:`, err);
       } finally {
         setInternalLoading(false);
@@ -110,7 +120,6 @@ export function SharedDropdown({
     }, debounceMs);
 
     return () => clearTimeout(timer);
-    // fetchOptions intentionally excluded — stored in ref to avoid re-fetch on every render
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     debounceMs,
@@ -128,13 +137,20 @@ export function SharedDropdown({
     };
   }, []);
 
+  const handleClear = () => {
+    onValueChange("");
+    onSearchChange?.("");
+    setInternalSearch("");
+  };
+
   return (
-    <div className={`flex-1 min-w-0 space-y-2 ${className}`}>
-      {label && (
+    <div className={`min-w-0 flex-1 space-y-2 ${className}`}>
+      {label ? (
         <Label htmlFor={id} className="text-slate-700">
           {label}
         </Label>
-      )}
+      ) : null}
+
       <Select2
         searchable={searchable}
         value={value}
@@ -144,11 +160,20 @@ export function SharedDropdown({
         onSearchChange={onSearchChange ?? setInternalSearch}
         clientFilter={resolvedClientFilter}
       >
-        <Select2Trigger id={id} className="bg-white border-slate-200" clearable={clearable && !!value} onClear={() => onValueChange("")}>
-          <span className={`text-sm truncate ${!displayLabel ? 'text-muted-foreground' : ''}`}>
-            {resolvedLoading ? 'Loading...' : (displayLabel || placeholder)}
+        <Select2Trigger
+          id={id}
+          className="border-slate-200 bg-white"
+          clearable={clearable && !!value}
+          onClear={() => onValueChange("")}
+        >
+          <span
+            className={`block min-w-0 flex-1 truncate pr-2 text-sm ${!displayLabel ? "text-muted-foreground" : ""
+              }`}
+          >
+            {resolvedLoading ? "Loading..." : displayLabel || placeholder}
           </span>
         </Select2Trigger>
+
         <Select2Content
           className="max-h-60 overflow-y-auto"
           loading={resolvedLoading}
@@ -158,6 +183,7 @@ export function SharedDropdown({
               {allLabel}
             </Select2Item>
           ) : null}
+
           {resolvedOptions.map((item) => (
             <Select2Item key={item.id} value={item.id} searchText={item.label}>
               {item.label}

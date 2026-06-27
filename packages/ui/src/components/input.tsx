@@ -38,8 +38,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               "[&:-webkit-autofill]:text-black",
 
               // disabled (optional, tapi jangan opacity)
-              "disabled:pointer-events-none disabled:cursor-not-allowed",
-              "disabled:bg-gray-100 disabled:text-gray-400",
+              // "disabled:pointer-events-none disabled:cursor-not-allowed",
+              // "disabled:bg-gray-100 disabled:text-gray-400",
+              "disabled:cursor-not-allowed disabled:opacity-50",
 
               startAdornment ? "pl-10 pr-3" : "px-3",
 

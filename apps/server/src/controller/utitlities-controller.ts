@@ -1,14 +1,19 @@
 import { build } from "../controller/app-response";
 import { dropdownRoleService, dropdownMemberService, dropdownUserService } from "../services/utilities-service";
+import type { BaseRequest } from "@monorepo/types";
+import type { Request, Response } from "express";
 
-export const getDropdownRole = async (req: any, res: any) => {
+type DropdownRequest = BaseRequest<{ search?: string | null }>;
+type RequestBody<T> = Request<Record<string, never>, unknown, T>;
+
+export const getDropdownRole = async (req: RequestBody<DropdownRequest>, res: Response) => {
     build(res, await dropdownRoleService(req.body));
 };
 
-export const getDropdownMember = async (req: any, res: any) => {
+export const getDropdownMember = async (req: RequestBody<DropdownRequest>, res: Response) => {
     build(res, await dropdownMemberService(req.body));
 };
 
-export const getDropdownUser = async (req: any, res: any) => {
+export const getDropdownUser = async (req: RequestBody<DropdownRequest>, res: Response) => {
     build(res, await dropdownUserService(req.body));
 };

@@ -3,8 +3,18 @@ import type { BaseRequest, BaseResponseDropdown } from "@monorepo/types";
 import { findQuery, FindParams } from '../config/query/query-runner';
 import { Condition, OperatorTypes } from '../config/query/query-builder';
 
-const buildDropdown = (data: any[], valueKey: string, labelKey: string): BaseResponseDropdown[] =>
-    data.map((item) => ({ value: item[valueKey], label: item[labelKey] }));
+type DropdownRequest = BaseRequest<{ search?: string | null }>;
+type DropdownRow = Record<string, string | number | null | undefined>;
+
+const buildDropdown = <T extends DropdownRow>(
+    data: T[],
+    valueKey: keyof T,
+    labelKey: keyof T
+): BaseResponseDropdown[] =>
+    data.map((item) => ({
+        value: String(item[valueKey] ?? ""),
+        label: String(item[labelKey] ?? ""),
+    }));
 
 const baseConditions = (): Condition[] => [
     { column: "is_deleted", value: false, operator: OperatorTypes.EQUAL },
@@ -12,9 +22,9 @@ const baseConditions = (): Condition[] => [
 
 // ─── ROLE DROPDOWN ───────────────────────────────────────────────────────────
 
-export const dropdownRoleService = async (request: BaseRequest) => {
+export const dropdownRoleService = async (request: DropdownRequest) => {
     try {
-        const search = (request.params as any)?.search ?? "";
+        const search = request.params?.search ?? "";
         const conditions: Condition[] = baseConditions();
         if (search) {
             conditions.push({ column: "name", value: search, operator: OperatorTypes.LIKE });
@@ -27,7 +37,7 @@ export const dropdownRoleService = async (request: BaseRequest) => {
             offset: 0,
         };
 
-        const data = await findQuery(tableNames.masterRole, queryParams);
+        const data = await findQuery<DropdownRow>(tableNames.masterRole, queryParams);
         return {
             status: 200,
             message: locales.request_success,
@@ -40,9 +50,9 @@ export const dropdownRoleService = async (request: BaseRequest) => {
 
 // ─── MEMBER DROPDOWN ─────────────────────────────────────────────────────────
 
-export const dropdownMemberService = async (request: BaseRequest) => {
+export const dropdownMemberService = async (request: DropdownRequest) => {
     try {
-        const search = (request.params as any)?.search ?? "";
+        const search = request.params?.search ?? "";
         const conditions: Condition[] = baseConditions();
         if (search) {
             conditions.push({ column: "name", value: search, operator: OperatorTypes.LIKE });
@@ -55,7 +65,7 @@ export const dropdownMemberService = async (request: BaseRequest) => {
             offset: 0,
         };
 
-        const data = await findQuery(tableNames.masterMember, queryParams);
+        const data = await findQuery<DropdownRow>(tableNames.masterMember, queryParams);
         return {
             status: 200,
             message: locales.request_success,
@@ -68,9 +78,9 @@ export const dropdownMemberService = async (request: BaseRequest) => {
 
 // ─── USER DROPDOWN ───────────────────────────────────────────────────────────
 
-export const dropdownUserService = async (request: BaseRequest) => {
+export const dropdownUserService = async (request: DropdownRequest) => {
     try {
-        const search = (request.params as any)?.search ?? "";
+        const search = request.params?.search ?? "";
         const conditions: Condition[] = baseConditions();
         if (search) {
             conditions.push({ column: "username", value: search, operator: OperatorTypes.LIKE });
@@ -83,7 +93,7 @@ export const dropdownUserService = async (request: BaseRequest) => {
             offset: 0,
         };
 
-        const data = await findQuery(tableNames.masterUser, queryParams);
+        const data = await findQuery<DropdownRow>(tableNames.masterUser, queryParams);
         return {
             status: 200,
             message: locales.request_success,

@@ -1,6 +1,6 @@
 import type { Metadata } from "./base-response";
 
-export interface BaseRequest<T = any|null> {
+export interface BaseRequest<T = unknown | null> {
     metadata?: Metadata | null;
     params?: T
 }

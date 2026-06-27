@@ -30,11 +30,12 @@ export enum OperatorTypes {
  * TYPES
  */
 export type ColumnDefinition = Record<string, DataTypes>;
-export type QueryData = Record<string, any>;
+export type QueryValue = string | number | boolean | Date | null | undefined;
+export type QueryData = Record<string, QueryValue>;
 
 export interface Condition {
   column: string;
-  value?: any;
+  value?: QueryValue | QueryValue[];
   tableAlias?: string;
   operator?: OperatorTypes;
 }
@@ -62,7 +63,7 @@ export const buildInsertQuery = (
 ) => {
   const inputColumns: string[] = [];
   const bindColumns: string[] = [];
-  const bindValues: any[] = [];
+  const bindValues: QueryValue[] = [];
 
   Object.keys(data).forEach((key) => {
     inputColumns.push(`"${key}"`);
@@ -97,7 +98,7 @@ export const buildUpdateQuery = (
   condition: QueryData
 ) => {
   const bindColumns: string[] = [];
-  const bindValues: any[] = [];
+  const bindValues: QueryValue[] = [];
 
   Object.keys(data).forEach((key) => {
     bindValues.push(data[key]);
@@ -123,13 +124,13 @@ export const buildUpdateQuery = (
  */
 const buildConditionOperator = (
   columnName: string,
-  value: any,
+  value: QueryValue | QueryValue[],
   operator: OperatorTypes = OperatorTypes.EQUAL,
   index: number
 ): string => {
   switch (operator) {
     case OperatorTypes.LIKE:
-      return `LOWER(${columnName}) LIKE '%${(value || "").toLowerCase()}%'`;
+      return `LOWER(${columnName}) LIKE '%${String(value || "").toLowerCase()}%'`;
 
     case OperatorTypes.NOT_EQUAL:
       return `${columnName}!=$${index}`;
@@ -161,10 +162,10 @@ const buildConditionOperator = (
  * CONDITION QUERY
  */
 export const buildConditionQuery = (conditions: Condition[] = []) => {
-  const bindValues: any[] = [];
+  const bindValues: QueryValue[] = [];
   const bindConditions: string[] = [];
 
-  conditions.forEach((cond, i) => {
+  conditions.forEach((cond) => {
     const columnName = cond.tableAlias
       ? `${cond.tableAlias}.${cond.column}`
       : cond.column;
@@ -187,7 +188,7 @@ export const buildConditionQuery = (conditions: Condition[] = []) => {
     ];
 
     if (!unbindOperators.includes(operator)) {
-      bindValues.push(cond.value);
+      bindValues.push(Array.isArray(cond.value) ? cond.value[0] : cond.value);
     }
   });
 
