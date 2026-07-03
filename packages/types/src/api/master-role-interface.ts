@@ -2,6 +2,7 @@ export interface MasterRoleInterface {
     id?: string;
     name?: string;
     code?: string;
+    desc?: string | null;
     created_time?: Date;
     updated_time?: Date;
     created_by_id?: string | null;

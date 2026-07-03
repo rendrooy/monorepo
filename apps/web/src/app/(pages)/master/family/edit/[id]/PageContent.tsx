@@ -1,6 +1,6 @@
 "use client";
 
-import { useApiService } from "@/hooks";
+import { useApiService, useConfirmedAction } from "@/hooks";
 import type { BaseResponse, MasterFamilyInterface } from "@monorepo/types";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -65,14 +65,25 @@ export default function PageContent() {
         [callUpdate, id, router],
     );
 
+    const { confirmationDialog, requestConfirmation } =
+        useConfirmedAction<MasterFamilyInterface>({
+            action: "update",
+            entityLabel: "family",
+            isLoading: loading,
+            onConfirm: handleSubmit,
+        });
+
     return (
-        <FamilyForm
-            title="Edit Data Family"
-            initialValues={family}
-            loading={loading}
-            onBack={() => router.back()}
-            onSubmit={handleSubmit}
-            submitText="Update"
-        />
+        <>
+            <FamilyForm
+                title="Edit Data Family"
+                initialValues={family}
+                loading={loading}
+                onBack={() => router.back()}
+                onSubmit={requestConfirmation}
+                submitText="Update"
+            />
+            {confirmationDialog}
+        </>
     );
 }

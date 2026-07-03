@@ -17,7 +17,7 @@ import {
     STATUS_REJECTED_BY_OPERATIONAL_BANK,
     STATUS_CLOSED,
     STATUS_FAILED,
-} from "@/constant/Status";
+} from "../constant/Status";
 
 type StatusConfig = {
     label: string;

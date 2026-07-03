@@ -40,7 +40,8 @@ type ColumnType<T> = {
 type Props<T> = {
     data: T[];
     loading?: boolean;
-    meta: Metadata;
+    meta?: Metadata;
+    showMeta?: boolean;
     columns: ColumnType<T>[];
 
     onMetaChange: (meta: Metadata) => void;
@@ -56,6 +57,7 @@ export function AppDataTable<T>({
     data,
     loading = false,
     meta,
+    showMeta = true,
     columns,
     onMetaChange,
     onEdit,
@@ -63,9 +65,9 @@ export function AppDataTable<T>({
     onDetail,
     actions,
 }: Props<T>) {
-    const currentPage = meta.page ?? 1;
-    const pageSize = meta.pageSize ?? 10;
-    const total = meta.total ?? 0;
+    const currentPage = meta?.page ?? 1;
+    const pageSize = meta?.pageSize ?? 10;
+    const total = meta?.total ?? 0;
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
     // Skeleton generator
@@ -112,14 +114,14 @@ export function AppDataTable<T>({
     };
 
     const currentCount = Math.min(
-        meta.pageSize ?? 0,
-        meta.total ?? 0
+        meta?.pageSize ?? 0,
+        meta?.total ?? 0
     );
 
     return (
         <div className="space-y-4">
             {/* TABLE */}
-            <div className="pt-6 relative">
+            <div className="pt-6 relative border border-slate-200 rounded-md">
                 {/* Overlay Loader */}
                 {loading && (
                     <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
@@ -128,11 +130,11 @@ export function AppDataTable<T>({
                 )}
 
                 <DataTable
-                    value={loading ? (skeletonRows as T[]) : data}
+                    value={(loading ? skeletonRows : data) as never[]}
                     loading={false}
                     removableSort
-                    sortField={meta.sortBy}
-                    sortOrder={meta.sortDir === "ASC" ? 1 : meta.sortDir === "DESC" ? -1 : 0}
+                    sortField={meta?.sortBy}
+                    sortOrder={meta?.sortDir === "ASC" ? 1 : meta?.sortDir === "DESC" ? -1 : 0}
                     emptyMessage={
                         !loading && (
                             <div className="text-center py-6 text-gray-400">
@@ -265,132 +267,136 @@ export function AppDataTable<T>({
             </div>
 
             {/* PAGINATION */}
-            <div className="flex items-center justify-between px-4 py-3 bg-white">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>Menampilkan</span>
-                    <Select2
-                        value={(meta.pageSize ?? 10).toString()}
-                        disabled={
-                            !meta.total ||
-                            !meta.pageSize ||
-                            meta.total <= meta.pageSize
-                        }
-                        className="border-slate-200 border-2"
-                        searchable={false}
-                        onValueChange={(val) =>
-                            updateMeta({
-                                page: 1,
-                                pageSize: Number(val),
-                            })
-                        }
-                    >
-                        <Select2Trigger>
-                            {/* 👇 ini yang diubah */}
-                            <span className="font-medium">
-                                {currentCount}
+            {
+                showMeta && (
+                    <div className="flex items-center justify-between px-4 py-3 bg-white">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>Menampilkan</span>
+                            <Select2
+                                value={(meta?.pageSize ?? 10).toString()}
+                                disabled={
+                                    !meta?.total ||
+                                    !meta?.pageSize ||
+                                    meta?.total <= meta?.pageSize
+                                }
+                                className="border-slate-200 border-2"
+                                searchable={false}
+                                onValueChange={(val) =>
+                                    updateMeta({
+                                        page: 1,
+                                        pageSize: Number(val),
+                                    })
+                                }
+                            >
+                                <Select2Trigger>
+                                    {/* 👇 ini yang diubah */}
+                                    <span className="font-medium">
+                                        {currentCount}
+                                    </span>
+                                </Select2Trigger>
+
+                                <Select2Content>
+                                    {PAGE_SIZE_OPTIONS.map((s) => (
+                                        <Select2Item key={s} value={s}>
+                                            {s}
+                                        </Select2Item>
+                                    ))}
+                                </Select2Content>
+                            </Select2>
+
+                            <span>
+                                dari
                             </span>
-                        </Select2Trigger>
+                            <span className="font-medium">{total}</span>
+                            <span>
+                                data
+                            </span>
+                        </div>
 
-                        <Select2Content>
-                            {PAGE_SIZE_OPTIONS.map((s) => (
-                                <Select2Item key={s} value={s}>
-                                    {s}
-                                </Select2Item>
-                            ))}
-                        </Select2Content>
-                    </Select2>
-
-                    <span>
-                        dari
-                    </span>
-                    <span className="font-medium">{total}</span>
-                    <span>
-                        data
-                    </span>
-                </div>
-
-                <Pagination>
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationFirst
-                                onClick={() => updateMeta({ page: 1 })}
-                                className={
-                                    currentPage === 1
-                                        ? "pointer-events-none opacity-40"
-                                        : ""
-                                }
-                            />
-                        </PaginationItem>
-
-                        <PaginationItem>
-                            <PaginationPrevious
-                                onClick={() =>
-                                    updateMeta({
-                                        page: Math.max(currentPage - 1, 1)
-                                    })
-                                }
-                                className={
-                                    currentPage === 1
-                                        ? "pointer-events-none opacity-40"
-                                        : ""
-                                }
-                            />
-                        </PaginationItem>
-
-                        {getPageNumbers().map((p, i) => {
-                            const key = `${p}-${i}`; // 🔥 fix utama
-
-                            return p === "..." ? (
-                                <PaginationItem key={key}>
-                                    <PaginationEllipsis />
-                                </PaginationItem>
-                            ) : (
-                                <PaginationItem key={key}>
-                                    <PaginationLink
-                                        isActive={currentPage === p}
-                                        onClick={() =>
-                                            updateMeta({ page: p as number, pageSize })
+                        <Pagination>
+                            <PaginationContent>
+                                <PaginationItem>
+                                    <PaginationFirst
+                                        onClick={() => updateMeta({ page: 1 })}
+                                        className={
+                                            currentPage === 1
+                                                ? "pointer-events-none opacity-40"
+                                                : ""
                                         }
-                                    >
-                                        {p}
-                                    </PaginationLink>
+                                    />
                                 </PaginationItem>
-                            );
-                        })}
 
-                        <PaginationItem>
-                            <PaginationNext
-                                onClick={() =>
-                                    updateMeta({
-                                        page: Math.min(
-                                            currentPage + 1,
-                                            totalPages
-                                        )
-                                    })
-                                }
-                                className={
-                                    currentPage === totalPages
-                                        ? "pointer-events-none opacity-40"
-                                        : ""
-                                }
-                            />
-                        </PaginationItem>
+                                <PaginationItem>
+                                    <PaginationPrevious
+                                        onClick={() =>
+                                            updateMeta({
+                                                page: Math.max(currentPage - 1, 1)
+                                            })
+                                        }
+                                        className={
+                                            currentPage === 1
+                                                ? "pointer-events-none opacity-40"
+                                                : ""
+                                        }
+                                    />
+                                </PaginationItem>
 
-                        <PaginationItem>
-                            <PaginationLast
-                                onClick={() =>
-                                    updateMeta({ page: totalPages })
-                                }
-                                className={
-                                    currentPage === totalPages
-                                        ? "pointer-events-none opacity-40"
-                                        : ""
-                                }
-                            />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
-            </div>
+                                {getPageNumbers().map((p, i) => {
+                                    const key = `${p}-${i}`; // 🔥 fix utama
+
+                                    return p === "..." ? (
+                                        <PaginationItem key={key}>
+                                            <PaginationEllipsis />
+                                        </PaginationItem>
+                                    ) : (
+                                        <PaginationItem key={key}>
+                                            <PaginationLink
+                                                isActive={currentPage === p}
+                                                onClick={() =>
+                                                    updateMeta({ page: p as number, pageSize })
+                                                }
+                                            >
+                                                {p}
+                                            </PaginationLink>
+                                        </PaginationItem>
+                                    );
+                                })}
+
+                                <PaginationItem>
+                                    <PaginationNext
+                                        onClick={() =>
+                                            updateMeta({
+                                                page: Math.min(
+                                                    currentPage + 1,
+                                                    totalPages
+                                                )
+                                            })
+                                        }
+                                        className={
+                                            currentPage === totalPages
+                                                ? "pointer-events-none opacity-40"
+                                                : ""
+                                        }
+                                    />
+                                </PaginationItem>
+
+                                <PaginationItem>
+                                    <PaginationLast
+                                        onClick={() =>
+                                            updateMeta({ page: totalPages })
+                                        }
+                                        className={
+                                            currentPage === totalPages
+                                                ? "pointer-events-none opacity-40"
+                                                : ""
+                                        }
+                                    />
+                                </PaginationItem>
+                            </PaginationContent>
+                        </Pagination>
+                    </div>
+                )
+            }
         </div >
     );
 }

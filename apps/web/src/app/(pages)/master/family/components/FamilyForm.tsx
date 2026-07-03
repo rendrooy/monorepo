@@ -202,6 +202,8 @@ export function FamilyForm({
         [selectedMembers, syncFormikMembers],
     );
 
+    const loadingMemberTable = loading || loadingFamilyRelation;
+
     return (
         <>
             <div className="mt-6">
@@ -286,42 +288,57 @@ export function FamilyForm({
                     </Card>
                 </form>
 
-                <Card className="mt-6">
-                    <CardContent className="mt-6">
-                        {!disabled ? (
-                            <Button type="button" onClick={handleOpenMemberDialog} variant="outline">
-                                <Plus />
-                                Tambah Anggota
-                            </Button>
-                        ) : null}
-                        <AppDataTable
-                            data={selectedMembers}
-                            loading={false}
-                            meta={{ page: 1, pageSize: Math.max(selectedMembers.length, 10) }}
-                            columns={[
-                                { field: "label", header: "Nama" },
-                                { field: "nik", header: "NIK" },
-                                { field: "family_relation_label", header: "Hubungan Keluarga" },
-                                { field: "id", header: "ID Member" },
-                            ]}
-                            onMetaChange={() => { }}
-                            actions={
-                                disabled
-                                    ? undefined
-                                    : (row) => (
+                {
+                    !loading && (
+                        <Card className="mt-6">
+                            <CardContent className="">
+                                {/* <div > */}
+                                <CardHeader className="px-0 mb-6 flex items-center justify-between">
+                                    <CardTitle>{title}</CardTitle>
+                                    {!disabled && (
                                         <Button
                                             type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => handleRemoveMember(row.id)}
+                                            onClick={handleOpenMemberDialog}
+                                            variant="outline"
                                         >
-                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Tambah Anggota
                                         </Button>
-                                    )
-                            }
-                        />
-                    </CardContent>
-                </Card>
+                                    )}
+                                </CardHeader>
+
+                                {/* </div> */}
+
+                                <AppDataTable
+                                    data={selectedMembers}
+                                    loading={loadingMemberTable}
+                                    showMeta={false}
+                                    columns={[
+                                        { field: "label", header: "Nama" },
+                                        { field: "nik", header: "NIK" },
+                                        { field: "family_relation_label", header: "Hubungan Keluarga" },
+                                        { field: "id", header: "ID Member" },
+                                    ]}
+                                    onMetaChange={() => { }}
+                                    actions={
+                                        disabled
+                                            ? undefined
+                                            : (row) => (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleRemoveMember(row.id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                                </Button>
+                                            )
+                                    }
+                                />
+                            </CardContent>
+                        </Card>
+                    )
+                }
 
                 <Card className="mt-6">
                     <CardContent className="mt-6">

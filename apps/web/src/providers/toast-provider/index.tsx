@@ -40,6 +40,7 @@ export const ToastProvider = ({
             ...options,
             content: (props) => {
                 const { message } = props;
+                const toastMessage = message as ToastOptions;
 
                 /* COLOR BASED ON SEVERITY */
                 const colorMap = {
@@ -62,7 +63,7 @@ export const ToastProvider = ({
                 };
 
                 const color =
-                    colorMap[message.severity as keyof typeof colorMap] ??
+                    colorMap[toastMessage.severity as keyof typeof colorMap] ??
                     "bg-gray-50 border-gray-300 text-gray-700";
 
                 return (
@@ -71,19 +72,19 @@ export const ToastProvider = ({
                     >
                         {/* ICON */}
                         <div className="text-lg mt-0.5">
-                            {iconMap[message.severity as keyof typeof iconMap]}
+                            {iconMap[toastMessage.severity as keyof typeof iconMap]}
                         </div>
 
                         {/* TEXT */}
                         <div className="flex flex-col">
-                            {message.summary && (
+                            {toastMessage.summary && (
                                 <span className="font-semibold text-sm">
-                                    {message.summary}
+                                    {toastMessage.summary}
                                 </span>
                             )}
-                            {message.detail && (
+                            {toastMessage.detail && (
                                 <span className="text-sm opacity-90">
-                                    {message.detail}
+                                    {toastMessage.detail}
                                 </span>
                             )}
                         </div>

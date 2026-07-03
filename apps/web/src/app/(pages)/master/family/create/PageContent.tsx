@@ -1,6 +1,6 @@
 "use client";
 
-import { useApiService } from "@/hooks";
+import { useApiService, useConfirmedAction } from "@/hooks";
 import type { BaseResponse, MasterFamilyInterface } from "@monorepo/types";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
@@ -39,13 +39,24 @@ export default function PageContent() {
         [callApi, router],
     );
 
+    const { confirmationDialog, requestConfirmation } =
+        useConfirmedAction<MasterFamilyInterface>({
+            action: "create",
+            entityLabel: "family",
+            isLoading: loading,
+            onConfirm: handleSubmit,
+        });
+
     return (
-        <FamilyForm
-            title="Tambah Data Family"
-            initialValues={initialValues}
-            loading={loading}
-            onBack={() => router.back()}
-            onSubmit={handleSubmit}
-        />
+        <>
+            <FamilyForm
+                title="Tambah Data Family"
+                initialValues={initialValues}
+                loading={loading}
+                onBack={() => router.back()}
+                onSubmit={requestConfirmation}
+            />
+            {confirmationDialog}
+        </>
     );
 }

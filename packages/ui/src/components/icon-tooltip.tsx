@@ -1,7 +1,7 @@
 "use client";
 
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 interface IconTooltipProps {
   content: string;

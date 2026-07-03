@@ -104,6 +104,8 @@ export const createRoleService = async (request: MasterRoleInterface) => {
         const crateParams: QueryData = {
             name: params.name,
             code: params.code,
+            desc: params.desc,
+            is_active: params.is_active,
         }
         const newRole = await insertQuery(tableNames.masterRole, crateParams);
         console.info("createRoleService newRole:", newRole);
@@ -129,6 +131,8 @@ export const updateRoleService = async (request: MasterRoleInterface) => {
         const updateParams: QueryData = {
             name: params.name,
             code: params.code,
+            desc: params.desc,
+            is_active: params.is_active,
         }
         const updatedData = await updateQuery(tableNames.masterRole, updateParams, { id: params.id });
         console.info("updateRoleService updatedRole:", updatedData);

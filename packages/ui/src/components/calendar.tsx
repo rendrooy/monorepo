@@ -60,13 +60,13 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ className, ...props }) => (
+        IconLeft: ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
           <ChevronLeft className={cn("size-4", className)} {...props} />
         ),
-        IconRight: ({ className, ...props }) => (
+        IconRight: ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
           <ChevronRight className={cn("size-4", className)} {...props} />
         ),
-      }}
+      } as React.ComponentProps<typeof DayPicker>["components"]}
       {...props}
     />
   );
