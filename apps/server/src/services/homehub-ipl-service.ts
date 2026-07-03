@@ -30,6 +30,85 @@ const cleanParams = (params: QueryData): QueryData =>
     Object.entries(params).filter(([, value]) => value !== undefined && value !== "")
   );
 
+const buildFamilyParams = (request: MasterFamilyInterface): QueryData => {
+  const { member_id: _memberId, member_ids: _memberIds, family_members: _familyMembers, ...familyParams } = request;
+  return cleanParams(familyParams as QueryData);
+};
+
+const assignMemberToFamily = async (
+  memberId: string | null | undefined,
+  familyId: string | null | undefined,
+  familyRelation?: string | null
+) => {
+  if (!memberId || !familyId) return;
+
+  await updateQuery(
+    tableNames.masterMember,
+    cleanParams({
+      family_id: familyId,
+      family_relation: familyRelation,
+      updated_time: new Date(),
+    }),
+    { id: memberId }
+  );
+};
+
+const loadFamilyMembers = async (familyId: string) =>
+  findQuery<NonNullable<MasterFamilyInterface["family_members"]>[number]>(tableNames.masterMember, {
+    selectedColumns: "id AS member_id, name AS member_name, nik AS member_nik, family_relation",
+    conditions: [
+      { column: "family_id", value: familyId },
+      { column: "is_deleted", value: false },
+    ],
+    order: { order_by: "created_time", order_dir: "ASC" },
+  });
+
+const assignMembersToFamily = async (
+  familyMembers: MasterFamilyInterface["family_members"],
+  memberIds: string[] | undefined,
+  fallbackMemberId: string | null | undefined,
+  familyId: string | null | undefined
+) => {
+  if (!familyId) return;
+
+  if (familyMembers?.length) {
+    const currentMembers = await loadFamilyMembers(familyId);
+    const nextIds = familyMembers.map((member) => member.member_id);
+    const removedMembers = currentMembers.filter((member) => !nextIds.includes(member.member_id));
+
+    for (const member of removedMembers) {
+      await updateQuery(
+        tableNames.masterMember,
+        { family_id: null, family_relation: null, updated_time: new Date() },
+        { id: member.member_id }
+      );
+    }
+
+    for (const member of familyMembers) {
+      await assignMemberToFamily(member.member_id, familyId, member.family_relation);
+    }
+    return;
+  }
+
+  if (familyMembers && familyMembers.length === 0) {
+    const currentMembers = await loadFamilyMembers(familyId);
+    for (const member of currentMembers) {
+      await updateQuery(
+        tableNames.masterMember,
+        { family_id: null, family_relation: null, updated_time: new Date() },
+        { id: member.member_id }
+      );
+    }
+    return;
+  }
+
+  const ids = memberIds?.length ? memberIds : fallbackMemberId ? [fallbackMemberId] : [];
+
+  for (const memberId of ids) {
+    await assignMemberToFamily(memberId, familyId);
+  }
+};
+
 const baseCondition = (alias?: string): Condition => ({
   column: "is_deleted",
   tableAlias: alias,
@@ -143,8 +222,18 @@ export const getFamilyService = async (request: MasterFamilyInterface) => {
     const data = await findOneQuery<MasterFamilyInterface>(tableNames.masterFamily, {
       conditions: [{ column: "id", value: request.id }],
     });
+    const familyMembers = data?.id ? await loadFamilyMembers(data.id) : [];
     return data
-      ? { status: 200, message: locales.request_success, data }
+      ? {
+        status: 200,
+        message: locales.request_success,
+        data: {
+          ...data,
+          family_members: familyMembers,
+          member_ids: familyMembers.map((member) => member.member_id),
+          member_id: familyMembers[0]?.member_id ?? "",
+        },
+      }
       : { status: 404, message: locales.resource_not_found };
   } catch {
     return { status: 500, message: locales.unable_to_handle_request };
@@ -168,8 +257,9 @@ export const createFamilyService = async (request: MasterFamilyInterface) => {
   try {
     const data = await insertQuery<MasterFamilyInterface>(
       tableNames.masterFamily,
-      cleanParams(request as QueryData)
+      buildFamilyParams(request)
     );
+    await assignMembersToFamily(request.family_members, request.member_ids, request.member_id, data?.id);
     return { status: 201, message: locales.request_success, data };
   } catch {
     return { status: 500, message: locales.unable_to_handle_request, data: null };
@@ -180,9 +270,10 @@ export const updateFamilyService = async (request: MasterFamilyInterface) => {
   try {
     const data = await updateQuery<MasterFamilyInterface>(
       tableNames.masterFamily,
-      cleanParams({ ...(request as QueryData), updated_time: new Date() }),
+      { ...buildFamilyParams(request), updated_time: new Date() },
       { id: request.id }
     );
+    await assignMembersToFamily(request.family_members, request.member_ids, request.member_id, request.id);
     return { status: 200, message: locales.request_success, data };
   } catch {
     return { status: 500, message: locales.unable_to_handle_request, data: null };

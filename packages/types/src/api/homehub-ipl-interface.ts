@@ -12,6 +12,14 @@ export interface MasterFamilyInterface {
   updated_by_id?: string | null;
   is_deleted?: boolean;
   is_active?: boolean;
+  member_id?: string | null;
+  member_ids?: string[];
+  family_members?: Array<{
+    member_id: string;
+    member_name?: string | null;
+    member_nik?: string | null;
+    family_relation?: string | null;
+  }>;
 }
 
 export interface IplSettingInterface {

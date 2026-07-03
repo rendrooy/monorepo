@@ -23,6 +23,7 @@ export enum OperatorTypes {
   GREATER_THAN_EQUAL = "greater_than_equal",
   LIKE = "like",
   IN = "in",
+  IS_NULL = "is_null",
   IS_NOT_NULL = "is_not_null",
 }
 
@@ -150,6 +151,9 @@ const buildConditionOperator = (
     case OperatorTypes.IN:
       return `${columnName} IN (${value})`;
 
+    case OperatorTypes.IS_NULL:
+      return `${columnName} IS NULL`;
+
     case OperatorTypes.IS_NOT_NULL:
       return `${columnName} IS NOT NULL`;
 
@@ -183,6 +187,7 @@ export const buildConditionQuery = (conditions: Condition[] = []) => {
 
     const unbindOperators = [
       OperatorTypes.LIKE,
+      OperatorTypes.IS_NULL,
       OperatorTypes.IS_NOT_NULL,
       OperatorTypes.IN,
     ];

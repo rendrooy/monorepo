@@ -37,34 +37,27 @@ const RELIGION_OPTIONS = [
     { id: "KONGHUCU", label: "Konghucu" },
 ];
 
-const FAMILY_RELATION_OPTIONS = [
-    { id: "KEPALA_KELUARGA", label: "Kepala Keluarga" },
-    { id: "ISTRI", label: "Istri" },
-    { id: "ANAK", label: "Anak" },
-    { id: "ORANG_TUA", label: "Orang Tua" },
-    { id: "LAINNYA", label: "Lainnya" },
-];
-
-const validationSchema = Yup.object({
-    name: Yup.string().required("Nama wajib diisi").min(3, "Minimal 3 karakter"),
-    nik: Yup.string()
-        .required("NIK wajib diisi")
-        .matches(/^\d+$/, "NIK harus angka")
-        .length(16, "NIK harus 16 digit"),
-    phone: Yup.string()
-        .required("No HP wajib diisi")
-        .matches(/^\d+$/, "No HP harus angka")
-        .min(10, "Minimal 10 digit")
-        .max(13, "Maksimal 13 digit"),
-    address: Yup.string().required("Alamat wajib diisi"),
-    sex: Yup.string().required("Jenis kelamin wajib dipilih"),
-    religion: Yup.string().required("Agama wajib dipilih"),
-    bod: Yup.string().required("Tanggal lahir wajib diisi"),
-});
 
 export default function PageContent() {
     const router = useRouter();
     const { callApi: callCreateMember, loading: loadingCreate } = useApiService("insertDataMember");
+
+    const validationSchema = Yup.object({
+        name: Yup.string().required("Nama wajib diisi").min(3, "Minimal 3 karakter"),
+        nik: Yup.string()
+            .required("NIK wajib diisi")
+            .matches(/^\d+$/, "NIK harus angka")
+            .length(16, "NIK harus 16 digit"),
+        phone: Yup.string()
+            .required("No HP wajib diisi")
+            .matches(/^\d+$/, "No HP harus angka")
+            .min(10, "Minimal 10 digit")
+            .max(13, "Maksimal 13 digit"),
+        address: Yup.string().required("Alamat wajib diisi"),
+        sex: Yup.string().required("Jenis kelamin wajib dipilih"),
+        religion: Yup.string().required("Agama wajib dipilih"),
+        bod: Yup.string().required("Tanggal lahir wajib diisi"),
+    });
 
     const formik = useFormik<MasterMemberInterface>({
         initialValues: {
@@ -79,9 +72,8 @@ export default function PageContent() {
             profession: "",
             religion: "",
             family_relation: "",
-            // family_id: "",
         },
-        // validationSchema,
+        validationSchema,
         onSubmit: () => { handleSubmit(); },
     });
 
@@ -194,8 +186,6 @@ export default function PageContent() {
                                         error={formik.touched.address ? formik.errors.address : undefined}
                                     />
                                 </div>
-                                {/* {field("family_id", "ID Keluarga", "Masukkan ID keluarga")}
-                                {dropdown("family_relation", "Status dalam Keluarga", "Pilih status", FAMILY_RELATION_OPTIONS)} */}
                             </div>
                         </div>
 

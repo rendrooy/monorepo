@@ -7,7 +7,7 @@ export interface DropdownMapping {
         response: BaseResponse<BaseResponseDropdown[]>;
     }>;
     dropdownMember: ServiceStructure<{
-        body: BaseRequest<{ search?: string }>;
+        body: BaseRequest<{ search?: string; unassignedOnly?: boolean }>;
         response: BaseResponse<BaseResponseDropdown[]>;
     }>;
     dropdownUser: ServiceStructure<{
@@ -20,6 +20,10 @@ export interface DropdownMapping {
     }>;
     dropdownIplBill: ServiceStructure<{
         body: BaseRequest<{ search?: string }>;
+        response: BaseResponse<BaseResponseDropdown[]>;
+    }>;
+    dropdownFamilyRelation: ServiceStructure<{
+        body: BaseRequest;
         response: BaseResponse<BaseResponseDropdown[]>;
     }>;
 }

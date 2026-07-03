@@ -6,5 +6,6 @@ export interface MasterRoleInterface {
     updated_time?: Date;
     created_by_id?: string | null;
     updated_by_id?: string | null;
+    is_active?: boolean;
     is_deleted?: boolean;
 }

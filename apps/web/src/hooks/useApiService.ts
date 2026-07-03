@@ -131,6 +131,7 @@ function getEndpointServiceKey(params: string): string {
         dropdownUser: "/utils/user",
         dropdownFamily: "/utils/family",
         dropdownIplBill: "/utils/ipl-bill",
+        dropdownFamilyRelation: "/utils/family-relation",
     }
 
     const url = endpoint[params];

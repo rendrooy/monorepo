@@ -12,6 +12,7 @@ import type { BaseResponse, MasterRoleInterface } from "@monorepo/types";
 import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Separator } from "@monorepo/ui/components/separator";
+import { RadioGroup, RadioGroupItem } from "@monorepo/ui/components/radio-group";
 
 const validationSchema = Yup.object({
     name: Yup.string().required("Nama role wajib diisi").min(3, "Minimal 3 karakter"),
@@ -22,10 +23,12 @@ export default function PageContent() {
     const router = useRouter();
     const { callApi: callCreateRole, loading: loadingCreate } = useApiService("insertDataRole");
 
+    // const [jenis, setJenis] = useState("ktp");
     const formik = useFormik<MasterRoleInterface>({
         initialValues: {
             name: "",
             code: "",
+            is_active: false
         },
         validationSchema,
         onSubmit: () => { handleSubmit(); },
@@ -80,6 +83,29 @@ export default function PageContent() {
                                     error={formik.touched.code ? formik.errors.code : undefined}
                                 />
                             </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="code">Kode Role</Label>
+                                <div>
+                                    <RadioGroup
+                                        value={String(formik.values.is_active)}
+                                        onValueChange={(value) => {
+                                            formik.setFieldValue("is_active", value === "true");
+                                        }}
+                                        className="flex gap-6"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <RadioGroupItem value="true" id="active" />
+                                            <Label htmlFor="active">Aktif</Label>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <RadioGroupItem value="false" id="inactive" />
+                                            <Label htmlFor="inactive">Tidak Aktif</Label>
+                                        </div>
+                                    </RadioGroup>
+                                </div>
+                            </div>
+
                         </div>
 
                         <Separator />
