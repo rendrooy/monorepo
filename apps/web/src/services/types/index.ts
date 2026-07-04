@@ -1,5 +1,6 @@
 export * from './MasterMember'
 export * from './MasterUser'
 export * from './MasterRole'
+export * from './MasterMenu'
 export * from './Dropdown'
 export * from './HomehubIpl'

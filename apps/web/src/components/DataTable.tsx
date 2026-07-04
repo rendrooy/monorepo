@@ -121,7 +121,7 @@ export function AppDataTable<T>({
     return (
         <div className="space-y-4">
             {/* TABLE */}
-            <div className="pt-6 relative border border-slate-200 rounded-md">
+            <div className="mt-6 relative border border-slate-200 rounded-md">
                 {/* Overlay Loader */}
                 {loading && (
                     <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">

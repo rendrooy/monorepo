@@ -3,6 +3,7 @@ import { Router } from "express";
 import testRouter from "./test";
 import { createUser, deleteUser, getUser, loadUser, updateUser } from "../controller/master-user-controller";
 import { createRole, deleteRole, getRole, loadRole, updateRole } from "../controller/master-role-controller";
+import { createMenu, deleteMenu, getMenu, loadMenu, updateMenu } from "../controller/master-menu-controller";
 import { getDropdownFamily, getDropdownFamilyRelation, getDropdownIplBill, getDropdownRole, getDropdownMember, getDropdownUser } from "../controller/utitlities-controller";
 import {
   createMember,
@@ -58,6 +59,12 @@ router.post('/master/role/load', loadRole);
 router.post('/master/role/insert', createRole);
 router.post('/master/role/update', updateRole);
 router.post('/master/role/delete', deleteRole);
+
+router.post('/master/menu/get', getMenu);
+router.post('/master/menu/load', loadMenu);
+router.post('/master/menu/insert', createMenu);
+router.post('/master/menu/update', updateMenu);
+router.post('/master/menu/delete', deleteMenu);
 
 router.post('/master/member/get', getMember);
 router.post('/master/member/load', loadMember);

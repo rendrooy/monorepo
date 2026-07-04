@@ -101,6 +101,12 @@ function getEndpointServiceKey(params: string): string {
         updateDataRole: "/master/role/update",
         deleteDataRole: "/master/role/delete",
 
+        loadDataMenu: "/master/menu/load",
+        getDataMenu: "/master/menu/get",
+        insertDataMenu: "/master/menu/insert",
+        updateDataMenu: "/master/menu/update",
+        deleteDataMenu: "/master/menu/delete",
+
         loadDataFamily: "/master/family/load",
         getDataFamily: "/master/family/get",
         insertDataFamily: "/master/family/insert",

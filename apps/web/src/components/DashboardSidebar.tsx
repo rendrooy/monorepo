@@ -97,6 +97,11 @@ const menuItems: MenuItem[] = [
         label: "Master Role",
         url: "master/role",
       },
+      {
+        id: "master/menu",
+        label: "Master Menu",
+        url: "master/menu",
+      },
     ],
   },
   {
