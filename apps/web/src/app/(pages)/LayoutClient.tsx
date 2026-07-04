@@ -7,8 +7,9 @@ import { Header } from "../../components/DashboardHeader";
 import { Sidebar } from "../../components/DashboardSidebar";
 import { DashboardBreadcrumbs } from "../../components/DashboardBreadcrumb";
 import { usePathname, useRouter } from "next/navigation";
-import type { MasterUserInterface } from "@monorepo/types";
+import type { AuthMenuTreeInterface, MasterUserInterface } from "@monorepo/types";
 import { PrimeReactProvider } from "primereact/api";
+import { AUTH_SESSION_CLEARED_EVENT, clearAuthSession, getAccessToken, getAuthMenu, getAuthUser } from "@/utils/auth-storage";
 // import { getCookie, setCookie, removeCookie } from "@/utils/CookieUtils";
 
 interface LayoutClientProps {
@@ -20,6 +21,9 @@ interface LayoutClientProps {
 export default function LayoutClient({ children, currentUser, frontendTTL }: Readonly<LayoutClientProps>) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [sessionUser, setSessionUser] = useState<MasterUserInterface | null>(currentUser);
+    const [sessionMenu, setSessionMenu] = useState<AuthMenuTreeInterface[]>([]);
+    const [checkingSession, setCheckingSession] = useState(true);
     // const { data: session, status } = useSession();
     const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLoggingOutRef = useRef(false);
@@ -51,7 +55,8 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
     const handleLogout = useCallback(async () => {
         isLoggingOutRef.current = true;
         try {
-            navigator.sendBeacon("/api/logout");
+            clearAuthSession();
+            router.replace("/login");
         } catch (error) {
             console.error("Logout failed", error);
         } finally {
@@ -60,7 +65,42 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
 
             // await signOut({ redirect: true, callbackUrl: "/login" });
         }
-    }, []);
+    }, [router]);
+
+    useEffect(() => {
+        const token = getAccessToken();
+
+        if (!token) {
+            router.replace(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
+            return;
+        }
+
+        setSessionUser(getAuthUser());
+        setSessionMenu(getAuthMenu());
+        setCheckingSession(false);
+    }, [pathname, router]);
+
+    useEffect(() => {
+        const handleSessionCleared = () => {
+            router.replace(`/login?callbackUrl=${encodeURIComponent(pathname)}`);
+        };
+
+        window.addEventListener(AUTH_SESSION_CLEARED_EVENT, handleSessionCleared);
+
+        return () => {
+            window.removeEventListener(AUTH_SESSION_CLEARED_EVENT, handleSessionCleared);
+        };
+    }, [pathname, router]);
+
+    if (checkingSession) {
+        return (
+            <PrimeReactProvider value={{ ripple: true }}>
+                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                    <div className="text-sm text-slate-500">Memeriksa sesi...</div>
+                </div>
+            </PrimeReactProvider>
+        );
+    }
 
     return (
         <PrimeReactProvider value={{ ripple: true }}>
@@ -70,12 +110,12 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
                     onMenuClick={() => setSidebarOpen(true)}
                     onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
                     isCollapsed={sidebarCollapsed}
-                    currentUser={currentUser}
+                    currentUser={sessionUser}
                     onLogout={handleLogout}
                 />
 
                 <Sidebar
-                    listMenu={[]}
+                    listMenu={sessionMenu}
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
                     isCollapsed={sidebarCollapsed}

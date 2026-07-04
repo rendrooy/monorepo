@@ -3,10 +3,10 @@
 import SwalDialog from "@/components/ConfirmationDialog";
 import { AppDataTable } from "@/components/DataTable";
 import { FilterPanel } from "@/components/FilterPanel";
-import { SharedDropdown } from "@/components/SharedDropdown";
+import { SharedDropdown, type SharedDropdownOption } from "@/components/SharedDropdown";
 import { MESSAGES } from "@/constants";
 import { useApiService } from "@/hooks";
-import type { MasterUserInterface, Metadata } from "@monorepo/types";
+import type { BaseResponse, BaseResponseDropdown, MasterUserInterface, Metadata } from "@monorepo/types";
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent } from "@monorepo/ui/components/card";
 import { Input } from "@monorepo/ui/components/input";
@@ -29,16 +29,19 @@ export default function PageContent() {
     });
     const [filterParams, setFilterParams] =
         useState<Partial<MasterUserInterface>>({});
+    const [roleOptions, setRoleOptions] = useState<SharedDropdownOption[]>([]);
 
-    const { callApi: callRoleDataList, loading: loadingUserDataList } =
+    const { callApi: callUserDataList, loading: loadingUserDataList } =
         useApiService("loadDataUser");
-    const { callApi: callDeleteRole, loading: loadingDeleteUser } =
-        useApiService("deleteDataUser")
+    const { callApi: callDeleteUser, loading: loadingDeleteUser } =
+        useApiService("deleteDataUser");
+    const { callApi: callDropdownRole, loading: loadingRole } =
+        useApiService("dropdownRole");
 
     /** 🔥 Fetch Data */
     const handleGetList = useCallback(
         async (params: Partial<MasterUserInterface>, pagination: Metadata) => {
-            await callRoleDataList(
+            await callUserDataList(
                 {
                     params,
                     metadata: pagination,
@@ -52,16 +55,16 @@ export default function PageContent() {
                         }));
                     },
                     onError(error) {
-                        console.error("loadDataRole error:", error);
+                        console.error("loadDataUser error:", error);
                     },
                 }
             );
         },
-        []
+        [callUserDataList]
     );
 
     const handleDelete = useCallback(async (data: MasterUserInterface) => {
-        await callDeleteRole(
+        await callDeleteUser(
             {
                 id: data.id ?? ""
             },
@@ -75,7 +78,23 @@ export default function PageContent() {
                 }
             }
         )
-    }, []);
+    }, [callDeleteUser, filterParams, handleGetList, meta]);
+
+    const loadRoleOptions = useCallback(async () => {
+        await callDropdownRole(
+            {},
+            {
+                onSuccess(response: BaseResponse<BaseResponseDropdown[]>) {
+                    setRoleOptions(
+                        (response.data ?? []).map((item) => ({
+                            id: item.value,
+                            label: item.label,
+                        })),
+                    );
+                },
+            },
+        );
+    }, [callDropdownRole]);
 
     function handleNavigation(type: string, item: MasterUserInterface | null) {
         setSelectedItem(item ?? undefined);
@@ -95,10 +114,11 @@ export default function PageContent() {
 
     useEffect(() => {
         handleGetList(filterParams, meta);
-    }, [meta.page, meta.pageSize, meta.sortBy, meta.sortDir, filterParams]);
+    }, [meta.page, meta.pageSize, meta.sortBy, meta.sortDir, filterParams, handleGetList]);
 
-
-
+    useEffect(() => {
+        loadRoleOptions();
+    }, [loadRoleOptions]);
 
     return (
         <div className="mt-6">
@@ -111,11 +131,11 @@ export default function PageContent() {
                 </CardContent>
             </Card>
             <FilterPanel
-                onSubmit={function (): void {
-                    throw new Error("Function not implemented.");
-                }}
-                onReset={function (): void {
-                    throw new Error("Function not implemented.");
+                columns={3}
+                onSubmit={() => setFilterParams(filterForm.values)}
+                onReset={() => {
+                    filterForm.resetForm();
+                    setFilterParams({});
                 }} >
 
                 <div>
@@ -147,12 +167,14 @@ export default function PageContent() {
                         id={"role_id"}
                         label="Role"
                         value={filterForm.values.role_id ?? ""}
-                        onValueChange={function (value: string): void {
-                            throw new Error("Function not implemented.");
+                        loading={loadingRole}
+                        onValueChange={(value: string) => {
+                            filterForm.setFieldValue("role_id", value);
                         }}
+                        options={roleOptions}
+                        clearable
                         placeholder="Masukan Filter Role"
-                    >
-                    </SharedDropdown>
+                    />
                 </div>
             </FilterPanel>
 

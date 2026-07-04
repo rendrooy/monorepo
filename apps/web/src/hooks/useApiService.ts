@@ -1,4 +1,5 @@
 import type { ServiceKey, ServiceMapping } from "@/services/ServiceType";
+import { clearAuthSession, getAccessToken } from "@/utils/auth-storage";
 import { useCallback, useState } from "react";
 
 interface ApiServiceState<T> {
@@ -34,9 +35,13 @@ export function useApiService<T extends ServiceKey>(servicesKey: T) {
             try {
                 setState((prev) => ({ ...prev, loading: true }));
                 const endpoint = getEndpointServiceKey(servicesKey)
+                const accessToken = getAccessToken();
                 const response = await fetch(`http://localhost:3001/v1${endpoint}`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                    },
                     body: JSON.stringify(body)
                 })
                 const responseText = await response.text();
@@ -48,12 +53,28 @@ export function useApiService<T extends ServiceKey>(servicesKey: T) {
                 }
                 const typedData = responseData as ServiceMapping[T]["response"]
 
+                if (!response.ok) {
+                    if (response.status === 401 && servicesKey !== "loginAuth") {
+                        clearAuthSession();
+                    }
+
+                    const errorMessage = typedData?.message || "Request Error";
+                    setState({
+                        data: typedData,
+                        loading: false,
+                        error: errorMessage,
+                    });
+                    options.onError?.(typedData);
+                    return typedData;
+                }
+
                 setState({
                     data: typedData,
                     loading: false,
                     error: null
                 })
                 options.onSuccess?.(typedData)
+                return typedData;
             } catch {
                 const errorMessage = "Network Error"
                 setState((prev) => ({
@@ -83,6 +104,10 @@ export function useApiService<T extends ServiceKey>(servicesKey: T) {
 
 function getEndpointServiceKey(params: string): string {
     const endpoint: Record<string, string> = {
+        loginAuth: "/auth/login",
+        meAuth: "/auth/me",
+        menuAuth: "/auth/menu",
+
         loadDataUser: "/master/user/load",
         getDataUser: "/master/user/get",
         insertDataUser: "/master/user/insert",

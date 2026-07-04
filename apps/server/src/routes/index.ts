@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import testRouter from "./test";
+import { authMenu, login, me } from "../controller/auth-controller";
 import { createUser, deleteUser, getUser, loadUser, updateUser } from "../controller/master-user-controller";
 import { createRole, deleteRole, getRole, loadRole, updateRole } from "../controller/master-role-controller";
 import { createMenu, deleteMenu, getMenu, loadMenu, updateMenu } from "../controller/master-menu-controller";
@@ -39,6 +40,7 @@ import {
   updateIplPayment,
   updateIplSetting
 } from "../controller/homehub-ipl-controller";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = Router();
 
@@ -47,6 +49,12 @@ router.get("/", function (_req, res) {
 });
 
 router.use("/test", testRouter);
+
+router.post('/auth/login', login);
+router.post('/auth/me', authMiddleware, me);
+router.post('/auth/menu', authMiddleware, authMenu);
+
+router.use(authMiddleware);
 
 router.post('/master/user/get', getUser);
 router.post('/master/user/load', loadUser);

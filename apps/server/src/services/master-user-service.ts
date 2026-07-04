@@ -2,6 +2,7 @@ import { locales, tableNames } from '../config';
 import type { BaseRequest, MasterUserInterface } from "@monorepo/types";
 import { findOneQuery, FindParams, JoinClause, findQuery, insertQuery, updateQuery, countQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
+import { hashPassword, isPasswordHashed } from '../utils/password';
 
 const USER_ALIAS = "u";
 const ROLE_ALIAS = "r";
@@ -119,10 +120,15 @@ export const loadUserService = async (request: BaseRequest<MasterUserInterface>)
 export const createUserService = async (request: MasterUserInterface) => {
     try {
         const params = request;
+        const password = params.password
+            ? isPasswordHashed(params.password)
+                ? params.password
+                : hashPassword(params.password)
+            : undefined;
         const crateParams: QueryData = {
             username: params.username,
             email: params.email,
-            ...(params.password && { password: params.password }),
+            ...(password && { password }),
             ...(params.role_id && { role_id: params.role_id }),
             ...(params.member_id && { member_id: params.member_id }),
         };
@@ -138,13 +144,18 @@ export const createUserService = async (request: MasterUserInterface) => {
 export const updateUserService = async (request: MasterUserInterface) => {
     try {
         const params = request;
+        const password = params.password
+            ? isPasswordHashed(params.password)
+                ? params.password
+                : hashPassword(params.password)
+            : undefined;
         const updateParams: QueryData = {
             username: params.username,
             email: params.email,
             ...(params.role_id !== undefined && { role_id: params.role_id }),
             ...(params.member_id !== undefined && { member_id: params.member_id }),
             // only update password if provided
-            ...(params.password && { password: params.password }),
+            ...(password && { password }),
         };
         const updatedUser = await updateQuery(tableNames.masterUser, updateParams, { id: params.id });
         console.info("updateUserService updatedUser:", updatedUser);

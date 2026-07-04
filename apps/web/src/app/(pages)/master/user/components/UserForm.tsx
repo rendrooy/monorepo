@@ -21,12 +21,15 @@ import { useFormik } from "formik";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Yup from "yup";
 
-export const userValidationSchema = Yup.object({
-    username: Yup.string().required("Username wajib diisi"),
-    email: Yup.string().email("Format email tidak valid").required("Email wajib diisi"),
-    role_id: Yup.string().required("Role wajib dipilih"),
-    password: Yup.string().required("Password wajib diisi"),
-});
+export const userValidationSchema = (requirePassword: boolean) =>
+    Yup.object({
+        username: Yup.string().required("Username wajib diisi"),
+        email: Yup.string().email("Format email tidak valid").required("Email wajib diisi"),
+        role_id: Yup.string().required("Role wajib dipilih"),
+        password: requirePassword
+            ? Yup.string().required("Password wajib diisi")
+            : Yup.string().nullable(),
+    });
 
 type UserFormProps = {
     disabled?: boolean;
@@ -36,6 +39,7 @@ type UserFormProps = {
     onSubmit?: (values: MasterUserInterface) => Promise<void> | void;
     submitText?: string;
     title: string;
+    requirePassword?: boolean;
 };
 
 const defaultValues: MasterUserInterface = {
@@ -52,6 +56,7 @@ export function UserForm({
     loading = false,
     onBack,
     onSubmit,
+    requirePassword = true,
     submitText = "Simpan",
     title,
 }: UserFormProps) {
@@ -77,7 +82,7 @@ export function UserForm({
         validateOnBlur: true,
         validateOnChange: true,
         validateOnMount: true,
-        validationSchema: disabled ? undefined : userValidationSchema,
+        validationSchema: disabled ? undefined : userValidationSchema(requirePassword),
         onSubmit: async (values) => {
             await onSubmit?.(values);
         },
@@ -116,11 +121,9 @@ export function UserForm({
     }, [callDropdownMember]);
 
     useEffect(() => {
-        if (disabled) return;
-
         loadRoleOptions();
         loadMemberOptions();
-    }, [disabled, loadMemberOptions, loadRoleOptions]);
+    }, [loadMemberOptions, loadRoleOptions]);
 
     return (
         <div className="mt-6">
@@ -166,7 +169,7 @@ export function UserForm({
                                     id="password"
                                     name="password"
                                     type="password"
-                                    placeholder="Masukkan password"
+                                    placeholder={requirePassword ? "Masukkan password" : "Kosongkan jika tidak diubah"}
                                     value={formik.values.password ?? ""}
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}

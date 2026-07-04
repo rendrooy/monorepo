@@ -6,11 +6,12 @@ import {
   Circle
 } from "lucide-react";
 import * as Icons from "lucide-react";
-import { type ElementType, useEffect, useState } from "react";
+import { type ElementType, useState } from "react";
 import Link from "next/link";
+import type { AuthMenuTreeInterface } from "@monorepo/types";
 
 interface SidebarProps {
-  listMenu: any[];
+  listMenu: AuthMenuTreeInterface[];
   isOpen: boolean;
   onClose: () => void;
   isCollapsed: boolean;
@@ -193,16 +194,18 @@ export function Sidebar({
     return `${p}/${c}`;
   };
 
-  const mapMenu = (data: any[]): MenuItem[] => {
+  const normalizeUrl = (url?: string) => (url || "").replace(/^\//, "");
+
+  const mapMenu = (data: AuthMenuTreeInterface[]): MenuItem[] => {
     const menuMap = new Map<string, MenuItem>();
 
     data.forEach((item) => {
       if (!menuMap.has(item.menuCode)) {
         menuMap.set(item.menuCode, {
-          id: item.menuCode,
-          icon: item.iconClass,
+          id: normalizeUrl(item.pathUrl) || item.menuCode,
+          icon: (item.iconClass || "Circle") as keyof typeof Icons,
           label: item.menuName,
-          url: item.pathUrl,
+          url: normalizeUrl(item.pathUrl),
           subItems: [],
         });
       }
@@ -211,13 +214,15 @@ export function Sidebar({
       if (item.child && item.child.length > 0) {
         const existingIds = new Set(parent.subItems.map((s) => s.id));
 
-        item.child.forEach((child: any) => {
-          if (!existingIds.has(child.menuCode)) {
+        item.child.forEach((child) => {
+          const childUrl = normalizeUrl(joinUrl(item.pathUrl, child.pathUrl));
+
+          if (!existingIds.has(childUrl)) {
             parent.subItems.push({
-              id: child.menuCode,
+              id: childUrl,
               label: child.menuName,
               // 🔥 ini yang penting
-              url: joinUrl(item.pathUrl, child.pathUrl),
+              url: childUrl,
             });
           }
         });
@@ -227,10 +232,8 @@ export function Sidebar({
     return Array.from(menuMap.values());
   };
 
-  // const menuItems = mapMenu(listMenu);
+  const resolvedMenuItems = listMenu.length > 0 ? mapMenu(listMenu) : menuItems;
 
-
-  // const menuItems =
   const toggleMenu = (menuId: string) => {
     setExpandedMenus((prev) =>
       prev.includes(menuId)
@@ -263,7 +266,7 @@ export function Sidebar({
       >
         <div className="h-full flex flex-col">
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            {menuItems.map((item) => {
+            {resolvedMenuItems.map((item) => {
 
               // const IconLocal = Icons[item.icon as keyof typeof Icons] as ElementType;
               const IconLocal =
