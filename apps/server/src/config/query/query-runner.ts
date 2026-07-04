@@ -3,8 +3,49 @@ import type { Condition, QueryData } from "./query-builder";
 import { resultMapper } from "./result-mapper";
 import { pool } from "../../connection/db";
 import { createQueryLogger } from "../../utils/query-logger";
+import { tableNames } from "..";
+import { getCurrentAuth } from "../../utils/request-context";
 
 const { logQuery } = createQueryLogger("query-runner");
+
+const auditedTables = new Set<string>([
+  tableNames.masterUser,
+  tableNames.masterRole,
+  tableNames.masterMenu,
+  tableNames.masterRoleMenuPermission,
+  tableNames.masterMember,
+  tableNames.masterFamily,
+  tableNames.iplSetting,
+  tableNames.iplBill,
+  tableNames.iplPayment,
+  tableNames.expense,
+]);
+
+const withAuditOnInsert = (tableName: string, params: QueryData): QueryData => {
+  const auth = getCurrentAuth();
+
+  if (!auth?.user_id || !auditedTables.has(tableName) || params.created_by_id) {
+    return params;
+  }
+
+  return {
+    ...params,
+    created_by_id: auth.user_id,
+  };
+};
+
+const withAuditOnUpdate = (tableName: string, params: QueryData): QueryData => {
+  const auth = getCurrentAuth();
+
+  if (!auth?.user_id || !auditedTables.has(tableName) || params.updated_by_id) {
+    return params;
+  }
+
+  return {
+    ...params,
+    updated_by_id: auth.user_id,
+  };
+};
 /**
  * TYPES
  */
@@ -91,8 +132,9 @@ export const insertQuery = async <T = unknown>(
   params: QueryData
 ): Promise<T | null> => {
   try {
-    const columns = Object.keys(params);
-    const values = Object.values(params);
+    const auditedParams = withAuditOnInsert(tableName, params);
+    const columns = Object.keys(auditedParams);
+    const values = Object.values(auditedParams);
 
     const placeholders = columns.map((_, i) => `$${i + 1}`).join(", ");
 
@@ -122,7 +164,8 @@ export const updateQuery = async <T = unknown>(
   conditions: QueryData
 ): Promise<T | null> => {
   try {
-    const setKeys = Object.keys(params);
+    const auditedParams = withAuditOnUpdate(tableName, params);
+    const setKeys = Object.keys(auditedParams);
     const whereKeys = Object.keys(conditions);
 
     const setClause = setKeys
@@ -136,7 +179,7 @@ export const updateQuery = async <T = unknown>(
       .join(" AND ");
 
     const values = [
-      ...Object.values(params),
+      ...Object.values(auditedParams),
       ...Object.values(conditions),
     ];
 

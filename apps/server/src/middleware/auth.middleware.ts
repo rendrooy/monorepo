@@ -2,6 +2,7 @@ import type { AuthTokenPayload } from "@monorepo/types";
 import type { Request, RequestHandler } from "express";
 import { locales } from "../config";
 import { verifyJwt } from "../utils/jwt";
+import { runWithAuthContext } from "../utils/request-context";
 
 export interface AuthenticatedRequest extends Request {
     auth?: AuthTokenPayload;
@@ -26,5 +27,5 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
     }
 
     (req as AuthenticatedRequest).auth = payload;
-    next();
+    runWithAuthContext(payload, next);
 };

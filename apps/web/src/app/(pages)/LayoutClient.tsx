@@ -7,9 +7,10 @@ import { Header } from "../../components/DashboardHeader";
 import { Sidebar } from "../../components/DashboardSidebar";
 import { DashboardBreadcrumbs } from "../../components/DashboardBreadcrumb";
 import { usePathname, useRouter } from "next/navigation";
-import type { AuthMenuTreeInterface, MasterUserInterface } from "@monorepo/types";
+import type { AuthMenuTreeInterface, AuthUserInterface, BaseResponse, MasterUserInterface } from "@monorepo/types";
 import { PrimeReactProvider } from "primereact/api";
-import { AUTH_SESSION_CLEARED_EVENT, clearAuthSession, getAccessToken, getAuthMenu, getAuthUser } from "@/utils/auth-storage";
+import { AUTH_SESSION_CLEARED_EVENT, clearAuthSession, getAccessToken, getAuthMenu, getAuthUser, setAuthMenu, setAuthUser } from "@/utils/auth-storage";
+import { useApiService } from "@/hooks";
 // import { getCookie, setCookie, removeCookie } from "@/utils/CookieUtils";
 
 interface LayoutClientProps {
@@ -30,6 +31,8 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
 
     const router = useRouter();
     const pathname = usePathname();
+    const { callApi: callMe } = useApiService("meAuth");
+    const { callApi: callMenu } = useApiService("menuAuth");
 
     const segments = pathname.split("/").filter(Boolean);
 
@@ -78,7 +81,35 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
         setSessionUser(getAuthUser());
         setSessionMenu(getAuthMenu());
         setCheckingSession(false);
-    }, [pathname, router]);
+
+        const refreshSession = async () => {
+            await Promise.all([
+                callMe(
+                    {},
+                    {
+                        onSuccess(response: BaseResponse<AuthUserInterface | null>) {
+                            if (response.data) {
+                                setAuthUser(response.data);
+                                setSessionUser(response.data);
+                            }
+                        },
+                    },
+                ),
+                callMenu(
+                    {},
+                    {
+                        onSuccess(response: BaseResponse<AuthMenuTreeInterface[]>) {
+                            const menu = response.data ?? [];
+                            setAuthMenu(menu);
+                            setSessionMenu(menu);
+                        },
+                    },
+                ),
+            ]);
+        };
+
+        refreshSession();
+    }, [callMe, callMenu, pathname, router]);
 
     useEffect(() => {
         const handleSessionCleared = () => {
