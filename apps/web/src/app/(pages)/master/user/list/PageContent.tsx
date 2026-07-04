@@ -6,6 +6,8 @@ import { FilterPanel } from "@/components/FilterPanel";
 import { SharedDropdown, type SharedDropdownOption } from "@/components/SharedDropdown";
 import { MESSAGES } from "@/constants";
 import { useApiService } from "@/hooks";
+import { getAuthMenu } from "@/utils/auth-storage";
+import { canAccessRoute } from "@/utils/permission";
 import type { BaseResponse, BaseResponseDropdown, MasterUserInterface, Metadata } from "@monorepo/types";
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent } from "@monorepo/ui/components/card";
@@ -14,11 +16,16 @@ import { Label } from "@monorepo/ui/components/label";
 import { useFormik } from "formik";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function PageContent() {
     const router = useRouter();
+    const masterUserPath = "master/user";
+    const authMenu = useMemo(() => getAuthMenu(), []);
+    const canCreate = useMemo(() => canAccessRoute(authMenu, masterUserPath, "ADD"), [authMenu]);
+    const canEdit = useMemo(() => canAccessRoute(authMenu, masterUserPath, "EDIT"), [authMenu]);
+    const canDelete = useMemo(() => canAccessRoute(authMenu, masterUserPath, "DELETE"), [authMenu]);
     const [selectedItem, setSelectedItem] = useState<MasterUserInterface>();
     const [listData, setListData] = useState<MasterUserInterface[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -64,6 +71,11 @@ export default function PageContent() {
     );
 
     const handleDelete = useCallback(async (data: MasterUserInterface) => {
+        if (!canDelete) {
+            toast.error("Anda tidak memiliki akses untuk menghapus data ini.");
+            return;
+        }
+
         await callDeleteUser(
             {
                 id: data.id ?? ""
@@ -78,7 +90,7 @@ export default function PageContent() {
                 }
             }
         )
-    }, [callDeleteUser, filterParams, handleGetList, meta]);
+    }, [callDeleteUser, canDelete, filterParams, handleGetList, meta]);
 
     const loadRoleOptions = useCallback(async () => {
         await callDropdownRole(
@@ -180,13 +192,19 @@ export default function PageContent() {
 
             <Card className="mt-6">
                 <CardContent className="pt-6">
-                    <Button
-                        onClick={() => { handleNavigation("CREATE", null) }}
-                        variant={"outline"}
-                    >
-                        <Plus />
-                        Tambah Data
-                    </Button>
+                    {canCreate ? (
+                        <div className="flex justify-start-end mb-6">
+                            <Button
+                                onClick={() => {
+                                    handleNavigation("CREATE", null);
+                                }}
+                                variant={"outline"}
+                            >
+                                <Plus />
+                                Tambah Data
+                            </Button>
+                        </div>
+                    ) : null}
                     <AppDataTable
                         columns={[
                             {
@@ -215,9 +233,9 @@ export default function PageContent() {
                         loading={loadingUserDataList}
                         meta={meta}
                         onMetaChange={setMeta}
-                        onEdit={(row) => handleNavigation("UPDATE", row)}
+                        onEdit={canEdit ? (row) => handleNavigation("UPDATE", row) : undefined}
                         onDetail={(row) => handleNavigation("DETAIL", row)}
-                        onDelete={(row) => handleNavigation("DELETE", row)}
+                        onDelete={canDelete ? (row) => handleNavigation("DELETE", row) : undefined}
                     />
                 </CardContent>
             </Card>

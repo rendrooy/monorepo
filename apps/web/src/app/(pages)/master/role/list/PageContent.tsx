@@ -6,7 +6,9 @@ import { FilterPanel } from "@/components/FilterPanel";
 import { StatusBadge } from "@/components/StatusBadges";
 import { MESSAGES } from "@/constants";
 import { useApiService } from "@/hooks";
-import type { MasterMemberInterface, MasterRoleInterface, Metadata } from "@monorepo/types";
+import { getAuthMenu } from "@/utils/auth-storage";
+import { canAccessRoute } from "@/utils/permission";
+import type { MasterRoleInterface, Metadata } from "@monorepo/types";
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent } from "@monorepo/ui/components/card";
 import { Input } from "@monorepo/ui/components/input";
@@ -14,11 +16,16 @@ import { Label } from "@monorepo/ui/components/label";
 import { useFormik } from "formik";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function PageContent() {
     const router = useRouter();
+    const masterRolePath = "master/role";
+    const authMenu = useMemo(() => getAuthMenu(), []);
+    const canCreate = useMemo(() => canAccessRoute(authMenu, masterRolePath, "ADD"), [authMenu]);
+    const canEdit = useMemo(() => canAccessRoute(authMenu, masterRolePath, "EDIT"), [authMenu]);
+    const canDelete = useMemo(() => canAccessRoute(authMenu, masterRolePath, "DELETE"), [authMenu]);
     const [selectedItem, setSelectedItem] = useState<MasterRoleInterface>();
     const [listData, setListData] = useState<MasterRoleInterface[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -31,6 +38,8 @@ export default function PageContent() {
         useApiService("loadDataRole");
     const { callApi: callDeleteRole, loading: loadingDeleteRole } =
         useApiService("deleteDataRole")
+    const [filterParams, setFilterParams] =
+        useState<Partial<MasterRoleInterface>>({});
     /** 🔥 Fetch Data */
     const handleGetList = useCallback(
         async (params: Partial<MasterRoleInterface>, pagination: Metadata) => {
@@ -53,9 +62,14 @@ export default function PageContent() {
                 }
             );
         },
-        []
+        [callRoleDataList]
     );
     const handleDelete = useCallback(async (data: MasterRoleInterface) => {
+        if (!canDelete) {
+            toast.error("Anda tidak memiliki akses untuk menghapus data ini.");
+            return;
+        }
+
         await callDeleteRole(
             {
                 id: data.id ?? ""
@@ -70,10 +84,7 @@ export default function PageContent() {
                 }
             }
         )
-    }, []);
-
-    const [filterParams, setFilterParams] =
-        useState<Partial<MasterRoleInterface>>({});
+    }, [callDeleteRole, canDelete, filterParams, handleGetList, meta]);
 
     function handleNavigation(type: string, item: MasterRoleInterface | null) {
         setSelectedItem(item ?? undefined);
@@ -139,13 +150,19 @@ export default function PageContent() {
             </FilterPanel>
             <Card className="mt-6">
                 <CardContent className="pt-6">
-                    <Button
-                        onClick={() => { handleNavigation("CREATE", null) }}
-                        variant={"outline"}
-                    >
-                        <Plus />
-                        Tambah Data
-                    </Button>
+                    {canCreate ? (
+                        <div className="flex justify-start-end mb-6">
+                            <Button
+                                onClick={() => {
+                                    handleNavigation("CREATE", null);
+                                }}
+                                variant={"outline"}
+                            >
+                                <Plus />
+                                Tambah Data
+                            </Button>
+                        </div>
+                    ) : null}
                     <AppDataTable
                         columns={[
                             {
@@ -178,9 +195,9 @@ export default function PageContent() {
                         loading={loadingRoleDataList}
                         meta={meta}
                         onMetaChange={setMeta}
-                        onEdit={(row) => handleNavigation("UPDATE", row)}
+                        onEdit={canEdit ? (row) => handleNavigation("UPDATE", row) : undefined}
                         onDetail={(row) => handleNavigation("DETAIL", row)}
-                        onDelete={(row) => handleNavigation("DELETE", row)}
+                        onDelete={canDelete ? (row) => handleNavigation("DELETE", row) : undefined}
                     />
                 </CardContent>
             </Card>
