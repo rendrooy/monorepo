@@ -96,7 +96,7 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
         return (
             <PrimeReactProvider value={{ ripple: true }}>
                 <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                    <div className="text-sm text-slate-500">Memeriksa sesi...</div>
+                    <div className="text-sm text-slate-500">Loading...</div>
                 </div>
             </PrimeReactProvider>
         );
