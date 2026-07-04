@@ -18,6 +18,7 @@ export const tableNames = {
     masterUser: "homehub_revamp.m_user",
     masterRole: "homehub_revamp.m_role",
     masterMenu: "homehub_revamp.m_menu",
+    masterRoleMenuPermission: "homehub_revamp.m_role_menu_permission",
     masterMember: "homehub_revamp.m_member",
     masterFamily: "homehub_revamp.m_family",
     iplSetting: "homehub_revamp.m_ipl_setting",

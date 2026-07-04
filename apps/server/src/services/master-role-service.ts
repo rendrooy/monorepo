@@ -1,8 +1,141 @@
 import { locales, tableNames } from '../config';
-import type { BaseRequest, MasterRoleInterface } from "@monorepo/types";
+import type { BaseRequest, MasterRoleInterface, MasterRoleMenuPermissionInterface } from "@monorepo/types";
 import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery, countQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
 
+const buildRoleParams = (params: MasterRoleInterface): QueryData => ({
+    name: params.name,
+    code: params.code,
+    '"desc"': params.desc,
+    is_active: params.is_active,
+});
+
+const loadRolePermissions = async (roleId?: string | null) => {
+    if (!roleId) return [];
+
+    return findQuery<MasterRoleMenuPermissionInterface>(
+        `${tableNames.masterRoleMenuPermission} rmp`,
+        {
+            selectedColumns: `
+                rmp.id,
+                rmp.role_id,
+                rmp.menu_id,
+                rmp.permission_mask,
+                rmp.is_active,
+                m.name AS menu_name,
+                m.code AS menu_code,
+                m.menu_level,
+                m.parent_id,
+                m.path_url
+            `,
+            joins: [
+                {
+                    table: tableNames.masterMenu,
+                    alias: "m",
+                    on: "m.id = rmp.menu_id",
+                },
+            ],
+            conditions: [
+                {
+                    column: "role_id",
+                    tableAlias: "rmp",
+                    value: roleId,
+                    operator: OperatorTypes.EQUAL,
+                },
+                {
+                    column: "is_deleted",
+                    tableAlias: "rmp",
+                    value: false,
+                    operator: OperatorTypes.EQUAL,
+                },
+                {
+                    column: "is_deleted",
+                    tableAlias: "m",
+                    value: false,
+                    operator: OperatorTypes.EQUAL,
+                },
+            ],
+            limit: 1000,
+            order: {
+                order_by: "m.menu_level ASC, m.sort_order",
+                order_dir: "ASC",
+            },
+        },
+    );
+};
+
+const loadDefaultRolePermissions = async () =>
+    findQuery<MasterRoleMenuPermissionInterface>(
+        tableNames.masterMenu,
+        {
+            selectedColumns: `
+                id AS menu_id,
+                name AS menu_name,
+                code AS menu_code,
+                menu_level,
+                parent_id,
+                path_url,
+                0 AS permission_mask,
+                true AS is_active
+            `,
+            conditions: [
+                {
+                    column: "is_deleted",
+                    value: false,
+                    operator: OperatorTypes.EQUAL,
+                },
+                {
+                    column: "is_active",
+                    value: true,
+                    operator: OperatorTypes.EQUAL,
+                },
+            ],
+            limit: 1000,
+            order: {
+                order_by: "menu_level ASC, sort_order",
+                order_dir: "ASC",
+            },
+        },
+    );
+
+const syncRolePermissions = async (
+    roleId?: string | null,
+    permissions?: MasterRoleMenuPermissionInterface[],
+    fallbackToActiveMenus = false,
+) => {
+    if (!roleId) return;
+
+    const resolvedPermissions =
+        permissions?.length || !fallbackToActiveMenus
+            ? permissions ?? []
+            : await loadDefaultRolePermissions();
+
+    await updateQuery(
+        tableNames.masterRoleMenuPermission,
+        {
+            is_deleted: true,
+            updated_time: new Date(),
+        },
+        { role_id: roleId },
+    );
+
+    const activePermissions = resolvedPermissions.filter((permission) => permission.menu_id);
+
+    await Promise.all(
+        activePermissions.map(async (permission) => {
+            const insertedPermission = await insertQuery(tableNames.masterRoleMenuPermission, {
+                role_id: roleId,
+                menu_id: permission.menu_id,
+                permission_mask: Number(permission.permission_mask ?? 0),
+                is_active: permission.is_active ?? true,
+            });
+
+            if (!insertedPermission) {
+                throw new Error("Failed to insert role menu permission");
+            }
+        }),
+    );
+};
 
 export const getRoleService = async (request: MasterRoleInterface) => {
     try {
@@ -16,14 +149,19 @@ export const getRoleService = async (request: MasterRoleInterface) => {
             value: params.id,
         });
 
-        const data = await findOneQuery(tableNames.masterRole, queryParams);
+        const data = await findOneQuery<MasterRoleInterface>(tableNames.masterRole, queryParams);
         console.info("getRoleService Role:", data);
 
         if (data) {
+            const rolePermissions = await loadRolePermissions(data.id);
+
             return {
                 status: 200,
                 message: locales.request_success,
-                data: data,
+                data: {
+                    ...data,
+                    role_permissions: rolePermissions,
+                },
             };
         }
         const BaseResponse = {
@@ -61,11 +199,11 @@ export const loadRoleService = async (request: BaseRequest<MasterRoleInterface>)
         });
         for (const key in params) {
             const value = params[key as keyof MasterRoleInterface];
-            const isMetadata = key !== "metadata";
-            if (value && isMetadata) {
+            const isFilterable = key !== "metadata" && key !== "role_permissions";
+            if (value && isFilterable) {
                 conditionParams.push({
                     column: key,
-                    value: value,
+                    value: value as string | number | boolean | Date,
                     operator: OperatorTypes.LIKE
                 });
             }
@@ -101,13 +239,13 @@ export const createRoleService = async (request: MasterRoleInterface) => {
     // Implementasi logika untuk createRoleService
     try {
         const params = request;
-        const crateParams: QueryData = {
-            name: params.name,
-            code: params.code,
-            desc: params.desc,
-            is_active: params.is_active,
+        const newRole = await insertQuery<MasterRoleInterface>(tableNames.masterRole, buildRoleParams(params));
+
+        if (!newRole?.id) {
+            throw new Error("Failed to insert role");
         }
-        const newRole = await insertQuery(tableNames.masterRole, crateParams);
+
+        await syncRolePermissions(newRole?.id, params.role_permissions, true);
         console.info("createRoleService newRole:", newRole);
         return {
             status: 201,
@@ -128,13 +266,13 @@ export const updateRoleService = async (request: MasterRoleInterface) => {
     // Implementasi logika untuk updateRoleService
     try {
         const params = request;
-        const updateParams: QueryData = {
-            name: params.name,
-            code: params.code,
-            desc: params.desc,
-            is_active: params.is_active,
+        const updatedData = await updateQuery(tableNames.masterRole, buildRoleParams(params), { id: params.id });
+
+        if (!updatedData) {
+            throw new Error("Failed to update role");
         }
-        const updatedData = await updateQuery(tableNames.masterRole, updateParams, { id: params.id });
+
+        await syncRolePermissions(params.id, params.role_permissions);
         console.info("updateRoleService updatedRole:", updatedData);
         return {
             status: 200,

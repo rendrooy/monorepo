@@ -16,8 +16,9 @@ import {
 } from "@monorepo/ui/components/radio-group";
 import { Separator } from "@monorepo/ui/components/separator";
 import { useFormik } from "formik";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import * as Yup from "yup";
+import { RolePermissionMatrix } from "./RolePermissionMatrix";
 
 export const roleValidationSchema = Yup.object({
     name: Yup.string()
@@ -41,6 +42,7 @@ const defaultValues: MasterRoleInterface = {
     code: "",
     desc: "",
     is_active: true,
+    role_permissions: [],
 };
 
 export function RoleForm({
@@ -71,6 +73,13 @@ export function RoleForm({
             await onSubmit?.(values);
         },
     });
+
+    const handlePermissionChange = useCallback(
+        (permissions: NonNullable<MasterRoleInterface["role_permissions"]>) => {
+            formik.setFieldValue("role_permissions", permissions);
+        },
+        [formik],
+    );
 
     return (
         <div className="mt-6">
@@ -144,6 +153,14 @@ export function RoleForm({
                                 </RadioGroup>
                             </div>
                         </div>
+
+                        <Separator />
+
+                        <RolePermissionMatrix
+                            disabled={disabled}
+                            permissions={formik.values.role_permissions ?? []}
+                            onChange={handlePermissionChange}
+                        />
 
                         <Separator />
 

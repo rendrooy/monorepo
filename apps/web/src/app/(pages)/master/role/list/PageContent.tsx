@@ -3,6 +3,7 @@
 import SwalDialog from "@/components/ConfirmationDialog";
 import { AppDataTable } from "@/components/DataTable";
 import { FilterPanel } from "@/components/FilterPanel";
+import { StatusBadge } from "@/components/StatusBadges";
 import { MESSAGES } from "@/constants";
 import { useApiService } from "@/hooks";
 import type { MasterMemberInterface, MasterRoleInterface, Metadata } from "@monorepo/types";
@@ -163,6 +164,14 @@ export default function PageContent() {
                                 field: "desc",
                                 header: "Description",
                                 skeletonWidth: "100%",
+                            },
+                            {
+                                field: "is_active",
+                                header: "Active",
+                                body(row) {
+                                    return <StatusBadge
+                                        active={row.is_active ?? false} />
+                                }
                             },
                         ]}
                         data={listData}
