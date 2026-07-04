@@ -2,9 +2,11 @@
 
 import { MESSAGES } from "@/constants";
 import { useApiService, useConfirmedAction } from "@/hooks";
+import { getAuthMenu } from "@/utils/auth-storage";
+import { canAccessRoute } from "@/utils/permission";
 import type { BaseResponse, MasterMemberInterface } from "@monorepo/types";
 import { useParams, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { MemberForm } from "../../components/MemberForm";
 
@@ -22,6 +24,16 @@ export default function PageContent() {
     const { callApi: callGetMemberById, loading: loadingGet } =
         useApiService("getDataMember");
     const [member, setMember] = useState<MasterMemberInterface>({});
+    const canEdit = useMemo(
+        () => canAccessRoute(getAuthMenu(), "master/member", "EDIT"),
+        [],
+    );
+
+    useEffect(() => {
+        if (!canEdit) {
+            router.replace("/403");
+        }
+    }, [canEdit, router]);
 
     const getDataMember = useCallback(async () => {
         if (!id) return;
@@ -45,6 +57,11 @@ export default function PageContent() {
 
     const handleSubmit = useCallback(
         async (values: MasterMemberInterface) => {
+            if (!canEdit) {
+                toast.error("Anda tidak memiliki akses untuk mengubah data ini.");
+                return;
+            }
+
             const toastId = toast.loading(MESSAGES.INFO.LOADING);
 
             await callUpdateMember(
@@ -60,7 +77,7 @@ export default function PageContent() {
                 },
             );
         },
-        [callUpdateMember, id, router],
+        [callUpdateMember, canEdit, id, router],
     );
 
     const { confirmationDialog, requestConfirmation } =

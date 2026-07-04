@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, type ReactNode } from "react";
 // import { type UserLoginData } from "@/types/Auth/Login";
 // import { useSession, signOut } from "next-auth/react";
 import { Header } from "../../components/DashboardHeader";
@@ -11,7 +11,20 @@ import type { AuthMenuTreeInterface, AuthUserInterface, BaseResponse, MasterUser
 import { PrimeReactProvider } from "primereact/api";
 import { AUTH_SESSION_CLEARED_EVENT, clearAuthSession, getAccessToken, getAuthMenu, getAuthUser, setAuthMenu, setAuthUser } from "@/utils/auth-storage";
 import { useApiService } from "@/hooks";
+import { canAccessRoute, type PermissionAction } from "@/utils/permission";
 // import { getCookie, setCookie, removeCookie } from "@/utils/CookieUtils";
+
+const getRoutePermissionAction = (segments: string[]): PermissionAction => {
+    if (segments.includes("create")) {
+        return "ADD";
+    }
+
+    if (segments.includes("edit")) {
+        return "EDIT";
+    }
+
+    return "READ";
+};
 
 interface LayoutClientProps {
     children: ReactNode;
@@ -19,11 +32,25 @@ interface LayoutClientProps {
     frontendTTL?: string;
 }
 
+function AccessLoadingState({ label }: Readonly<{ label: string }>) {
+    return (
+        <PrimeReactProvider value={{ ripple: true }}>
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="flex items-center gap-3 text-sm text-slate-500">
+                    <div className="h-5 w-5 rounded-full border-2 border-slate-300 border-t-slate-700 animate-spin" />
+                    <span>{label}</span>
+                </div>
+            </div>
+        </PrimeReactProvider>
+    );
+}
+
 export default function LayoutClient({ children, currentUser, frontendTTL }: Readonly<LayoutClientProps>) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [sessionUser, setSessionUser] = useState<MasterUserInterface | null>(currentUser);
     const [sessionMenu, setSessionMenu] = useState<AuthMenuTreeInterface[]>([]);
+    const [menuResolved, setMenuResolved] = useState(false);
     const [checkingSession, setCheckingSession] = useState(true);
     // const { data: session, status } = useSession();
     const idleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -40,6 +67,7 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
         segments.length >= 2
             ? `${segments[0]}/${segments[1]}`
             : (segments[0] ?? "dashboard");
+    const requiredAction = getRoutePermissionAction(segments);
     const breadcrumbs = segments.map((segment, index) => {
         const href = "/" + segments.slice(0, index + 1).join("/");
 
@@ -50,6 +78,11 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
             href: index === 1 ? href : "#",
         };
     });
+
+    const canAccessCurrentRoute = useMemo(
+        () => sessionMenu.length > 0 && canAccessRoute(sessionMenu, activePage, requiredAction),
+        [activePage, requiredAction, sessionMenu],
+    );
 
     const onPageChange = (page: string) => {
         router.push(`/${page}`);
@@ -78,8 +111,10 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
             return;
         }
 
+        const storedMenu = getAuthMenu();
         setSessionUser(getAuthUser());
-        setSessionMenu(getAuthMenu());
+        setSessionMenu(storedMenu);
+        setMenuResolved(storedMenu.length > 0);
         setCheckingSession(false);
 
         const refreshSession = async () => {
@@ -102,6 +137,7 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
                             const menu = response.data ?? [];
                             setAuthMenu(menu);
                             setSessionMenu(menu);
+                            setMenuResolved(true);
                         },
                     },
                 ),
@@ -123,14 +159,22 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
         };
     }, [pathname, router]);
 
-    if (checkingSession) {
-        return (
-            <PrimeReactProvider value={{ ripple: true }}>
-                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                    <div className="text-sm text-slate-500">Loading...</div>
-                </div>
-            </PrimeReactProvider>
-        );
+    useEffect(() => {
+        if (checkingSession || !menuResolved) {
+            return;
+        }
+
+        if (!canAccessCurrentRoute) {
+            router.replace("/403");
+        }
+    }, [canAccessCurrentRoute, checkingSession, menuResolved, router]);
+
+    if (checkingSession || !menuResolved) {
+        return <AccessLoadingState label="Memeriksa akses..." />;
+    }
+
+    if (!canAccessCurrentRoute) {
+        return <AccessLoadingState label="Mengalihkan..." />;
     }
 
     return (

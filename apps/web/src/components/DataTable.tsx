@@ -121,7 +121,7 @@ export function AppDataTable<T>({
     return (
         <div className="space-y-4">
             {/* TABLE */}
-            <div className="mt-6 relative border border-slate-200 rounded-md">
+            <div className="relative border border-slate-200 rounded-md">
                 {/* Overlay Loader */}
                 {loading && (
                     <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10">
@@ -198,7 +198,6 @@ export function AppDataTable<T>({
                         />
                     ))}
 
-                    {/* Custom Actions */}
                     {actions && (
                         <Column
                             body={(row: T) =>
@@ -208,8 +207,7 @@ export function AppDataTable<T>({
                         />
                     )}
 
-                    {/* Default Actions */}
-                    {!actions && (onEdit || onDelete) && (
+                    {!actions && (onDetail || onEdit || onDelete) && (
                         <Column
                             header="Action"
                             body={(row: T) => {
@@ -218,44 +216,35 @@ export function AppDataTable<T>({
                                 return (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                            >
+                                            <Button variant="ghost" size="icon">
                                                 <EllipsisVertical className="w-4 h-4" />
                                             </Button>
                                         </DropdownMenuTrigger>
 
                                         <DropdownMenuContent align="end">
-                                            {onDetail && (
-                                                <DropdownMenuItem
-                                                    onClick={() => onDetail(row)}
-                                                >
+                                            {onDetail ? (
+                                                <DropdownMenuItem onClick={() => onDetail(row)}>
                                                     <LucideEye className="w-4 h-4 mr-2" />
                                                     View
                                                 </DropdownMenuItem>
-                                            )}
+                                            ) : null}
 
-                                            {onEdit && (
-                                                <DropdownMenuItem
-                                                    onClick={() => onEdit(row)}
-                                                >
+                                            {onEdit ? (
+                                                <DropdownMenuItem onClick={() => onEdit(row)}>
                                                     <PencilLineIcon className="w-4 h-4 mr-2" />
                                                     Edit
                                                 </DropdownMenuItem>
-                                            )}
+                                            ) : null}
 
-                                            {onDelete && (
+                                            {onDelete ? (
                                                 <DropdownMenuItem
-                                                    onClick={() =>
-                                                        onDelete(row)
-                                                    }
+                                                    onClick={() => onDelete(row)}
                                                     className="text-red-500"
                                                 >
                                                     <Trash2 className="w-4 h-4 mr-2" />
                                                     Delete
                                                 </DropdownMenuItem>
-                                            )}
+                                            ) : null}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 );

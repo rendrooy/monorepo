@@ -6,7 +6,7 @@ import {
   Circle
 } from "lucide-react";
 import * as Icons from "lucide-react";
-import { type ElementType, useState } from "react";
+import { type ElementType, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { AuthMenuTreeInterface } from "@monorepo/types";
 
@@ -33,147 +33,6 @@ interface MenuItem {
   subItems: SubMenuItem[];
 }
 
-const menuItems: MenuItem[] = [
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: "LayoutDashboard",
-    url: "dashboard",
-    subItems: [],
-  },
-  {
-    id: "onboarding",
-    label: "Onboarding",
-    icon: "UserCheck",
-    url: "onboarding",
-    subItems: [],
-  },
-  {
-    id: "request",
-    label: "Standing Instruction",
-    icon: "FileText",
-    subItems: [
-      {
-        id: "standing-instruction/request-penyaluran",
-        label: "Request Penyaluran",
-        url: "standing-instruction/request-penyaluran",
-      },
-    ],
-  },
-  {
-    id: "report",
-    label: "Monitoring",
-    icon: "BarChart3",
-    subItems: [
-      {
-        id: "monitoring/penyaluran",
-        label: "Penyaluran",
-        url: "monitoring/penyaluran",
-      },
-    ],
-  },
-
-  {
-    id: "master",
-    label: "Master",
-    icon: 'Settings',
-    subItems: [
-      {
-        id: "master/user",
-        label: "Master User",
-        url: "master/user",
-      },
-      {
-        id: "master/member",
-        label: "Master Member",
-        url: "master/member",
-      },
-      {
-        id: "master/family",
-        label: "Master Family",
-        url: "master/family",
-      },
-      {
-        id: "master/role",
-        label: "Master Role",
-        url: "master/role",
-      },
-      {
-        id: "master/menu",
-        label: "Master Menu",
-        url: "master/menu",
-      },
-    ],
-  },
-  {
-    id: "ipl",
-    label: "IPL",
-    icon: "ReceiptText",
-    subItems: [
-      {
-        id: "ipl/dashboard",
-        label: "Dashboard IPL",
-        url: "ipl/dashboard",
-      },
-      {
-        id: "ipl/setting",
-        label: "Setting Tarif",
-        url: "ipl/setting",
-      },
-      {
-        id: "ipl/bill",
-        label: "Tagihan",
-        url: "ipl/bill",
-      },
-      {
-        id: "ipl/payment",
-        label: "Pembayaran",
-        url: "ipl/payment",
-      },
-      {
-        id: "ipl/arrears",
-        label: "Tunggakan",
-        url: "ipl/arrears",
-      },
-      {
-        id: "ipl/expense",
-        label: "Pengeluaran",
-        url: "ipl/expense",
-      },
-      {
-        id: "ipl/report",
-        label: "Laporan Kas",
-        url: "ipl/report",
-      },
-    ],
-  },
-
-  {
-    id: "unduhan",
-    label: "Unduhan",
-    icon: "Download",
-    url: "unduhan",
-    subItems: [],
-  },
-  {
-    id: "operation",
-    label: "Operation",
-    icon: "Settings",
-    subItems: [
-      {
-        id: "operation/release",
-        label: "Release",
-        url: "operation/release",
-      },
-      {
-        id: "operation/history-release",
-        label: "History Release",
-        url: "operation/history-release",
-      },
-    ],
-  },
-];
-
 export function Sidebar({
   listMenu,
   isOpen,
@@ -188,13 +47,20 @@ export function Sidebar({
   const isExpanded = !isCollapsed || isHovered;
   // const [menuItems, setMenuItems] = useState<MenuItem[]>()
 
-  const joinUrl = (parent?: string, child?: string) => {
-    const p = parent?.replace(/\/$/, "") || "";
-    const c = child?.replace(/^\//, "") || "";
-    return `${p}/${c}`;
-  };
-
   const normalizeUrl = (url?: string) => (url || "").replace(/^\//, "");
+
+  const joinUrl = (parent?: string, child?: string) => {
+    const parentUrl = normalizeUrl(parent);
+    const childUrl = normalizeUrl(child);
+
+    if (!parentUrl) return childUrl;
+    if (!childUrl) return parentUrl;
+    if (childUrl === parentUrl || childUrl.startsWith(`${parentUrl}/`)) {
+      return childUrl;
+    }
+
+    return `${parentUrl}/${childUrl}`;
+  };
 
   const mapMenu = (data: AuthMenuTreeInterface[]): MenuItem[] => {
     const menuMap = new Map<string, MenuItem>();
@@ -232,7 +98,21 @@ export function Sidebar({
     return Array.from(menuMap.values());
   };
 
-  const resolvedMenuItems = listMenu.length > 0 ? mapMenu(listMenu) : menuItems;
+  const resolvedMenuItems = useMemo(() => mapMenu(listMenu), [listMenu]);
+
+  useEffect(() => {
+    const activeParent = resolvedMenuItems.find((item) =>
+      item.subItems.some((sub) => activePage === sub.id || activePage.startsWith(`${sub.id}/`)),
+    );
+
+    if (!activeParent) {
+      return;
+    }
+
+    setExpandedMenus((prev) =>
+      prev.includes(activeParent.id) ? prev : [...prev, activeParent.id],
+    );
+  }, [activePage, resolvedMenuItems]);
 
   const toggleMenu = (menuId: string) => {
     setExpandedMenus((prev) =>
@@ -266,6 +146,11 @@ export function Sidebar({
       >
         <div className="h-full flex flex-col">
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            {resolvedMenuItems.length === 0 && isExpanded ? (
+              <div className="px-3 py-2 text-sm text-slate-500">
+                Menu belum tersedia
+              </div>
+            ) : null}
             {resolvedMenuItems.map((item) => {
 
               // const IconLocal = Icons[item.icon as keyof typeof Icons] as ElementType;
@@ -275,12 +160,13 @@ export function Sidebar({
               const isMenuExpanded = expandedMenus.includes(item.id);
               const isActive =
                 activePage === item.id ||
-                item.subItems.some((sub) => sub.id === activePage);
+                activePage.startsWith(`${item.id}/`) ||
+                item.subItems.some((sub) => activePage === sub.id || activePage.startsWith(`${sub.id}/`));
 
               const shouldShowSubItems =
                 isMenuExpanded ||
                 (hasSubItems &&
-                  item.subItems.some((sub) => sub.id === activePage));
+                  item.subItems.some((sub) => activePage === sub.id || activePage.startsWith(`${sub.id}/`)));
 
               return (
                 <div key={item.id}>
@@ -342,7 +228,7 @@ export function Sidebar({
                   {hasSubItems && shouldShowSubItems && isExpanded && (
                     <div className="ml-4 space-y-1">
                       {item.subItems.map((sub) => {
-                        const isSubActive = activePage === sub.id;
+                        const isSubActive = activePage === sub.id || activePage.startsWith(`${sub.id}/`);
 
                         return (
                           <Link

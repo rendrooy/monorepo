@@ -1,27 +1,54 @@
-"use client"
-
+"use client";
 
 import SwalDialog from "@/components/ConfirmationDialog";
 import { AppDataTable } from "@/components/DataTable";
 import { FilterPanel } from "@/components/FilterPanel";
 import { MESSAGES } from "@/constants";
 import { useApiService } from "@/hooks";
-import type { MasterMemberInterface, MasterRoleInterface, Metadata } from "@monorepo/types";
+import { getAuthMenu } from "@/utils/auth-storage";
+import { canAccessRoute } from "@/utils/permission";
+import type {
+    MasterMemberInterface,
+    Metadata,
+} from "@monorepo/types";
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent } from "@monorepo/ui/components/card";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@monorepo/ui/components/dropdown-menu";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@monorepo/ui/components/dropdown-menu";
 import { Input } from "@monorepo/ui/components/input";
 import { Label } from "@monorepo/ui/components/label";
-import loading from "@monorepo/ui/components/loading";
 import { useFormik } from "formik";
-import { EllipsisVertical, LucideEye, PencilLineIcon, Plus, Trash2 } from "lucide-react";
+import {
+    EllipsisVertical,
+    LucideEye,
+    PencilLineIcon,
+    Plus,
+    Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Column } from "primereact/column";
-import { use, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 export default function PageContent() {
     const router = useRouter();
+    const memberMenuPath = "master/member";
+    const authMenu = useMemo(() => getAuthMenu(), []);
+    const canCreate = useMemo(
+        () => canAccessRoute(authMenu, memberMenuPath, "ADD"),
+        [authMenu],
+    );
+    const canEdit = useMemo(
+        () => canAccessRoute(authMenu, memberMenuPath, "EDIT"),
+        [authMenu],
+    );
+    const canDelete = useMemo(
+        () => canAccessRoute(authMenu, memberMenuPath, "DELETE"),
+        [authMenu],
+    );
     const [selectedItem, setSelectedItem] = useState<MasterMemberInterface>();
     const [listData, setListData] = useState<MasterMemberInterface[]>([]);
     const [meta, setMeta] = useState<Metadata>({
@@ -32,9 +59,11 @@ export default function PageContent() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const { callApi: callMemberDataList, loading: loadingMemberDataList } =
         useApiService("loadDataMember");
-    const { callApi: callDeleteMember, loading: loadingDeleteMember } =
-        useApiService("deleteDataMember")
-
+    const { callApi: callDeleteMember } =
+        useApiService("deleteDataMember");
+    const [filterParams, setFilterParams] = useState<
+        Partial<MasterMemberInterface>
+    >({});
 
     /** 🔥 Fetch Data */
     const handleGetList = useCallback(
@@ -55,32 +84,36 @@ export default function PageContent() {
                     onError(error) {
                         console.error("loadDataRole error:", error);
                     },
-                }
+                },
             );
         },
-        []
+        [],
     );
 
-    const handleDelete = useCallback(async (data: MasterMemberInterface) => {
-        await callDeleteMember(
-            {
-                id: data.id ?? ""
-            },
-            {
-                onSuccess(data) {
-                    toast.success(MESSAGES.SUCCESS.DELETE);
-                    handleGetList(filterParams, meta);
-                },
-                onError(data) {
-                    toast.error(MESSAGES.ERROR.DELETE);
-                }
+    const handleDelete = useCallback(
+        async (data: MasterMemberInterface) => {
+            if (!canDelete) {
+                toast.error("Anda tidak memiliki akses untuk menghapus data ini.");
+                return;
             }
-        )
-    }, []);
 
-    const [filterParams, setFilterParams] =
-        useState<Partial<MasterMemberInterface>>({});
-
+            await callDeleteMember(
+                {
+                    id: data.id ?? "",
+                },
+                {
+                    onSuccess(data) {
+                        toast.success(MESSAGES.SUCCESS.DELETE);
+                        handleGetList(filterParams, meta);
+                    },
+                    onError(data) {
+                        toast.error(MESSAGES.ERROR.DELETE);
+                    },
+                },
+            );
+        },
+        [callDeleteMember, canDelete, filterParams, handleGetList, meta],
+    );
 
     const filterForm = useFormik<MasterMemberInterface>({
         initialValues: {
@@ -88,15 +121,17 @@ export default function PageContent() {
             nik: "",
             religion: "",
         },
-        onSubmit: () => { }
+        onSubmit: () => { },
     });
 
     function handleNavigation(type: string, item: MasterMemberInterface | null) {
         setSelectedItem(item ?? undefined);
         if (type === "CREATE") router.push("../master/member/create");
         else if (type === "DELETE") setIsDialogOpen(true);
-        else if (type === "UPDATE") router.push(`../master/member/edit/${item?.id}`);
-        else if (type === "DETAIL") router.push(`../master/member/view/${item?.id}`);
+        else if (type === "UPDATE")
+            router.push(`../master/member/edit/${item?.id}`);
+        else if (type === "DETAIL")
+            router.push(`../master/member/view/${item?.id}`);
     }
 
     useEffect(() => {
@@ -115,15 +150,16 @@ export default function PageContent() {
             </Card>
 
             <FilterPanel
-                onSubmit={() => { setFilterParams(filterForm.values) }}
+                onSubmit={() => {
+                    setFilterParams(filterForm.values);
+                }}
                 onReset={() => {
                     filterForm.resetForm();
                     setFilterParams({});
-                }}>
+                }}
+            >
                 <div>
-                    <Label>
-                        Nama
-                    </Label>
+                    <Label>Nama</Label>
                     <Input
                         id="name"
                         className="mt-2"
@@ -133,9 +169,7 @@ export default function PageContent() {
                     />
                 </div>
                 <div>
-                    <Label>
-                        NIK
-                    </Label>
+                    <Label>NIK</Label>
                     <Input
                         id="nik"
                         className="mt-2"
@@ -145,9 +179,7 @@ export default function PageContent() {
                     />
                 </div>
                 <div>
-                    <Label>
-                        Agama
-                    </Label>
+                    <Label>Agama</Label>
                     <Input
                         id="religion"
                         className="mt-2"
@@ -160,13 +192,19 @@ export default function PageContent() {
 
             <Card className="mt-6">
                 <CardContent className="pt-6">
-                    <Button
-                        onClick={() => { handleNavigation("CREATE", null) }}
-                        variant={"outline"}
-                    >
-                        <Plus />
-                        Tambah Data
-                    </Button>
+                    {canCreate ? (
+                        <div className="flex justify-start-end mb-6">
+                            <Button
+                                onClick={() => {
+                                    handleNavigation("CREATE", null);
+                                }}
+                                variant={"outline"}
+                            >
+                                <Plus />
+                                Tambah Data
+                            </Button>
+                        </div>
+                    ) : null}
                     <AppDataTable
                         columns={[
                             {
@@ -192,17 +230,50 @@ export default function PageContent() {
                                 header: "Phone",
                                 skeletonWidth: "100%",
                             },
+                            {
+                                header: "Aksi",
+                                body: (row: MasterMemberInterface) => (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <EllipsisVertical className="w-4 h-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => handleNavigation("DETAIL", row)}>
+                                                <LucideEye className="w-4 h-4 mr-2" />
+                                                View
+                                            </DropdownMenuItem>
+
+                                            {canEdit ? (
+                                                <DropdownMenuItem onClick={() => handleNavigation("UPDATE", row)}>
+                                                    <PencilLineIcon className="w-4 h-4 mr-2" />
+                                                    Edit
+                                                </DropdownMenuItem>
+                                            ) : null}
+
+                                            {canDelete ? (
+                                                <DropdownMenuItem
+                                                    onClick={() => handleNavigation("DELETE", row)}
+                                                    className="text-red-500"
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            ) : null}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                ),
+                            },
                         ]}
                         data={listData}
                         loading={loadingMemberDataList}
                         meta={meta}
                         onMetaChange={(val) => {
-                            console.info(val)
-                            setMeta(val)
+                            console.info(val);
+                            setMeta(val);
                         }}
-                        onEdit={(row) => handleNavigation("UPDATE", row)}
-                        onDelete={(row) => handleNavigation("DELETE", row)}
-                        onDetail={(row) => handleNavigation("DETAIL", row)}
                     />
                 </CardContent>
             </Card>
@@ -216,10 +287,10 @@ export default function PageContent() {
                 cancelText="Batal"
                 onCancel={() => setIsDialogOpen(false)}
                 onConfirm={() => {
-                    handleDelete(selectedItem!)
+                    handleDelete(selectedItem!);
                     setIsDialogOpen(false);
                 }}
             />
         </div>
-    )
+    );
 }
