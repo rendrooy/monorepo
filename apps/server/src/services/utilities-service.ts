@@ -70,7 +70,7 @@ export const dropdownMemberService = async (request: DropdownRequest) => {
         }
 
         const queryParams: FindParams = {
-            selectedColumns: "id, name",
+            selectedColumns: "id, name, nik",
             conditions,
             limit: 100,
             offset: 0,
@@ -80,7 +80,11 @@ export const dropdownMemberService = async (request: DropdownRequest) => {
         return {
             status: 200,
             message: locales.request_success,
-            data: buildDropdown(data, "id", "name"),
+            data: data.map((item) => ({
+                value: String(item.id ?? ""),
+                label: String(item.name ?? ""),
+                nik: item.nik ? String(item.nik) : null,
+            })),
         };
     } catch {
         return { status: 500, message: locales.unable_to_handle_request, data: [] };

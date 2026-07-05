@@ -10,6 +10,7 @@ import type {
   IplPaymentInterface,
   IplSettingInterface,
   MasterFamilyInterface,
+  ResidentDashboardInterface,
 } from "@monorepo/types";
 import {
   countQuery,
@@ -22,6 +23,7 @@ import {
 import { type Condition, OperatorTypes, type QueryData } from "../config/query/query-builder";
 import { pool } from "../connection/db";
 import { createQueryLogger } from "../utils/query-logger";
+import { getCurrentAuth } from "../utils/request-context";
 
 const { clientQuery, poolQuery } = createQueryLogger("homehub-ipl-service");
 
@@ -614,6 +616,129 @@ export const getDashboardIplService = async (request: IplDashboardRequest) => {
     };
     return { status: 200, message: locales.request_success, data };
   } catch {
+    return { status: 500, message: locales.unable_to_handle_request, data: null };
+  }
+};
+
+export const getResidentDashboardService = async () => {
+  try {
+    const auth = getCurrentAuth();
+    if (!auth?.user_id) {
+      return { status: 401, message: locales.invalid_access_token, data: null };
+    }
+
+    const userResult = await poolQuery<{
+      registration_status: string | null;
+      is_active: boolean | null;
+      member_name: string | null;
+      member_nik: string | null;
+      family_id: string | null;
+      family_relation: string | null;
+      family_no_kk: string | null;
+      family_address: string | null;
+    }>(
+      "getResidentDashboardService.user",
+      `
+        SELECT
+          u.registration_status,
+          u.is_active,
+          m.name AS member_name,
+          m.nik AS member_nik,
+          m.family_id,
+          m.family_relation,
+          f.no_kk AS family_no_kk,
+          f.address AS family_address
+        FROM ${tableNames.masterUser} u
+        LEFT JOIN ${tableNames.masterMember} m
+          ON u.member_id = m.id
+         AND m.is_deleted = false
+        LEFT JOIN ${tableNames.masterFamily} f
+          ON m.family_id = f.id
+         AND f.is_deleted = false
+        WHERE u.id = $1
+          AND u.is_deleted = false
+        LIMIT 1
+      `,
+      [auth.user_id]
+    );
+
+    const user = userResult.rows?.[0];
+    if (!user) {
+      return { status: 404, message: locales.resource_not_found, data: null };
+    }
+
+    const data: ResidentDashboardInterface = {
+      account_status: user.registration_status,
+      is_active: user.is_active,
+      member_name: user.member_name,
+      member_nik: user.member_nik,
+      family_id: user.family_id,
+      family_relation: user.family_relation,
+      family_no_kk: user.family_no_kk,
+      family_address: user.family_address,
+      total_bill: 0,
+      total_outstanding: 0,
+      unpaid_count: 0,
+      latest_payment: null,
+    };
+
+    if (!user.family_id) {
+      return { status: 200, message: locales.request_success, data };
+    }
+
+    const summaryResult = await poolQuery<{
+      total_bill: string | number | null;
+      total_outstanding: string | number | null;
+      unpaid_count: string | number | null;
+    }>(
+      "getResidentDashboardService.billSummary",
+      `
+        SELECT
+          COALESCE(SUM(amount), 0) AS total_bill,
+          COALESCE(SUM(amount - paid_amount), 0) AS total_outstanding,
+          COUNT(*) FILTER (WHERE status IN ('UNPAID', 'PARTIAL', 'OVERDUE')) AS unpaid_count
+        FROM ${tableNames.iplBill}
+        WHERE family_id = $1
+          AND is_deleted = false
+      `,
+      [user.family_id]
+    );
+
+    const latestPaymentResult = await poolQuery<NonNullable<ResidentDashboardInterface["latest_payment"]>>(
+      "getResidentDashboardService.latestPayment",
+      `
+        SELECT
+          p.id,
+          p.amount,
+          p.payment_date,
+          p.payment_method,
+          b.period_month,
+          b.period_year
+        FROM ${tableNames.iplPayment} p
+        LEFT JOIN ${tableNames.iplBill} b
+          ON p.bill_id = b.id
+        WHERE p.family_id = $1
+          AND p.is_deleted = false
+        ORDER BY p.payment_date DESC, p.created_time DESC
+        LIMIT 1
+      `,
+      [user.family_id]
+    );
+
+    const summary = summaryResult.rows?.[0] ?? {};
+    return {
+      status: 200,
+      message: locales.request_success,
+      data: {
+        ...data,
+        total_bill: Number(summary.total_bill || 0),
+        total_outstanding: Number(summary.total_outstanding || 0),
+        unpaid_count: Number(summary.unpaid_count || 0),
+        latest_payment: latestPaymentResult.rows?.[0] ?? null,
+      },
+    };
+  } catch (error) {
+    console.error("getResidentDashboardService error:", error);
     return { status: 500, message: locales.unable_to_handle_request, data: null };
   }
 };

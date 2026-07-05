@@ -65,6 +65,9 @@ const defaultValues: MasterFamilyInterface = {
     family_members: [],
 };
 
+const createMemberRowKey = (memberId?: string | null, index?: number) =>
+    `${memberId || "member"}-${index ?? Date.now()}-${Math.random().toString(36).slice(2)}`;
+
 export function FamilyForm({
     disabled = false,
     initialValues,
@@ -92,6 +95,11 @@ export function FamilyForm({
             member_ids: initialValues.member_ids ?? [],
         }),
         [initialValues],
+    );
+
+    const initialFamilyMembersKey = useMemo(
+        () => JSON.stringify(resolvedInitialValues.family_members ?? []),
+        [resolvedInitialValues.family_members],
     );
 
     const formik = useFormik<MasterFamilyInterface>({
@@ -136,6 +144,7 @@ export function FamilyForm({
                         (response.data ?? []).map((item) => ({
                             id: item.value,
                             label: item.label,
+                            nik: item.nik,
                         })),
                     );
                 },
@@ -167,15 +176,29 @@ export function FamilyForm({
     }, [disabled, loadFamilyRelationOptions, loadMemberOptions]);
 
     useEffect(() => {
-        const nextMembers = (resolvedInitialValues.family_members ?? []).map((member) => ({
+        const nextMembers = (resolvedInitialValues.family_members ?? []).map((member, index) => ({
             id: member.member_id,
+            row_key: createMemberRowKey(member.member_id, index),
             label: member.member_name ?? member.member_id,
             nik: member.member_nik,
             family_relation: member.family_relation ?? "",
-            family_relation_label: getRelationLabel(member.family_relation),
+            family_relation_label: member.family_relation ?? "",
         }));
         setSelectedMembers(nextMembers);
-    }, [getRelationLabel, resolvedInitialValues.family_members]);
+    }, [initialFamilyMembersKey]);
+
+    useEffect(() => {
+        if (!familyRelationOptions.length) {
+            return;
+        }
+
+        setSelectedMembers((currentMembers) =>
+            currentMembers.map((member) => ({
+                ...member,
+                family_relation_label: getRelationLabel(member.family_relation),
+            })),
+        );
+    }, [familyRelationOptions, getRelationLabel]);
 
     const handleOpenMemberDialog = useCallback(() => {
         setIsMemberDialogOpen(true);
@@ -186,7 +209,10 @@ export function FamilyForm({
     const handleAddMember = useCallback((selectedMember: SelectedFamilyMember) => {
         const nextMembers: SelectedFamilyMember[] = [
             ...selectedMembers,
-            selectedMember,
+            {
+                ...selectedMember,
+                row_key: createMemberRowKey(selectedMember.id),
+            },
         ];
 
         setSelectedMembers(nextMembers);
@@ -194,8 +220,8 @@ export function FamilyForm({
     }, [selectedMembers, syncFormikMembers]);
 
     const handleRemoveMember = useCallback(
-        (memberId: string) => {
-            const nextMembers = selectedMembers.filter((item) => item.id !== memberId);
+        (rowKey?: string) => {
+            const nextMembers = selectedMembers.filter((item) => item.row_key !== rowKey);
             setSelectedMembers(nextMembers);
             syncFormikMembers(nextMembers);
         },
@@ -327,7 +353,7 @@ export function FamilyForm({
                                                             type="button"
                                                             variant="ghost"
                                                             size="icon"
-                                                            onClick={() => handleRemoveMember(row.id)}
+                                                            onClick={() => handleRemoveMember(row.row_key)}
                                                         >
                                                             <Trash2 className="h-4 w-4 text-red-500" />
                                                         </Button>

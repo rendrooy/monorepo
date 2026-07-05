@@ -35,6 +35,7 @@ import {
   deleteIplSetting,
   generateIplBill,
   getCashReport,
+  getResidentDashboard,
   getFamily,
   getIplBill,
   getIplDashboard,
@@ -121,6 +122,7 @@ router.post('/ipl/payment/update', updateIplPayment);
 router.post('/ipl/payment/delete', deleteIplPayment);
 
 router.post('/ipl/dashboard', getIplDashboard);
+router.post('/resident/dashboard', getResidentDashboard);
 router.post('/ipl/cash-report', getCashReport);
 router.post('/ipl/expense/load', loadExpense);
 router.post('/ipl/expense/insert', createExpense);

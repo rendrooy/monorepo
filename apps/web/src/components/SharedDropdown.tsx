@@ -10,6 +10,7 @@ import {
 export type SharedDropdownOption = {
   id: string;
   label: string;
+  nik?: string | null;
 };
 
 type SharedDropdownProps = {

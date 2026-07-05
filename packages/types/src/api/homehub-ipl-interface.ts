@@ -108,6 +108,28 @@ export interface IplDashboardInterface {
   overdue_count: number;
 }
 
+export interface ResidentDashboardInterface {
+  account_status?: string | null;
+  is_active?: boolean | null;
+  member_name?: string | null;
+  member_nik?: string | null;
+  family_relation?: string | null;
+  family_id?: string | null;
+  family_no_kk?: string | null;
+  family_address?: string | null;
+  total_bill: number;
+  total_outstanding: number;
+  unpaid_count: number;
+  latest_payment?: {
+    id?: string | null;
+    amount?: number | null;
+    payment_date?: string | null;
+    payment_method?: string | null;
+    period_month?: number | null;
+    period_year?: number | null;
+  } | null;
+}
+
 export interface CashReportInterface {
   period_month: number;
   period_year: number;

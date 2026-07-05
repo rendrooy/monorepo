@@ -11,6 +11,7 @@ import type {
     IplPaymentInterface,
     IplSettingInterface,
     MasterFamilyInterface,
+    ResidentDashboardInterface,
 } from "@monorepo/types";
 import type { ServiceStructure } from "../ServiceType";
 
@@ -86,6 +87,10 @@ export interface HomehubIplMapping {
     getDataCashReport: ServiceStructure<{
         body: IplDashboardRequest;
         response: BaseResponse<CashReportInterface>;
+    }>,
+    getDataResidentDashboard: ServiceStructure<{
+        body: Record<string, never>;
+        response: BaseResponse<ResidentDashboardInterface | null>;
     }>,
     loadDataExpense: ServiceStructure<{
         body: BaseRequest<ExpenseInterface>;

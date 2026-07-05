@@ -27,6 +27,7 @@ import {
   getIplBillService,
   getIplPaymentService,
   getIplSettingService,
+  getResidentDashboardService,
   loadExpenseService,
   loadFamilyService,
   loadIplBillService,
@@ -132,6 +133,10 @@ export const getCashReport = async (
   req: RequestBody<IplDashboardRequest>,
   res: Response,
 ) => build(res, await getCashReportService(req.body));
+export const getResidentDashboard = async (
+  _req: RequestBody<Record<string, never>>,
+  res: Response,
+) => build(res, await getResidentDashboardService());
 export const loadExpense = async (
   req: RequestBody<BaseRequest<ExpenseInterface>>,
   res: Response,

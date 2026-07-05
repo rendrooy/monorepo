@@ -8,6 +8,7 @@ export interface BaseResponse<T = unknown | null> {
 export interface BaseResponseDropdown {
   value: string;
   label: string;
+  nik?: string | null;
 }
 
 export interface Metadata {

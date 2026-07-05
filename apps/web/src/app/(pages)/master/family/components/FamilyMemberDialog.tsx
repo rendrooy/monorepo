@@ -10,13 +10,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@monorepo/ui/components/dialog";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export type SelectedFamilyMember = SharedDropdownOption & {
     family_relation?: string;
     family_relation_label?: string;
     nik?: string | null;
+    row_key?: string;
 };
 
 type FamilyMemberDialogProps = {
@@ -43,19 +44,29 @@ export function FamilyMemberDialog({
     const [selectedMemberId, setSelectedMemberId] = useState("");
     const [selectedFamilyRelation, setSelectedFamilyRelation] = useState("");
 
+    const resetSelection = useCallback(() => {
+        setSelectedMemberId("");
+        setSelectedFamilyRelation("");
+    }, []);
+
     const availableMemberOptions = memberOptions.filter(
         (option) => !selectedMembers.some((member) => member.id === option.id),
     );
 
+    useEffect(() => {
+        if (open) {
+            resetSelection();
+        }
+    }, [open, resetSelection]);
+
     const handleOpenChange = useCallback(
         (nextOpen: boolean) => {
-            if (nextOpen) {
-                setSelectedMemberId("");
-                setSelectedFamilyRelation("");
+            if (!nextOpen) {
+                resetSelection();
             }
             onOpenChange(nextOpen);
         },
-        [onOpenChange],
+        [onOpenChange, resetSelection],
     );
 
     const handleAddMember = useCallback(() => {
@@ -83,12 +94,12 @@ export function FamilyMemberDialog({
             family_relation: selectedRelation.id,
             family_relation_label: selectedRelation.label,
         });
-        onOpenChange(false);
+        handleOpenChange(false);
     }, [
         familyRelationOptions,
+        handleOpenChange,
         memberOptions,
         onAddMember,
-        onOpenChange,
         selectedFamilyRelation,
         selectedMemberId,
         selectedMembers,
@@ -131,7 +142,7 @@ export function FamilyMemberDialog({
                     <Button
                         type="button"
                         variant="outline"
-                        onClick={() => onOpenChange(false)}
+                        onClick={() => handleOpenChange(false)}
                     >
                         Batal
                     </Button>

@@ -158,6 +158,7 @@ function getEndpointServiceKey(params: string): string {
         deleteDataIplPayment: "/ipl/payment/delete",
 
         getDataIplDashboard: "/ipl/dashboard",
+        getDataResidentDashboard: "/resident/dashboard",
         getDataCashReport: "/ipl/cash-report",
         loadDataExpense: "/ipl/expense/load",
         insertDataExpense: "/ipl/expense/insert",
