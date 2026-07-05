@@ -105,6 +105,7 @@ export function useApiService<T extends ServiceKey>(servicesKey: T) {
 function getEndpointServiceKey(params: string): string {
     const endpoint: Record<string, string> = {
         loginAuth: "/auth/login",
+        registerAuth: "/auth/register",
         meAuth: "/auth/me",
         menuAuth: "/auth/menu",
 

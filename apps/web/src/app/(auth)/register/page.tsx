@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 import { useApiService } from "@/hooks";
-import { getAccessToken, setAccessToken, setAuthMenu, setAuthUser } from "@/utils/auth-storage";
-import type { AuthLoginResponse, BaseResponse } from "@monorepo/types";
+import type { BaseResponse, MasterUserInterface } from "@monorepo/types";
 import { Button } from "@monorepo/ui/components/button";
 import {
     Card,
@@ -12,34 +13,22 @@ import {
 } from "@monorepo/ui/components/card";
 import { Input } from "@monorepo/ui/components/input";
 import { Label } from "@monorepo/ui/components/label";
-import { Eye, EyeOff } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import type { FormEvent } from "react";
 import { toast } from "sonner";
 
-export default function LoginPage() {
+export default function RegisterPage() {
     const router = useRouter();
-    const { callApi, loading } = useApiService("loginAuth");
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
+    const { callApi, loading } = useApiService("registerAuth");
     const [showPassword, setShowPassword] = useState(false);
+    const [nik, setNik] = useState("");
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
 
-    const callbackUrl = useMemo(() => {
-        if (typeof window === "undefined") {
-            return "/dashboard";
-        }
-
-        return new URLSearchParams(window.location.search).get("callbackUrl") || "/dashboard";
-    }, []);
-
-    useEffect(() => {
-        if (getAccessToken()) {
-            router.replace(callbackUrl);
-        }
-    }, [callbackUrl, router]);
+    const canSubmit = nik && username && email && password;
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -47,26 +36,18 @@ export default function LoginPage() {
 
         await callApi(
             {
+                nik,
                 username,
+                email,
                 password,
             },
             {
-                onSuccess(response: BaseResponse<AuthLoginResponse | null>) {
-                    const data = response.data;
-
-                    if (!data?.access_token) {
-                        setErrorMessage("Login gagal");
-                        return;
-                    }
-
-                    setAccessToken(data.access_token);
-                    setAuthUser(data.user);
-                    setAuthMenu(data.menu);
-                    toast.success("Login berhasil");
-                    router.replace(callbackUrl);
+                onSuccess(response: BaseResponse<MasterUserInterface | null>) {
+                    toast.success(response.message || "Registrasi berhasil dikirim");
+                    router.push("/login");
                 },
                 onError(error: BaseResponse) {
-                    const message = error.message || "Username atau password tidak sesuai";
+                    const message = error.message || "Registrasi gagal";
                     setErrorMessage(message);
                     toast.error(message);
                 },
@@ -78,19 +59,41 @@ export default function LoginPage() {
         <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
             <Card className="w-full max-w-md border-slate-200">
                 <CardHeader>
-                    <CardTitle>Login HomeHub</CardTitle>
+                    <CardTitle>Registrasi Akun</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form className="space-y-4" onSubmit={handleSubmit}>
                         <div className="space-y-2">
-                            <Label htmlFor="username">Username atau Email</Label>
+                            <Label htmlFor="nik">NIK</Label>
+                            <Input
+                                id="nik"
+                                name="nik"
+                                placeholder="Masukkan NIK yang terdaftar"
+                                value={nik}
+                                onChange={(event) => setNik(event.target.value)}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="username">Username</Label>
                             <Input
                                 id="username"
                                 name="username"
-                                autoComplete="username"
-                                placeholder="Masukkan username atau email"
+                                placeholder="Masukkan username"
                                 value={username}
                                 onChange={(event) => setUsername(event.target.value)}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                name="email"
+                                type="email"
+                                placeholder="Masukkan email"
+                                value={email}
+                                onChange={(event) => setEmail(event.target.value)}
                             />
                         </div>
 
@@ -101,11 +104,10 @@ export default function LoginPage() {
                                     id="password"
                                     name="password"
                                     type={showPassword ? "text" : "password"}
-                                    autoComplete="current-password"
                                     placeholder="Masukkan password"
+                                    className="pr-11"
                                     value={password}
                                     onChange={(event) => setPassword(event.target.value)}
-                                    className="pr-11"
                                 />
                                 <button
                                     type="button"
@@ -126,18 +128,14 @@ export default function LoginPage() {
                             <p className="text-sm text-red-600">{errorMessage}</p>
                         ) : null}
 
-                        <Button
-                            type="submit"
-                            className="w-full"
-                            disabled={loading || !username || !password}
-                        >
-                            {loading ? "Memproses..." : "Login"}
+                        <Button type="submit" className="w-full" disabled={loading || !canSubmit}>
+                            {loading ? "Mengirim..." : "Registrasi"}
                         </Button>
 
                         <div className="text-center text-sm text-slate-600">
-                            Belum punya akun?{" "}
-                            <Link href="/register" className="font-medium text-blue-600 hover:text-blue-700">
-                                Daftar di sini
+                            Sudah punya akun?{" "}
+                            <Link href="/login" className="font-medium text-blue-600 hover:text-blue-700">
+                                Login
                             </Link>
                         </div>
                     </form>

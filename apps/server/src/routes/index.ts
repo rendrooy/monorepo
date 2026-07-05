@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import testRouter from "./test";
-import { authMenu, login, me } from "../controller/auth-controller";
+import { authMenu, login, me, register } from "../controller/auth-controller";
 import {
   approveUserRegistration,
   createUser,
@@ -61,6 +61,7 @@ router.get("/", function (_req, res) {
 router.use("/test", testRouter);
 
 router.post('/auth/login', login);
+router.post('/auth/register', register);
 router.post('/auth/me', authMiddleware, me);
 router.post('/auth/menu', authMiddleware, authMenu);
 

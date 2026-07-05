@@ -1,13 +1,17 @@
-import type { AuthLoginRequest } from "@monorepo/types";
+import type { AuthLoginRequest, AuthRegisterRequest } from "@monorepo/types";
 import type { Request, Response } from "express";
 import { build } from "./app-response";
 import { getAuthPayload } from "../middleware/auth.middleware";
-import { authMenuService, loginService, meService } from "../services/auth-service";
+import { authMenuService, loginService, meService, registerService } from "../services/auth-service";
 
 type RequestBody<T> = Request<Record<string, never>, unknown, T>;
 
 export const login = async (req: RequestBody<AuthLoginRequest>, res: Response) => {
     build(res, await loginService(req.body));
+};
+
+export const register = async (req: RequestBody<AuthRegisterRequest>, res: Response) => {
+    build(res, await registerService(req.body));
 };
 
 export const me = async (req: Request, res: Response) => {

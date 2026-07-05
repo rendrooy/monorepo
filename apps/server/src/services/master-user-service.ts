@@ -1,5 +1,5 @@
 import { locales, tableNames } from '../config';
-import type { BaseRequest, MasterUserInterface } from "@monorepo/types";
+import type { BaseRequest, MasterRoleInterface, MasterUserInterface } from "@monorepo/types";
 import { findOneQuery, FindParams, JoinClause, findQuery, insertQuery, updateQuery, countQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
 import { hashPassword, isPasswordHashed } from '../utils/password';
@@ -222,6 +222,23 @@ const buildBasePendingRegistrationConditions = (): Condition[] => [
     },
 ];
 
+const findDefaultResidentRole = async () =>
+    findOneQuery<MasterRoleInterface>(tableNames.masterRole, {
+        selectedColumns: "id, code, name",
+        conditions: [
+            {
+                column: "code",
+                value: "WRG",
+                operator: OperatorTypes.EQUAL,
+            },
+            {
+                column: "is_deleted",
+                value: false,
+                operator: OperatorTypes.EQUAL,
+            },
+        ],
+    });
+
 export const loadUserRegistrationService = async (request: BaseRequest<MasterUserInterface>) => {
     try {
         const params = request.params as MasterUserInterface;
@@ -320,10 +337,41 @@ export const getUserRegistrationService = async (request: MasterUserInterface) =
 export const approveUserRegistrationService = async (request: MasterUserInterface) => {
     try {
         const auth = getCurrentAuth();
+        const pendingUser = await findOneQuery<MasterUserInterface>(tableNames.masterUser, {
+            selectedColumns: "id, role_id",
+            conditions: [
+                {
+                    column: "id",
+                    value: request.id,
+                    operator: OperatorTypes.EQUAL,
+                },
+                {
+                    column: "registration_status",
+                    value: "PENDING",
+                    operator: OperatorTypes.EQUAL,
+                },
+                {
+                    column: "is_deleted",
+                    value: false,
+                    operator: OperatorTypes.EQUAL,
+                },
+            ],
+        });
+
+        if (!pendingUser) {
+            return { status: 404, message: locales.resource_not_found, data: null };
+        }
+
+        const residentRole = pendingUser.role_id ? null : await findDefaultResidentRole();
+        if (!pendingUser.role_id && !residentRole?.id) {
+            return { status: 400, message: "Role WARGA belum tersedia", data: null };
+        }
+
         const updated = await updateQuery<MasterUserInterface>(
             tableNames.masterUser,
             {
                 registration_status: "APPROVED",
+                role_id: pendingUser.role_id || residentRole?.id,
                 is_active: true,
                 approved_time: new Date(),
                 approved_by_id: auth?.user_id,
@@ -336,10 +384,6 @@ export const approveUserRegistrationService = async (request: MasterUserInterfac
                 registration_status: "PENDING",
             },
         );
-
-        if (!updated) {
-            return { status: 404, message: locales.resource_not_found, data: null };
-        }
 
         return { status: 200, message: locales.request_success, data: updated };
     } catch (error) {

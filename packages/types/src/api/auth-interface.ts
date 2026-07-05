@@ -6,6 +6,13 @@ export interface AuthLoginRequest {
     password?: string | null;
 }
 
+export interface AuthRegisterRequest {
+    nik?: string | null;
+    username?: string | null;
+    email?: string | null;
+    password?: string | null;
+}
+
 export interface AuthUserInterface {
     id?: string | null;
     username?: string | null;

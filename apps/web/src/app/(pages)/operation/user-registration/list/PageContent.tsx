@@ -191,7 +191,7 @@ export default function PageContent() {
                             { field: "email", header: "Email", skeletonWidth: "80%" },
                             { field: "member_name", header: "Nama Warga", skeletonWidth: "80%" },
                             { field: "member_nik", header: "NIK", skeletonWidth: "80%" },
-                            { field: "role_name", header: "Role", skeletonWidth: "70%" },
+                            // { field: "role_name", header: "Role", skeletonWidth: "70%" },
                             {
                                 field: "created_time",
                                 header: "Tanggal Request",
@@ -226,35 +226,10 @@ export default function PageContent() {
                                 ),
                             },
                         ]}
-                        // data={
-                        //     }
-                        // ]}
                         data={listData}
                         loading={loadingLoad}
                         meta={meta}
                         onMetaChange={setMeta}
-                    // actions={canAction ? (row) => (
-                    //     <DropdownMenu>
-                    //         <DropdownMenuTrigger asChild>
-                    //             <Button variant="ghost" size="icon">
-                    //                 <EllipsisVertical className="w-4 h-4" />
-                    //             </Button>
-                    //         </DropdownMenuTrigger>
-                    //         <DropdownMenuContent align="end">
-                    //             <DropdownMenuItem onClick={() => openActionDialog("APPROVE", row)}>
-                    //                 <CheckCircle2 className="w-4 h-4 mr-2" />
-                    //                 Setujui
-                    //             </DropdownMenuItem>
-                    //             <DropdownMenuItem
-                    //                 className="text-red-500"
-                    //                 onClick={() => openActionDialog("REJECT", row)}
-                    //             >
-                    //                 <XCircle className="w-4 h-4 mr-2" />
-                    //                 Tolak
-                    //             </DropdownMenuItem>
-                    //         </DropdownMenuContent>
-                    //     </DropdownMenu>
-                    // ) : undefined}
                     />
                 </CardContent>
             </Card>

@@ -1,16 +1,19 @@
 import { locales, tableNames } from "../config";
-import { findOneQuery, findQuery, type FindParams, type JoinClause } from "../config/query/query-runner";
+import { findOneQuery, findQuery, insertQuery, type FindParams, type JoinClause } from "../config/query/query-runner";
 import { OperatorTypes, type Condition } from "../config/query/query-builder";
 import { signJwt } from "../utils/jwt";
-import { verifyPassword } from "../utils/password";
+import { hashPassword, verifyPassword } from "../utils/password";
 import type {
     AuthLoginRequest,
     AuthLoginResponse,
     AuthMenuInterface,
     AuthMenuTreeInterface,
+    AuthRegisterRequest,
     AuthTokenPayload,
     AuthUserInterface,
     BaseResponse,
+    MasterMemberInterface,
+    MasterRoleInterface,
     MasterUserInterface,
 } from "@monorepo/types";
 
@@ -227,6 +230,136 @@ const findUserByCredential = async (column: "username" | "email", value?: string
     };
 
     return findOneQuery<MasterUserInterface>(`${tableNames.masterUser} ${USER_ALIAS}`, queryParams);
+};
+
+const findAnyUserByColumn = async (column: "username" | "email" | "member_id", value?: string | null) => {
+    if (!value) {
+        return null;
+    }
+
+    return findOneQuery<MasterUserInterface>(`${tableNames.masterUser} ${USER_ALIAS}`, {
+        selectedColumns: `${USER_ALIAS}.id, ${USER_ALIAS}.registration_status`,
+        conditions: [
+            {
+                column: `${USER_ALIAS}.${column}`,
+                value,
+                operator: OperatorTypes.EQUAL,
+            },
+            {
+                column: `${USER_ALIAS}.is_deleted`,
+                value: false,
+                operator: OperatorTypes.EQUAL,
+            },
+        ],
+    });
+};
+
+const findMemberByNik = async (nik?: string | null) => {
+    if (!nik) {
+        return null;
+    }
+
+    return findOneQuery<MasterMemberInterface>(tableNames.masterMember, {
+        selectedColumns: "id, nik, name",
+        conditions: [
+            {
+                column: "nik",
+                value: nik,
+                operator: OperatorTypes.EQUAL,
+            },
+            {
+                column: "is_deleted",
+                value: false,
+                operator: OperatorTypes.EQUAL,
+            },
+        ],
+    });
+};
+
+const findDefaultResidentRole = async () =>
+    findOneQuery<MasterRoleInterface>(tableNames.masterRole, {
+        selectedColumns: "id, code, name",
+        conditions: [
+            {
+                column: "code",
+                value: "WARGA",
+                operator: OperatorTypes.EQUAL,
+            },
+            {
+                column: "is_deleted",
+                value: false,
+                operator: OperatorTypes.EQUAL,
+            },
+        ],
+    });
+
+export const registerService = async (
+    request: AuthRegisterRequest,
+): Promise<BaseResponse<MasterUserInterface | null>> => {
+    try {
+        const nik = request.nik?.trim();
+        const username = request.username?.trim();
+        const email = request.email?.trim();
+        const password = request.password;
+
+        if (!nik || !username || !email || !password) {
+            return { status: 400, message: "Data registrasi belum lengkap", data: null };
+        }
+
+        const member = await findMemberByNik(nik);
+        if (!member?.id) {
+            return { status: 404, message: "NIK tidak terdaftar sebagai warga", data: null };
+        }
+
+        const existingMemberUser = await findAnyUserByColumn("member_id", member.id);
+        if (
+            existingMemberUser?.registration_status === "PENDING" ||
+            existingMemberUser?.registration_status === "APPROVED"
+        ) {
+            return { status: 409, message: "Warga ini sudah memiliki request atau akun aktif", data: null };
+        }
+
+        const existingUsername = await findAnyUserByColumn("username", username);
+        if (existingUsername) {
+            return { status: 409, message: "Username sudah digunakan", data: null };
+        }
+
+        const existingEmail = await findAnyUserByColumn("email", email);
+        if (existingEmail) {
+            return { status: 409, message: "Email sudah digunakan", data: null };
+        }
+
+        const residentRole = await findDefaultResidentRole();
+        const newUser = await insertQuery<MasterUserInterface>(tableNames.masterUser, {
+            username,
+            email,
+            password: hashPassword(password),
+            member_id: member.id,
+            ...(residentRole?.id && { role_id: residentRole.id }),
+            registration_status: "PENDING",
+            is_active: false,
+        });
+
+        if (!newUser) {
+            throw new Error("Failed to register user");
+        }
+
+        return {
+            status: 201,
+            message: "Registrasi berhasil dikirim. Menunggu persetujuan admin.",
+            data: {
+                id: newUser.id,
+                username: newUser.username,
+                email: newUser.email,
+                member_id: newUser.member_id,
+                registration_status: newUser.registration_status,
+                is_active: newUser.is_active,
+            },
+        };
+    } catch (error) {
+        console.error("registerService error:", error);
+        return { status: 500, message: locales.unable_to_handle_request, data: null };
+    }
 };
 
 export const loginService = async (

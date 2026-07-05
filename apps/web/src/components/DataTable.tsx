@@ -21,7 +21,7 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@monorepo/ui/components/pagination";
-import { EllipsisVertical, LucideEye, PencilLineIcon, Trash2 } from "lucide-react";
+import { EllipsisVertical, LucideEye, PackageOpen, PencilLineIcon, Trash2 } from "lucide-react";
 import { Select2, Select2Trigger, Select2Value, Select2Content, Select2Item } from "@monorepo/ui/components/select2";
 import type { Metadata } from "@monorepo/types";
 
@@ -125,7 +125,8 @@ export function AppDataTable<T>({
                     sortOrder={meta?.sortDir === "ASC" ? 1 : meta?.sortDir === "DESC" ? -1 : 0}
                     emptyMessage={
                         !loading && (
-                            <div className="text-center py-6 text-gray-400">
+                            <div className="flex flex-col items-center justify-center gap-2 py-6 text-center text-gray-400">
+                                <PackageOpen className="h-8 w-8" />
                                 No data found
                             </div>
                         )
