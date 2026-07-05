@@ -12,6 +12,7 @@ export interface AuthUserInterface {
     email?: string | null;
     role_id?: string | null;
     role_name?: string | null;
+    role_code?: string | null;
     member_id?: string | null;
     member_name?: string | null;
 }
@@ -28,6 +29,7 @@ export interface AuthTokenPayload {
     username?: string | null;
     email?: string | null;
     role_id?: string | null;
+    role_code?: string | null;
     iat?: number;
     exp?: number;
 }

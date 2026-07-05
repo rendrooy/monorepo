@@ -6,6 +6,7 @@ export interface MasterUserInterface {
   token?: string | null;
   role_id?: string | null;
   role_name?: string | null;   // joined from m_role.name
+  role_code?: string | null;   // joined from m_role.code
   member_id?: string | null;
   member_name?: string | null; // joined from m_member.name
   member_nik?: string | null;

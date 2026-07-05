@@ -318,22 +318,25 @@ export function FamilyForm({
                                         { field: "nik", header: "NIK" },
                                         { field: "family_relation_label", header: "Hubungan Keluarga" },
                                         { field: "id", header: "ID Member" },
+                                        ...(!disabled
+                                            ? [
+                                                {
+                                                    header: "Aksi",
+                                                    body: (row: SelectedFamilyMember) => (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => handleRemoveMember(row.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                                        </Button>
+                                                    ),
+                                                },
+                                            ]
+                                            : []),
                                     ]}
                                     onMetaChange={() => { }}
-                                    actions={
-                                        disabled
-                                            ? undefined
-                                            : (row) => (
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => handleRemoveMember(row.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                                </Button>
-                                            )
-                                    }
                                 />
                             </CardContent>
                         </Card>

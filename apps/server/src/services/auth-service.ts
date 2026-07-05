@@ -43,6 +43,7 @@ const authSelectedColumns = [
     `${USER_ALIAS}.password`,
     `${USER_ALIAS}.role_id`,
     `${ROLE_ALIAS}.name AS role_name`,
+    `${ROLE_ALIAS}.code AS role_code`,
     `${USER_ALIAS}.member_id`,
     `${MEMBER_ALIAS}.name AS member_name`,
     `${USER_ALIAS}.registration_status`,
@@ -56,6 +57,7 @@ const authUserSelectedColumns = [
     `${USER_ALIAS}.email`,
     `${USER_ALIAS}.role_id`,
     `${ROLE_ALIAS}.name AS role_name`,
+    `${ROLE_ALIAS}.code AS role_code`,
     `${USER_ALIAS}.member_id`,
     `${MEMBER_ALIAS}.name AS member_name`,
     `${USER_ALIAS}.registration_status`,
@@ -68,6 +70,7 @@ const toAuthUser = (user: MasterUserInterface): AuthUserInterface => ({
     email: user.email,
     role_id: user.role_id,
     role_name: user.role_name,
+    role_code: user.role_code,
     member_id: user.member_id,
     member_name: user.member_name,
 });
@@ -247,6 +250,7 @@ export const loginService = async (
             username: user.username,
             email: user.email,
             role_id: user.role_id,
+            role_code: user.role_code,
         });
 
         return {

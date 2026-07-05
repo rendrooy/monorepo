@@ -7,9 +7,11 @@ import { useApiService } from "@/hooks";
 import type { IplBillInterface, IplPaymentInterface, Metadata } from "@monorepo/types";
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@monorepo/ui/components/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@monorepo/ui/components/dropdown-menu";
 import { Input } from "@monorepo/ui/components/input";
 import { Label } from "@monorepo/ui/components/label";
 import { useFormik } from "formik";
+import { EllipsisVertical, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -108,12 +110,32 @@ export default function PageContent() {
                             { field: "amount", header: "Nominal", body: (row) => formatCurrency(row.amount) },
                             { field: "payment_method", header: "Metode" },
                             { field: "note", header: "Catatan" },
+                            {
+                                header: "Aksi",
+                                body: (row) => (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <EllipsisVertical className="w-4 h-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem
+                                                className="text-red-500"
+                                                onClick={() => { setSelectedItem(row); setIsDialogOpen(true); }}
+                                            >
+                                                <Trash2 className="w-4 h-4 mr-2" />
+                                                Delete
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                ),
+                            },
                         ]}
                         data={listData}
                         loading={loading}
                         meta={meta}
                         onMetaChange={setMeta}
-                        onDelete={(row) => { setSelectedItem(row); setIsDialogOpen(true); }}
                     />
                 </CardContent>
             </Card>

@@ -45,7 +45,6 @@ type Props<T> = {
     columns: ColumnType<T>[];
 
     onMetaChange: (meta: Metadata) => void;
-
 };
 
 export function AppDataTable<T>({
