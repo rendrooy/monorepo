@@ -2,7 +2,17 @@ import { Router } from "express";
 
 import testRouter from "./test";
 import { authMenu, login, me } from "../controller/auth-controller";
-import { createUser, deleteUser, getUser, loadUser, updateUser } from "../controller/master-user-controller";
+import {
+  approveUserRegistration,
+  createUser,
+  deleteUser,
+  getUser,
+  getUserRegistration,
+  loadUser,
+  loadUserRegistration,
+  rejectUserRegistration,
+  updateUser
+} from "../controller/master-user-controller";
 import { createRole, deleteRole, getRole, loadRole, updateRole } from "../controller/master-role-controller";
 import { createMenu, deleteMenu, getMenu, loadMenu, updateMenu } from "../controller/master-menu-controller";
 import { getDropdownFamily, getDropdownFamilyRelation, getDropdownIplBill, getDropdownRole, getDropdownMember, getDropdownUser } from "../controller/utitlities-controller";
@@ -85,6 +95,11 @@ router.post('/master/family/load', loadFamily);
 router.post('/master/family/insert', createFamily);
 router.post('/master/family/update', updateFamily);
 router.post('/master/family/delete', deleteFamily);
+
+router.post('/operation/user-registration/load', loadUserRegistration);
+router.post('/operation/user-registration/get', getUserRegistration);
+router.post('/operation/user-registration/approve', approveUserRegistration);
+router.post('/operation/user-registration/reject', rejectUserRegistration);
 
 router.post('/ipl/setting/get', getIplSetting);
 router.post('/ipl/setting/load', loadIplSetting);

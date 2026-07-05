@@ -3,6 +3,7 @@ import type { BaseRequest, MasterUserInterface } from "@monorepo/types";
 import { findOneQuery, FindParams, JoinClause, findQuery, insertQuery, updateQuery, countQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
 import { hashPassword, isPasswordHashed } from '../utils/password';
+import { getCurrentAuth } from '../utils/request-context';
 
 const USER_ALIAS = "u";
 const ROLE_ALIAS = "r";
@@ -31,6 +32,14 @@ const selectedColumns = [
     `${ROLE_ALIAS}.name AS role_name`,
     `${USER_ALIAS}.member_id`,
     `${MEMBER_ALIAS}.name AS member_name`,
+    `${MEMBER_ALIAS}.nik AS member_nik`,
+    `${USER_ALIAS}.registration_status`,
+    `${USER_ALIAS}.approved_time`,
+    `${USER_ALIAS}.approved_by_id`,
+    `${USER_ALIAS}.rejected_time`,
+    `${USER_ALIAS}.rejected_by_id`,
+    `${USER_ALIAS}.rejection_note`,
+    `${USER_ALIAS}.is_active`,
     `${USER_ALIAS}.is_deleted`,
     `${USER_ALIAS}.created_time`,
     `${USER_ALIAS}.updated_time`,
@@ -81,14 +90,27 @@ export const loadUserService = async (request: BaseRequest<MasterUserInterface>)
         ];
 
         // only filter on actual user columns, skip joined fields
-        const filterableKeys: (keyof MasterUserInterface)[] = ["username", "email", "role_id", "member_id"];
+        const filterableKeys: (keyof MasterUserInterface)[] = [
+            "username",
+            "email",
+            "role_id",
+            "member_id",
+            "registration_status",
+            "is_active",
+        ];
         for (const key of filterableKeys) {
             const value = params?.[key];
-            if (value) {
+            if (value !== undefined && value !== null && value !== "") {
+                const exactKeys: (keyof MasterUserInterface)[] = [
+                    "role_id",
+                    "member_id",
+                    "registration_status",
+                    "is_active",
+                ];
                 conditionParams.push({
                     column: `${USER_ALIAS}.${key}`,
-                    value,
-                    operator: OperatorTypes.LIKE,
+                    value: value as string | number | boolean | Date,
+                    operator: exactKeys.includes(key) ? OperatorTypes.EQUAL : OperatorTypes.LIKE,
                 });
             }
         }
@@ -131,6 +153,8 @@ export const createUserService = async (request: MasterUserInterface) => {
             ...(password && { password }),
             ...(params.role_id && { role_id: params.role_id }),
             ...(params.member_id && { member_id: params.member_id }),
+            registration_status: params.registration_status ?? "APPROVED",
+            is_active: params.is_active ?? true,
         };
         const newUser = await insertQuery(tableNames.masterUser, crateParams);
         console.info("createUserService newUser:", newUser);
@@ -154,6 +178,13 @@ export const updateUserService = async (request: MasterUserInterface) => {
             email: params.email,
             ...(params.role_id !== undefined && { role_id: params.role_id }),
             ...(params.member_id !== undefined && { member_id: params.member_id }),
+            ...(params.registration_status !== undefined && { registration_status: params.registration_status }),
+            ...(params.is_active !== undefined && { is_active: params.is_active }),
+            ...(params.approved_time !== undefined && { approved_time: params.approved_time }),
+            ...(params.approved_by_id !== undefined && { approved_by_id: params.approved_by_id }),
+            ...(params.rejected_time !== undefined && { rejected_time: params.rejected_time }),
+            ...(params.rejected_by_id !== undefined && { rejected_by_id: params.rejected_by_id }),
+            ...(params.rejection_note !== undefined && { rejection_note: params.rejection_note }),
             // only update password if provided
             ...(password && { password }),
         };
@@ -174,6 +205,174 @@ export const deleteUserService = async (request: MasterUserInterface) => {
         return { status: 200, message: locales.request_success };
     } catch (error) {
         console.error("deleteUserService error:", error);
+        return { status: 500, message: locales.unable_to_handle_request, data: null };
+    }
+};
+
+const buildBasePendingRegistrationConditions = (): Condition[] => [
+    {
+        column: `${USER_ALIAS}.is_deleted`,
+        value: false,
+        operator: OperatorTypes.EQUAL,
+    },
+    {
+        column: `${USER_ALIAS}.registration_status`,
+        value: "PENDING",
+        operator: OperatorTypes.EQUAL,
+    },
+];
+
+export const loadUserRegistrationService = async (request: BaseRequest<MasterUserInterface>) => {
+    try {
+        const params = request.params as MasterUserInterface;
+        const page = request.metadata?.page || 1;
+        const limit = request.metadata?.pageSize || 100;
+        const offset = (page - 1) * limit;
+        const conditions = buildBasePendingRegistrationConditions();
+
+        if (params?.username) {
+            conditions.push({
+                column: `${USER_ALIAS}.username`,
+                value: params.username,
+                operator: OperatorTypes.LIKE,
+            });
+        }
+
+        if (params?.email) {
+            conditions.push({
+                column: `${USER_ALIAS}.email`,
+                value: params.email,
+                operator: OperatorTypes.LIKE,
+            });
+        }
+
+        if (params?.member_nik) {
+            conditions.push({
+                column: `${MEMBER_ALIAS}.nik`,
+                value: params.member_nik,
+                operator: OperatorTypes.LIKE,
+            });
+        }
+
+        const queryParams: FindParams = {
+            selectedColumns,
+            joins: userJoins,
+            conditions,
+            limit,
+            offset,
+            order: {
+                order_by: `${USER_ALIAS}.created_time`,
+                order_dir: "DESC",
+            },
+        };
+
+        const [data, total] = await Promise.all([
+            findQuery<MasterUserInterface>(`${tableNames.masterUser} ${USER_ALIAS}`, queryParams),
+            countQuery(`${tableNames.masterUser} ${USER_ALIAS}`, { conditions, joins: userJoins }),
+        ]);
+
+        return {
+            status: 200,
+            message: locales.request_success,
+            data,
+            metaData: {
+                total,
+                page,
+                pageSize: limit,
+            },
+        };
+    } catch (error) {
+        console.error("loadUserRegistrationService error:", error);
+        return { status: 500, message: locales.unable_to_handle_request, data: null };
+    }
+};
+
+export const getUserRegistrationService = async (request: MasterUserInterface) => {
+    try {
+        const data = await findOneQuery<MasterUserInterface>(`${tableNames.masterUser} ${USER_ALIAS}`, {
+            selectedColumns,
+            joins: userJoins,
+            conditions: [
+                {
+                    column: `${USER_ALIAS}.id`,
+                    value: request.id,
+                    operator: OperatorTypes.EQUAL,
+                },
+                {
+                    column: `${USER_ALIAS}.is_deleted`,
+                    value: false,
+                    operator: OperatorTypes.EQUAL,
+                },
+            ],
+        });
+
+        if (!data) {
+            return { status: 404, message: locales.resource_not_found, data: null };
+        }
+
+        return { status: 200, message: locales.request_success, data };
+    } catch (error) {
+        console.error("getUserRegistrationService error:", error);
+        return { status: 500, message: locales.unable_to_handle_request, data: null };
+    }
+};
+
+export const approveUserRegistrationService = async (request: MasterUserInterface) => {
+    try {
+        const auth = getCurrentAuth();
+        const updated = await updateQuery<MasterUserInterface>(
+            tableNames.masterUser,
+            {
+                registration_status: "APPROVED",
+                is_active: true,
+                approved_time: new Date(),
+                approved_by_id: auth?.user_id,
+                rejected_time: null,
+                rejected_by_id: null,
+                rejection_note: null,
+            },
+            {
+                id: request.id,
+                registration_status: "PENDING",
+            },
+        );
+
+        if (!updated) {
+            return { status: 404, message: locales.resource_not_found, data: null };
+        }
+
+        return { status: 200, message: locales.request_success, data: updated };
+    } catch (error) {
+        console.error("approveUserRegistrationService error:", error);
+        return { status: 500, message: locales.unable_to_handle_request, data: null };
+    }
+};
+
+export const rejectUserRegistrationService = async (request: MasterUserInterface) => {
+    try {
+        const auth = getCurrentAuth();
+        const updated = await updateQuery<MasterUserInterface>(
+            tableNames.masterUser,
+            {
+                registration_status: "REJECTED",
+                is_active: false,
+                rejected_time: new Date(),
+                rejected_by_id: auth?.user_id,
+                rejection_note: request.rejection_note ?? null,
+            },
+            {
+                id: request.id,
+                registration_status: "PENDING",
+            },
+        );
+
+        if (!updated) {
+            return { status: 404, message: locales.resource_not_found, data: null };
+        }
+
+        return { status: 200, message: locales.request_success, data: updated };
+    } catch (error) {
+        console.error("rejectUserRegistrationService error:", error);
         return { status: 500, message: locales.unable_to_handle_request, data: null };
     }
 };

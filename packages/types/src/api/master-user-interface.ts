@@ -8,9 +8,17 @@ export interface MasterUserInterface {
   role_name?: string | null;   // joined from m_role.name
   member_id?: string | null;
   member_name?: string | null; // joined from m_member.name
+  member_nik?: string | null;
+  registration_status?: "PENDING" | "APPROVED" | "REJECTED" | string | null;
+  approved_time?: Date | string | null;
+  approved_by_id?: string | null;
+  rejected_time?: Date | string | null;
+  rejected_by_id?: string | null;
+  rejection_note?: string | null;
   created_time?: Date | null;
   updated_time?: Date | null;
   created_by_id?: string | null;
   updated_by_id?: string | null;
+  is_active?: boolean;
   is_deleted?: boolean;
 }

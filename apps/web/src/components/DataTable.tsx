@@ -46,11 +46,11 @@ type Props<T> = {
 
     onMetaChange: (meta: Metadata) => void;
 
-    onEdit?: (row: T) => void;
-    onDelete?: (row: T) => void;
-    onDetail?: (row: T) => void;
+    // onEdit?: (row: T) => void;
+    // onDelete?: (row: T) => void;
+    // onDetail?: (row: T) => void;
 
-    actions?: (row: T) => React.ReactNode;
+    // actions?: (row: T) => React.ReactNode;
 };
 
 export function AppDataTable<T>({
@@ -60,10 +60,10 @@ export function AppDataTable<T>({
     showMeta = true,
     columns,
     onMetaChange,
-    onEdit,
-    onDelete,
-    onDetail,
-    actions,
+    // onEdit,
+    // onDelete,
+    // onDetail,
+    // actions,
 }: Props<T>) {
     const currentPage = meta?.page ?? 1;
     const pageSize = meta?.pageSize ?? 10;
@@ -198,16 +198,16 @@ export function AppDataTable<T>({
                         />
                     ))}
 
-                    {actions && (
+                    {/* {actions && (
                         <Column
                             body={(row: T) =>
                                 loading ? renderSkeleton("20px") : actions(row)
                             }
                             bodyClassName="w-[60px]"
                         />
-                    )}
+                    )} */}
 
-                    {!actions && (onDetail || onEdit || onDelete) && (
+                    {/* {!actions && (onDetail || onEdit || onDelete) && (
                         <Column
                             header="Action"
                             body={(row: T) => {
@@ -251,7 +251,7 @@ export function AppDataTable<T>({
                             }}
                             bodyClassName="w-[60px]"
                         />
-                    )}
+                    )} */}
                 </DataTable>
             </div>
 

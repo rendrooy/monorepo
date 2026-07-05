@@ -108,6 +108,11 @@ function getEndpointServiceKey(params: string): string {
         meAuth: "/auth/me",
         menuAuth: "/auth/menu",
 
+        loadDataUserRegistration: "/operation/user-registration/load",
+        getDataUserRegistration: "/operation/user-registration/get",
+        approveDataUserRegistration: "/operation/user-registration/approve",
+        rejectDataUserRegistration: "/operation/user-registration/reject",
+
         loadDataUser: "/master/user/load",
         getDataUser: "/master/user/get",
         insertDataUser: "/master/user/insert",

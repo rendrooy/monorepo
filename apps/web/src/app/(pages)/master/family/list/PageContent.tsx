@@ -10,10 +10,11 @@ import { canAccessRoute } from "@/utils/permission";
 import type { MasterFamilyInterface, Metadata } from "@monorepo/types";
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent } from "@monorepo/ui/components/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@monorepo/ui/components/dropdown-menu";
 import { Input } from "@monorepo/ui/components/input";
 import { Label } from "@monorepo/ui/components/label";
 import { useFormik } from "formik";
-import { Plus } from "lucide-react";
+import { EllipsisVertical, LucideEye, PencilLineIcon, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -127,14 +128,51 @@ export default function PageContent() {
                             { field: "address", header: "Alamat" },
                             { field: "postal_code", header: "Kode Pos" },
                             { field: "is_active", header: "Aktif", body: (row) => row.is_active ? "Ya" : "Tidak" },
+
+                            {
+                                header: "Aksi",
+                                body: (row: MasterFamilyInterface) => (
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon">
+                                                <EllipsisVertical className="w-4 h-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => handleNavigation("DETAIL", row)}>
+                                                <LucideEye className="w-4 h-4 mr-2" />
+                                                View
+                                            </DropdownMenuItem>
+
+                                            {canEdit ? (
+                                                <DropdownMenuItem onClick={() => handleNavigation("UPDATE", row)}>
+                                                    <PencilLineIcon className="w-4 h-4 mr-2" />
+                                                    Edit
+                                                </DropdownMenuItem>
+                                            ) : null}
+
+                                            {canDelete ? (
+                                                <DropdownMenuItem
+                                                    onClick={() => handleNavigation("DELETE", row)}
+                                                    className="text-red-500"
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            ) : null}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                ),
+                            },
                         ]}
                         data={listData}
                         loading={loading}
                         meta={meta}
                         onMetaChange={setMeta}
-                        onEdit={canEdit ? (row) => handleNavigation("UPDATE", row) : undefined}
-                        onDetail={(row) => handleNavigation("DETAIL", row)}
-                        onDelete={canDelete ? (row) => handleNavigation("DELETE", row) : undefined}
+                    // onEdit={canEdit ? (row) => handleNavigation("UPDATE", row) : undefined}
+                    // onDetail={(row) => handleNavigation("DETAIL", row)}
+                    // onDelete={canDelete ? (row) => handleNavigation("DELETE", row) : undefined}
                     />
                 </CardContent>
             </Card>

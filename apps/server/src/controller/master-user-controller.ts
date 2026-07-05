@@ -1,4 +1,14 @@
-import { createUserService, deleteUserService, getUserService, loadUserService, updateUserService } from "../services/master-user-service";
+import {
+    approveUserRegistrationService,
+    createUserService,
+    deleteUserService,
+    getUserRegistrationService,
+    getUserService,
+    loadUserRegistrationService,
+    loadUserService,
+    rejectUserRegistrationService,
+    updateUserService
+} from "../services/master-user-service";
 import type { BaseRequest, MasterUserInterface } from "@monorepo/types";
 import type { Request, Response } from "express";
 import { build } from "./app-response";
@@ -19,4 +29,17 @@ export const updateUser = async (req: RequestBody<MasterUserInterface>, res: Res
 };
 export const deleteUser = async (req: RequestBody<MasterUserInterface>, res: Response) => {
     build(res, await deleteUserService(req.body));
+};
+
+export const loadUserRegistration = async (req: RequestBody<BaseRequest<MasterUserInterface>>, res: Response) => {
+    build(res, await loadUserRegistrationService(req.body));
+};
+export const getUserRegistration = async (req: RequestBody<MasterUserInterface>, res: Response) => {
+    build(res, await getUserRegistrationService(req.body));
+};
+export const approveUserRegistration = async (req: RequestBody<MasterUserInterface>, res: Response) => {
+    build(res, await approveUserRegistrationService(req.body));
+};
+export const rejectUserRegistration = async (req: RequestBody<MasterUserInterface>, res: Response) => {
+    build(res, await rejectUserRegistrationService(req.body));
 };

@@ -45,6 +45,8 @@ const authSelectedColumns = [
     `${ROLE_ALIAS}.name AS role_name`,
     `${USER_ALIAS}.member_id`,
     `${MEMBER_ALIAS}.name AS member_name`,
+    `${USER_ALIAS}.registration_status`,
+    `${USER_ALIAS}.is_active`,
     `${USER_ALIAS}.is_deleted`,
 ].join(", ");
 
@@ -56,6 +58,8 @@ const authUserSelectedColumns = [
     `${ROLE_ALIAS}.name AS role_name`,
     `${USER_ALIAS}.member_id`,
     `${MEMBER_ALIAS}.name AS member_name`,
+    `${USER_ALIAS}.registration_status`,
+    `${USER_ALIAS}.is_active`,
 ].join(", ");
 
 const toAuthUser = (user: MasterUserInterface): AuthUserInterface => ({
@@ -201,6 +205,16 @@ const findUserByCredential = async (column: "username" | "email", value?: string
             value: false,
             operator: OperatorTypes.EQUAL,
         },
+        {
+            column: `${USER_ALIAS}.registration_status`,
+            value: "APPROVED",
+            operator: OperatorTypes.EQUAL,
+        },
+        {
+            column: `${USER_ALIAS}.is_active`,
+            value: true,
+            operator: OperatorTypes.EQUAL,
+        },
     ];
 
     const queryParams: FindParams = {
@@ -266,6 +280,16 @@ export const meService = async (
                 {
                     column: `${USER_ALIAS}.is_deleted`,
                     value: false,
+                    operator: OperatorTypes.EQUAL,
+                },
+                {
+                    column: `${USER_ALIAS}.registration_status`,
+                    value: "APPROVED",
+                    operator: OperatorTypes.EQUAL,
+                },
+                {
+                    column: `${USER_ALIAS}.is_active`,
+                    value: true,
                     operator: OperatorTypes.EQUAL,
                 },
             ],
