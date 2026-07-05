@@ -46,11 +46,6 @@ type Props<T> = {
 
     onMetaChange: (meta: Metadata) => void;
 
-    // onEdit?: (row: T) => void;
-    // onDelete?: (row: T) => void;
-    // onDetail?: (row: T) => void;
-
-    // actions?: (row: T) => React.ReactNode;
 };
 
 export function AppDataTable<T>({
@@ -60,10 +55,6 @@ export function AppDataTable<T>({
     showMeta = true,
     columns,
     onMetaChange,
-    // onEdit,
-    // onDelete,
-    // onDetail,
-    // actions,
 }: Props<T>) {
     const currentPage = meta?.page ?? 1;
     const pageSize = meta?.pageSize ?? 10;
@@ -113,10 +104,8 @@ export function AppDataTable<T>({
         });
     };
 
-    const currentCount = Math.min(
-        meta?.pageSize ?? 0,
-        meta?.total ?? 0
-    );
+    const currentCount = Math.min(pageSize, total);
+    const canChangePageSize = total > pageSize;
 
     return (
         <div className="space-y-4">
@@ -197,61 +186,6 @@ export function AppDataTable<T>({
                             bodyClassName={col.bodyClassName}
                         />
                     ))}
-
-                    {/* {actions && (
-                        <Column
-                            body={(row: T) =>
-                                loading ? renderSkeleton("20px") : actions(row)
-                            }
-                            bodyClassName="w-[60px]"
-                        />
-                    )} */}
-
-                    {/* {!actions && (onDetail || onEdit || onDelete) && (
-                        <Column
-                            header="Action"
-                            body={(row: T) => {
-                                if (loading) return renderSkeleton("20px");
-
-                                return (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon">
-                                                <EllipsisVertical className="w-4 h-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-
-                                        <DropdownMenuContent align="end">
-                                            {onDetail ? (
-                                                <DropdownMenuItem onClick={() => onDetail(row)}>
-                                                    <LucideEye className="w-4 h-4 mr-2" />
-                                                    View
-                                                </DropdownMenuItem>
-                                            ) : null}
-
-                                            {onEdit ? (
-                                                <DropdownMenuItem onClick={() => onEdit(row)}>
-                                                    <PencilLineIcon className="w-4 h-4 mr-2" />
-                                                    Edit
-                                                </DropdownMenuItem>
-                                            ) : null}
-
-                                            {onDelete ? (
-                                                <DropdownMenuItem
-                                                    onClick={() => onDelete(row)}
-                                                    className="text-red-500"
-                                                >
-                                                    <Trash2 className="w-4 h-4 mr-2" />
-                                                    Delete
-                                                </DropdownMenuItem>
-                                            ) : null}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                );
-                            }}
-                            bodyClassName="w-[60px]"
-                        />
-                    )} */}
                 </DataTable>
             </div>
 
@@ -261,37 +195,37 @@ export function AppDataTable<T>({
                     <div className="flex items-center justify-between px-4 py-3 bg-white">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <span>Menampilkan</span>
-                            <Select2
-                                value={(meta?.pageSize ?? 10).toString()}
-                                disabled={
-                                    !meta?.total ||
-                                    !meta?.pageSize ||
-                                    meta?.total <= meta?.pageSize
-                                }
-                                className="border-slate-200 border-2"
-                                searchable={false}
-                                onValueChange={(val) =>
-                                    updateMeta({
-                                        page: 1,
-                                        pageSize: Number(val),
-                                    })
-                                }
-                            >
-                                <Select2Trigger>
-                                    {/* 👇 ini yang diubah */}
-                                    <span className="font-medium">
-                                        {currentCount}
-                                    </span>
-                                </Select2Trigger>
+                            {canChangePageSize ? (
+                                <div className="w-16">
+                                    <Select2
+                                        value={pageSize.toString()}
+                                        searchable={false}
+                                        onValueChange={(val) =>
+                                            updateMeta({
+                                                page: 1,
+                                                pageSize: Number(val),
+                                            })
+                                        }
+                                    >
+                                        <Select2Trigger className="h-8 min-h-8 border-slate-200 px-2 pr-8">
+                                            {/* 👇 ini yang diubah */}
+                                            <span className="font-medium">
+                                                {pageSize}
+                                            </span>
+                                        </Select2Trigger>
 
-                                <Select2Content>
-                                    {PAGE_SIZE_OPTIONS.map((s) => (
-                                        <Select2Item key={s} value={s}>
-                                            {s}
-                                        </Select2Item>
-                                    ))}
-                                </Select2Content>
-                            </Select2>
+                                        <Select2Content className="min-w-16">
+                                            {PAGE_SIZE_OPTIONS.map((s) => (
+                                                <Select2Item key={s} value={s}>
+                                                    {s}
+                                                </Select2Item>
+                                            ))}
+                                        </Select2Content>
+                                    </Select2>
+                                </div>
+                            ) : (
+                                <span className="font-medium">{currentCount}</span>
+                            )}
 
                             <span>
                                 dari
