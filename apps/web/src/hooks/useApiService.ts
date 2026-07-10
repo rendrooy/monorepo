@@ -144,31 +144,10 @@ function getEndpointServiceKey(params: string): string {
         updateDataFamily: "/master/family/update",
         deleteDataFamily: "/master/family/delete",
 
-        loadDataIplSetting: "/ipl/setting/load",
-        insertDataIplSetting: "/ipl/setting/insert",
-        updateDataIplSetting: "/ipl/setting/update",
-
-        loadDataIplBill: "/ipl/bill/load",
-        generateDataIplBill: "/ipl/bill/generate",
-        updateDataIplBill: "/ipl/bill/update",
-        deleteDataIplBill: "/ipl/bill/delete",
-
-        loadDataIplPayment: "/ipl/payment/load",
-        insertDataIplPayment: "/ipl/payment/insert",
-        deleteDataIplPayment: "/ipl/payment/delete",
-
-        getDataIplDashboard: "/ipl/dashboard",
-        getDataResidentDashboard: "/resident/dashboard",
-        getDataCashReport: "/ipl/cash-report",
-        loadDataExpense: "/ipl/expense/load",
-        insertDataExpense: "/ipl/expense/insert",
-        deleteDataExpense: "/ipl/expense/delete",
-
         dropdownRole: "/utils/role",
         dropdownMember: "/utils/member",
         dropdownUser: "/utils/user",
         dropdownFamily: "/utils/family",
-        dropdownIplBill: "/utils/ipl-bill",
         dropdownFamilyRelation: "/utils/family-relation",
     }
 

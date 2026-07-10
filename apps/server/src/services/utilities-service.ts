@@ -146,34 +146,6 @@ export const dropdownFamilyService = async (request: DropdownRequest) => {
     }
 };
 
-export const dropdownIplBillService = async (request: DropdownRequest) => {
-    try {
-        const search = request.params?.search ?? "";
-        const conditions: Condition[] = [
-            { column: "is_deleted", value: false, tableAlias: "b", operator: OperatorTypes.EQUAL },
-        ];
-        if (search) {
-            conditions.push({ column: "no_kk", value: search, tableAlias: "f", operator: OperatorTypes.LIKE });
-        }
-
-        const data = await findQuery<DropdownRow>(`${tableNames.iplBill} b`, {
-            selectedColumns: "b.id, CONCAT(f.no_kk, ' - ', b.period_month, '/', b.period_year, ' - ', b.status) AS label",
-            joins: [{ table: tableNames.masterFamily, alias: "f", on: "b.family_id = f.id" }],
-            conditions,
-            limit: 100,
-            offset: 0,
-            order: { order_by: "b.created_time", order_dir: "DESC" },
-        });
-        return {
-            status: 200,
-            message: locales.request_success,
-            data: buildDropdown(data, "id", "label"),
-        };
-    } catch {
-        return { status: 500, message: locales.unable_to_handle_request, data: [] };
-    }
-};
-
 // ─── LEGACY (keep for backward compat) ───────────────────────────────────────
 export const loadRoleService = dropdownRoleService;
 

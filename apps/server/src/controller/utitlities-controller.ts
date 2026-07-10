@@ -2,7 +2,6 @@ import { build } from "../controller/app-response";
 import {
     dropdownFamilyRelationService,
     dropdownFamilyService,
-    dropdownIplBillService,
     dropdownRoleService,
     dropdownMemberService,
     dropdownUserService
@@ -27,10 +26,6 @@ export const getDropdownUser = async (req: RequestBody<DropdownRequest>, res: Re
 
 export const getDropdownFamily = async (req: RequestBody<DropdownRequest>, res: Response) => {
     build(res, await dropdownFamilyService(req.body));
-};
-
-export const getDropdownIplBill = async (req: RequestBody<DropdownRequest>, res: Response) => {
-    build(res, await dropdownIplBillService(req.body));
 };
 
 export const getDropdownFamilyRelation = async (_req: RequestBody<DropdownRequest>, res: Response) => {

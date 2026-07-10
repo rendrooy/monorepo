@@ -15,7 +15,7 @@ import {
 } from "../controller/master-user-controller";
 import { createRole, deleteRole, getRole, loadRole, updateRole } from "../controller/master-role-controller";
 import { createMenu, deleteMenu, getMenu, loadMenu, updateMenu } from "../controller/master-menu-controller";
-import { getDropdownFamily, getDropdownFamilyRelation, getDropdownIplBill, getDropdownRole, getDropdownMember, getDropdownUser } from "../controller/utitlities-controller";
+import { getDropdownFamily, getDropdownFamilyRelation, getDropdownRole, getDropdownMember, getDropdownUser } from "../controller/utitlities-controller";
 import {
   createMember,
   deleteMember,
@@ -24,33 +24,12 @@ import {
   updateMember
 } from "../controller/master-member-controller";
 import {
-  createExpense,
   createFamily,
-  createIplPayment,
-  createIplSetting,
-  deleteExpense,
   deleteFamily,
-  deleteIplBill,
-  deleteIplPayment,
-  deleteIplSetting,
-  generateIplBill,
-  getCashReport,
-  getResidentDashboard,
   getFamily,
-  getIplBill,
-  getIplDashboard,
-  getIplPayment,
-  getIplSetting,
-  loadExpense,
   loadFamily,
-  loadIplBill,
-  loadIplPayment,
-  loadIplSetting,
   updateFamily,
-  updateIplBill,
-  updateIplPayment,
-  updateIplSetting
-} from "../controller/homehub-ipl-controller";
+} from "../controller/master-family-controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = Router();
@@ -103,36 +82,10 @@ router.post('/operation/user-registration/get', getUserRegistration);
 router.post('/operation/user-registration/approve', approveUserRegistration);
 router.post('/operation/user-registration/reject', rejectUserRegistration);
 
-router.post('/ipl/setting/get', getIplSetting);
-router.post('/ipl/setting/load', loadIplSetting);
-router.post('/ipl/setting/insert', createIplSetting);
-router.post('/ipl/setting/update', updateIplSetting);
-router.post('/ipl/setting/delete', deleteIplSetting);
-
-router.post('/ipl/bill/get', getIplBill);
-router.post('/ipl/bill/load', loadIplBill);
-router.post('/ipl/bill/generate', generateIplBill);
-router.post('/ipl/bill/update', updateIplBill);
-router.post('/ipl/bill/delete', deleteIplBill);
-
-router.post('/ipl/payment/get', getIplPayment);
-router.post('/ipl/payment/load', loadIplPayment);
-router.post('/ipl/payment/insert', createIplPayment);
-router.post('/ipl/payment/update', updateIplPayment);
-router.post('/ipl/payment/delete', deleteIplPayment);
-
-router.post('/ipl/dashboard', getIplDashboard);
-router.post('/resident/dashboard', getResidentDashboard);
-router.post('/ipl/cash-report', getCashReport);
-router.post('/ipl/expense/load', loadExpense);
-router.post('/ipl/expense/insert', createExpense);
-router.post('/ipl/expense/delete', deleteExpense);
-
 router.post('/utils/role', getDropdownRole);
 router.post('/utils/member', getDropdownMember);
 router.post('/utils/user', getDropdownUser);
 router.post('/utils/family', getDropdownFamily);
-router.post('/utils/ipl-bill', getDropdownIplBill);
 router.post('/utils/family-relation', getDropdownFamilyRelation);
 
 

@@ -5,5 +5,5 @@ export * from "./master-user-interface";
 export * from "./master-role-interface";
 export * from "./master-member-interface";
 export * from "./master-menu-interface";
-export * from "./homehub-ipl-interface";
+export * from "./master-family-interface";
 export * from "./auth-interface";

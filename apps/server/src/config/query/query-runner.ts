@@ -15,10 +15,6 @@ const auditedTables = new Set<string>([
   tableNames.masterRoleMenuPermission,
   tableNames.masterMember,
   tableNames.masterFamily,
-  tableNames.iplSetting,
-  tableNames.iplBill,
-  tableNames.iplPayment,
-  tableNames.expense,
 ]);
 
 const withAuditOnInsert = (tableName: string, params: QueryData): QueryData => {

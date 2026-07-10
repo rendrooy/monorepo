@@ -18,10 +18,6 @@ export interface DropdownMapping {
         body: BaseRequest<{ search?: string }>;
         response: BaseResponse<BaseResponseDropdown[]>;
     }>;
-    dropdownIplBill: ServiceStructure<{
-        body: BaseRequest<{ search?: string }>;
-        response: BaseResponse<BaseResponseDropdown[]>;
-    }>;
     dropdownFamilyRelation: ServiceStructure<{
         body: BaseRequest;
         response: BaseResponse<BaseResponseDropdown[]>;
