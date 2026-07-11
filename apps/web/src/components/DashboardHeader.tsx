@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LogOut, Menu } from "lucide-react";
+import { Bell, LogOut, Menu } from "lucide-react";
+import type { AppNotificationInterface } from "@monorepo/types";
+import { useApiService } from "@/hooks";
+import { useRouter } from "next/navigation";
 
 import {
   DropdownMenu,
@@ -38,7 +41,27 @@ export function Header({
   currentUser,
   onLogout,
 }: HeaderProps) {
+  const router = useRouter();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [notifications, setNotifications] = useState<AppNotificationInterface[]>([]);
+  const { callApi: loadNotifications } = useApiService("loadNotification");
+  const { callApi: readNotification } = useApiService("readNotification");
+
+  useEffect(() => {
+    const load = () => loadNotifications({}, { onSuccess: (response) => setNotifications(response.data || []) });
+    load();
+    const timer = window.setInterval(load, 60_000);
+    return () => window.clearInterval(timer);
+  }, [loadNotifications]);
+
+  const openNotification = async (notification: AppNotificationInterface) => {
+    if (!notification.is_read) {
+      await readNotification({ id: notification.id }, {
+        onSuccess: () => setNotifications((items) => items.map((item) => item.id === notification.id ? { ...item, is_read: true } : item)),
+      });
+    }
+    if (notification.reference_url) router.push(notification.reference_url);
+  };
 
   const handleLogoutClick = () => {
     setShowLogoutDialog(true);
@@ -135,6 +158,23 @@ export function Header({
               {currentDateStr}
             </p>
           </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="relative rounded-md p-2 text-slate-600 hover:bg-slate-100" aria-label="Notifikasi">
+                <Bell className="h-5 w-5" />
+                {notifications.some((item) => !item.is_read) ? <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500" /> : null}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 bg-white">
+              <DropdownMenuLabel>Notifikasi</DropdownMenuLabel>
+              {notifications.length === 0 ? <div className="px-3 py-6 text-center text-sm text-slate-500">Belum ada notifikasi</div> : notifications.slice(0, 8).map((notification) => (
+                <DropdownMenuItem key={notification.id} className="cursor-pointer items-start py-3" onSelect={() => openNotification(notification)}>
+                  <span className={`mt-1.5 h-2 w-2 flex-none rounded-full ${notification.is_read ? "bg-slate-200" : "bg-blue-600"}`} />
+                  <span className="ml-2 min-w-0"><span className="block font-medium text-slate-800">{notification.title}</span><span className="mt-0.5 block whitespace-normal text-xs text-slate-500">{notification.message}</span></span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {/* User Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

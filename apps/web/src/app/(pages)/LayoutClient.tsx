@@ -63,10 +63,7 @@ export default function LayoutClient({ children, currentUser, frontendTTL }: Rea
 
     const segments = pathname.split("/").filter(Boolean);
 
-    const activePage =
-        segments.length >= 2
-            ? `${segments[0]}/${segments[1]}`
-            : (segments[0] ?? "dashboard");
+    const activePage = segments.join("/") || "dashboard";
     const requiredAction = getRoutePermissionAction(segments);
     const breadcrumbs = segments.map((segment, index) => {
         const href = "/" + segments.slice(0, index + 1).join("/");

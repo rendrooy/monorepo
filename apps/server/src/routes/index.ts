@@ -31,6 +31,10 @@ import {
   updateFamily,
 } from "../controller/master-family-controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import {
+  cancelBillBatch, createBillBatch, getBillBatch, loadBill, loadBillBatch,
+  loadMyBill, loadNotification, publishBillBatch, readNotification, updateBillBatch,
+} from "../controller/ipl-billing-controller";
 
 const router = Router();
 
@@ -81,6 +85,17 @@ router.post('/operation/user-registration/load', loadUserRegistration);
 router.post('/operation/user-registration/get', getUserRegistration);
 router.post('/operation/user-registration/approve', approveUserRegistration);
 router.post('/operation/user-registration/reject', rejectUserRegistration);
+
+router.post('/operation/ipl/batch/load', loadBillBatch);
+router.post('/operation/ipl/batch/get', getBillBatch);
+router.post('/operation/ipl/batch/insert', createBillBatch);
+router.post('/operation/ipl/batch/update', updateBillBatch);
+router.post('/operation/ipl/batch/publish', publishBillBatch);
+router.post('/operation/ipl/batch/cancel', cancelBillBatch);
+router.post('/operation/ipl/bill/load', loadBill);
+router.post('/operation/ipl/bill/my', loadMyBill);
+router.post('/notification/load', loadNotification);
+router.post('/notification/read', readNotification);
 
 router.post('/utils/role', getDropdownRole);
 router.post('/utils/member', getDropdownMember);

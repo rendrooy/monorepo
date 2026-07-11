@@ -3,6 +3,7 @@ export interface BaseResponse<T = unknown | null> {
   message: string;
   data?: T;
   meta?: Metadata;
+  metaData?: Metadata;
 };
 
 export interface BaseResponseDropdown {

@@ -7,3 +7,4 @@ export * from "./master-member-interface";
 export * from "./master-menu-interface";
 export * from "./master-family-interface";
 export * from "./auth-interface";
+export * from "./ipl-billing-interface";

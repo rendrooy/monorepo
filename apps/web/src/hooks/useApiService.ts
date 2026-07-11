@@ -149,6 +149,17 @@ function getEndpointServiceKey(params: string): string {
         dropdownUser: "/utils/user",
         dropdownFamily: "/utils/family",
         dropdownFamilyRelation: "/utils/family-relation",
+
+        loadIplBatch: "/operation/ipl/batch/load",
+        getIplBatch: "/operation/ipl/batch/get",
+        insertIplBatch: "/operation/ipl/batch/insert",
+        updateIplBatch: "/operation/ipl/batch/update",
+        publishIplBatch: "/operation/ipl/batch/publish",
+        cancelIplBatch: "/operation/ipl/batch/cancel",
+        loadIplBill: "/operation/ipl/bill/load",
+        loadMyIplBill: "/operation/ipl/bill/my",
+        loadNotification: "/notification/load",
+        readNotification: "/notification/read",
     }
 
     const url = endpoint[params];

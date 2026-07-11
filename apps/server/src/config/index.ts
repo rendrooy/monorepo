@@ -21,6 +21,9 @@ export const tableNames = {
     masterRoleMenuPermission: "homehub_revamp.m_role_menu_permission",
     masterMember: "homehub_revamp.m_member",
     masterFamily: "homehub_revamp.m_family",
+    iplBillBatch: "homehub_revamp.t_ipl_bill_batch",
+    iplBill: "homehub_revamp.t_ipl_bill",
+    notification: "homehub_revamp.t_notification",
 };
 
 export const locales = {

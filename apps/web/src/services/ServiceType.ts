@@ -1,6 +1,6 @@
-import type { AuthMapping, MasterUserMapping, MasterMemberMapping, MasterRoleMapping, MasterMenuMapping, MasterFamilyMapping, DropdownMapping, OperationUserRegistrationMapping } from "./types";
+import type { AuthMapping, MasterUserMapping, MasterMemberMapping, MasterRoleMapping, MasterMenuMapping, MasterFamilyMapping, DropdownMapping, OperationUserRegistrationMapping, IplBillingMapping } from "./types";
 
-export type ServiceMapping = AuthMapping & MasterUserMapping & MasterMemberMapping & MasterRoleMapping & MasterMenuMapping & MasterFamilyMapping & DropdownMapping & OperationUserRegistrationMapping
+export type ServiceMapping = AuthMapping & MasterUserMapping & MasterMemberMapping & MasterRoleMapping & MasterMenuMapping & MasterFamilyMapping & DropdownMapping & OperationUserRegistrationMapping & IplBillingMapping
 
 export type ServiceKey = keyof ServiceMapping;
 
