@@ -25,8 +25,10 @@ CREATE TABLE homehub_revamp.t_ipl_bill (
     period varchar(8) NOT NULL,
     amount numeric(18,2) NOT NULL CHECK (amount > 0),
     note varchar(1000),
+    paid_amount numeric(18,2) NOT NULL DEFAULT 0,
+    credit_amount numeric(18,2) NOT NULL DEFAULT 0,
     status varchar(20) NOT NULL DEFAULT 'UNPAID'
-        CHECK (status IN ('UNPAID', 'CANCELLED')),
+        CHECK (status IN ('UNPAID', 'PARTIALLY_PAID', 'PAID', 'OVERPAID', 'CANCELLED')),
     created_time timestamp with time zone NOT NULL DEFAULT now(),
     updated_time timestamp with time zone,
     created_by_id uuid,

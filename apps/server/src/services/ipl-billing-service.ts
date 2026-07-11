@@ -226,7 +226,10 @@ const loadBills = async (request: BaseRequest<IplBillInterface>, familyId?: stri
   );
   values.push(pageSize, offset);
   const data = await pool.query<IplBillInterface>(
-    `SELECT bill.*, f.no_kk AS family_no_kk, f.address AS family_address
+    `SELECT bill.*, f.no_kk AS family_no_kk, f.address AS family_address,
+       GREATEST(bill.amount - bill.paid_amount, 0) AS remaining_amount,
+       (SELECT COUNT(*)::int FROM ${tableNames.iplPayment} p
+        WHERE p.bill_id = bill.id AND p.status = 'PENDING' AND p.is_deleted = false) AS pending_payment_count
      FROM ${tableNames.iplBill} bill INNER JOIN ${tableNames.masterFamily} f ON f.id = bill.family_id
      ${clause} ORDER BY bill.created_time DESC LIMIT $${values.length - 1} OFFSET $${values.length}`,
     values,

@@ -35,6 +35,10 @@ import {
   cancelBillBatch, createBillBatch, getBillBatch, loadBill, loadBillBatch,
   loadMyBill, loadNotification, publishBillBatch, readNotification, updateBillBatch,
 } from "../controller/ipl-billing-controller";
+import {
+  approvePayment, createPayment, getPaymentProof, loadMyPayment,
+  loadPayment, rejectPayment, reversePayment,
+} from "../controller/ipl-payment-controller";
 
 const router = Router();
 
@@ -94,6 +98,13 @@ router.post('/operation/ipl/batch/publish', publishBillBatch);
 router.post('/operation/ipl/batch/cancel', cancelBillBatch);
 router.post('/operation/ipl/bill/load', loadBill);
 router.post('/operation/ipl/bill/my', loadMyBill);
+router.post('/operation/ipl/payment/load', loadPayment);
+router.post('/operation/ipl/payment/my', loadMyPayment);
+router.post('/operation/ipl/payment/create', createPayment);
+router.post('/operation/ipl/payment/approve', approvePayment);
+router.post('/operation/ipl/payment/reject', rejectPayment);
+router.post('/operation/ipl/payment/reverse', reversePayment);
+router.get('/operation/ipl/payment/:id/proof', getPaymentProof);
 router.post('/notification/load', loadNotification);
 router.post('/notification/read', readNotification);
 

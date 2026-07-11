@@ -160,6 +160,12 @@ function getEndpointServiceKey(params: string): string {
         loadMyIplBill: "/operation/ipl/bill/my",
         loadNotification: "/notification/load",
         readNotification: "/notification/read",
+        loadIplPayment: "/operation/ipl/payment/load",
+        loadMyIplPayment: "/operation/ipl/payment/my",
+        createIplPayment: "/operation/ipl/payment/create",
+        approveIplPayment: "/operation/ipl/payment/approve",
+        rejectIplPayment: "/operation/ipl/payment/reject",
+        reverseIplPayment: "/operation/ipl/payment/reverse",
     }
 
     const url = endpoint[params];

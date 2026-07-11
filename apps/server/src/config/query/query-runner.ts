@@ -18,6 +18,8 @@ const auditedTables = new Set<string>([
   tableNames.iplBillBatch,
   tableNames.iplBill,
   tableNames.notification,
+  tableNames.iplPayment,
+  tableNames.iplFamilyCredit,
 ]);
 
 const withAuditOnInsert = (tableName: string, params: QueryData): QueryData => {

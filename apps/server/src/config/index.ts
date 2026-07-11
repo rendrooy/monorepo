@@ -24,6 +24,8 @@ export const tableNames = {
     iplBillBatch: "homehub_revamp.t_ipl_bill_batch",
     iplBill: "homehub_revamp.t_ipl_bill",
     notification: "homehub_revamp.t_notification",
+    iplPayment: "homehub_revamp.t_ipl_payment",
+    iplFamilyCredit: "homehub_revamp.t_ipl_family_credit",
 };
 
 export const locales = {
