@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, LogOut, Menu } from "lucide-react";
+import { Bell, CircleUserRound, LogOut, Menu } from "lucide-react";
 import type { AppNotificationInterface } from "@monorepo/types";
 import { useApiService } from "@/hooks";
 import { useRouter } from "next/navigation";
@@ -110,14 +110,22 @@ export function Header({
       {/* Main Navbar - Figma Design */}
       <div className="relative h-16">
         {/* Left Section */}
-        <div className="absolute left-0 top-0 h-16 flex items-center gap-4 px-5">
+        <div className="absolute left-0 top-0 h-16 flex items-center gap-2 px-3 sm:gap-4 sm:px-5">
+          <button
+            type="button"
+            onClick={onMenuClick}
+            className="flex rounded-md p-2 text-slate-500 transition-colors hover:bg-slate-100 lg:hidden"
+            aria-label="Buka sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
           <Image
             src="/logo.png"
             alt="HomeHub"
             width={160}
             height={80}
             priority
-            className="h-14 w-36 flex-shrink-0 object-contain"
+            className="h-14 w-28 flex-shrink-0 object-contain sm:w-36"
           />
           {/* Burger Button for Sidebar Toggle (Desktop) */}
           <button
@@ -128,7 +136,7 @@ export function Header({
           </button>
         </div>
         {/* Right Section - Date and User */}
-        <div className="absolute right-0 top-0 h-16 flex items-center gap-3.5 px-6">
+        <div className="absolute right-0 top-0 h-16 flex items-center gap-1 px-3 sm:gap-3.5 sm:px-6">
           {/* Date */}
           <div className="hidden md:flex items-center gap-1.5">
             {/* <div className="size-6">
@@ -187,7 +195,8 @@ export function Header({
                     />
                   </svg>
                 </div> */}
-                <p className="font-medium text-[#181d27] text-[14px] whitespace-nowrap">
+                <CircleUserRound className="h-5 w-5 text-slate-600 sm:hidden" />
+                <p className="hidden font-medium text-[#181d27] text-[14px] whitespace-nowrap sm:block">
                   {currentUser?.username || ""}
                 </p>
                 {/* <div className="size-6">

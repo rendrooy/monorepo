@@ -192,8 +192,8 @@ export function AppDataTable<T>({
             {/* PAGINATION */}
             {
                 showMeta && (
-                    <div className="flex items-center justify-between px-4 py-3 bg-white">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="flex flex-col gap-3 bg-white px-2 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+                        <div className="flex w-full flex-wrap items-center gap-2 text-sm text-muted-foreground sm:w-auto">
                             <span>Menampilkan</span>
                             {canChangePageSize ? (
                                 <div className="w-16">
@@ -236,8 +236,8 @@ export function AppDataTable<T>({
                             </span>
                         </div>
 
-                        <Pagination>
-                            <PaginationContent>
+                        <Pagination className="w-full overflow-x-auto sm:w-auto">
+                            <PaginationContent className="w-full justify-between sm:w-auto sm:justify-end">
                                 <PaginationItem>
                                     <PaginationFirst
                                         onClick={() => updateMeta({ page: 1 })}
@@ -264,15 +264,19 @@ export function AppDataTable<T>({
                                     />
                                 </PaginationItem>
 
+                                <PaginationItem className="flex h-9 items-center px-2 text-sm font-medium text-slate-600 sm:hidden">
+                                    Halaman {currentPage} dari {totalPages}
+                                </PaginationItem>
+
                                 {getPageNumbers().map((p, i) => {
                                     const key = `${p}-${i}`; // 🔥 fix utama
 
                                     return p === "..." ? (
-                                        <PaginationItem key={key}>
+                                        <PaginationItem key={key} className="hidden sm:block">
                                             <PaginationEllipsis />
                                         </PaginationItem>
                                     ) : (
-                                        <PaginationItem key={key}>
+                                        <PaginationItem key={key} className="hidden sm:block">
                                             <PaginationLink
                                                 isActive={currentPage === p}
                                                 onClick={() =>

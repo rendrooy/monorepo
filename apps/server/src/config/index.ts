@@ -1,3 +1,53 @@
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+
+const loadLocalEnv = (): void => {
+    const envPathCandidates = [
+        resolve(process.cwd(), ".env"),
+        resolve(process.cwd(), "apps/server/.env"),
+        resolve(__dirname, "../../.env"),
+    ];
+    const envPath = envPathCandidates.find((candidate) => existsSync(candidate));
+
+    if (!envPath) {
+        return;
+    }
+
+    const lines = readFileSync(envPath, "utf8").split(/\r?\n/);
+
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+
+        if (!trimmedLine || trimmedLine.startsWith("#")) {
+            continue;
+        }
+
+        const separatorIndex = trimmedLine.indexOf("=");
+
+        if (separatorIndex === -1) {
+            continue;
+        }
+
+        const key = trimmedLine.slice(0, separatorIndex).trim();
+        let value = trimmedLine.slice(separatorIndex + 1).trim();
+
+        if (!key || process.env[key] !== undefined) {
+            continue;
+        }
+
+        if (
+            (value.startsWith("\"") && value.endsWith("\"")) ||
+            (value.startsWith("'") && value.endsWith("'"))
+        ) {
+            value = value.slice(1, -1);
+        }
+
+        process.env[key] = value;
+    }
+};
+
+loadLocalEnv();
+
 export const timeConfig = {
     momentDate: 'YYYY-MM-DD',
     oracleDate: 'YYYY-MM-DD',
@@ -7,26 +57,27 @@ export const timeConfig = {
 };
 
 export const dbConnection = {
-    user: 'postgres',
-    host: 'localhost',
-    database: 'postgres',
-    password: 'postgres',
-    port: 5432, // Port default PostgreSQL
+    connectionString: process.env.DATABASE_URL || "postgresql://postgres:NxI8S0CQv8k4gZLn@db.erxkctaqtmqpxlgjznkj.supabase.co:5432/postgres",
+    user: process.env.DB_USER || 'postgres',
+    host: process.env.DB_HOST || 'db.erxkctaqtmqpxlgjznkj.supabase.co',
+    database: process.env.DB_NAME || 'postgres',
+    password: process.env.DB_PASSWORD || 'NxI8S0CQv8k4gZLn',
+    port: Number(process.env.DB_PORT || 5432), // Port default PostgreSQL
 };
 
 export const tableNames = {
-    masterUser: "homehub_revamp.m_user",
-    masterRole: "homehub_revamp.m_role",
-    masterMenu: "homehub_revamp.m_menu",
-    masterRoleMenuPermission: "homehub_revamp.m_role_menu_permission",
-    masterMember: "homehub_revamp.m_member",
-    masterFamily: "homehub_revamp.m_family",
-    iplBillBatch: "homehub_revamp.t_ipl_bill_batch",
-    iplBill: "homehub_revamp.t_ipl_bill",
-    notification: "homehub_revamp.t_notification",
-    iplPayment: "homehub_revamp.t_ipl_payment",
-    iplFamilyCredit: "homehub_revamp.t_ipl_family_credit",
-    iplCreditLedger: "homehub_revamp.t_ipl_credit_ledger",
+    masterUser: "m_user",
+    masterRole: "m_role",
+    masterMenu: "m_menu",
+    masterRoleMenuPermission: "m_role_menu_permission",
+    masterMember: "m_member",
+    masterFamily: "m_family",
+    iplBillBatch: "t_ipl_bill_batch",
+    iplBill: "t_ipl_bill",
+    notification: "t_notification",
+    iplPayment: "t_ipl_payment",
+    iplFamilyCredit: "t_ipl_family_credit",
+    iplCreditLedger: "t_ipl_credit_ledger",
 };
 
 export const locales = {

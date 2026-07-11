@@ -136,7 +136,7 @@ export const publishBillBatchService = async (id?: string | null) => {
         `INSERT INTO ${tableNames.iplBill}
            (batch_id, family_id, bill_number, period, amount, note, created_by_id)
          SELECT $1, $2,
-           'IPL-' || $3 || '-' || LPAD(nextval('homehub_revamp.ipl_bill_number_seq')::text, 6, '0'),
+           'IPL-' || $3 || '-' || LPAD(nextval('ipl_bill_number_seq')::text, 6, '0'),
            $3, $4, $5, $6
          WHERE NOT EXISTS (
            SELECT 1 FROM ${tableNames.iplBill}
@@ -177,7 +177,7 @@ export const publishBillBatchService = async (id?: string | null) => {
         `INSERT INTO ${tableNames.notification}
            (user_id, type, title, message, reference_id, reference_url, created_by_id)
          SELECT DISTINCT u.id, 'IPL_BILL_PUBLISHED', 'Tagihan IPL baru',
-           'Tagihan IPL periode ' || $2 || ' telah diterbitkan.', $1::uuid, '/ipl/bill', $3::uuid
+           'Tagihan IPL periode ' || $2 || ' telah diterbitkan.', $1::uuid, '/operation/bill', $3::uuid
          FROM ${tableNames.masterUser} u
          INNER JOIN ${tableNames.masterMember} m ON u.member_id = m.id
          WHERE m.family_id = $4::uuid AND u.is_active = true AND u.is_deleted = false`,
