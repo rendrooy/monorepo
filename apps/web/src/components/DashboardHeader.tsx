@@ -5,6 +5,7 @@ import { Bell, LogOut, Menu } from "lucide-react";
 import type { AppNotificationInterface } from "@monorepo/types";
 import { useApiService } from "@/hooks";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 import {
   DropdownMenu,
@@ -108,30 +109,16 @@ export function Header({
     <header className="bg-white border-b border-slate-200 fixed top-0 left-0 right-0 z-30">
       {/* Main Navbar - Figma Design */}
       <div className="relative h-16">
-        {/* Left Section - Logo BNI + GOV SALUR + Burger Button */}
+        {/* Left Section */}
         <div className="absolute left-0 top-0 h-16 flex items-center gap-4 px-5">
-          {/* BNI Logo */}
-          <div className="h-[25.481px] w-[86px] flex-shrink-0">
-            <svg
-              className="block size-full"
-              fill="none"
-              preserveAspectRatio="none"
-              viewBox="0 0 86 26"
-            >
-              {/* <g id="layer1">
-                <g id="path176"></g>
-                <path d={svgPaths.pe46a200} fill="#F15A22" id="path188" />
-                <path d={svgPaths.p18551f00} fill="#F15A22" id="path192" />
-                <path d={svgPaths.p3a2237f0} fill="#F15A22" id="path196" />
-                <path d={svgPaths.p1cc03e80} fill="#F15A22" id="path200" />
-                <path d={svgPaths.paab5400} fill="#F15A22" id="path212" />
-                <path d={svgPaths.pb30200} fill="#F15A22" id="path216" />
-                <path d={svgPaths.p21ee1c00} fill="#006885" id="path220" />
-                <path d={svgPaths.p36e8c200} fill="#006885" id="path224" />
-                <path d={svgPaths.p17fb1b00} fill="#006885" id="path228" />
-              </g> */}
-            </svg>
-          </div>
+          <Image
+            src="/logo.png"
+            alt="HomeHub"
+            width={160}
+            height={80}
+            priority
+            className="h-14 w-36 flex-shrink-0 object-contain"
+          />
           {/* Burger Button for Sidebar Toggle (Desktop) */}
           <button
             onClick={onToggleCollapse}
