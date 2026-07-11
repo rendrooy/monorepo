@@ -10,6 +10,8 @@ import type {
   IplCreditLedgerInterface,
   IplReportRequest,
   IplReportSummaryInterface,
+  IplDashboardInterface,
+  IplFinancialTrendInterface,
 } from "@monorepo/types";
 import type { ServiceStructure } from "../ServiceType";
 
@@ -32,4 +34,6 @@ export interface IplBillingMapping {
   reverseIplPayment: ServiceStructure<{ body: IplPaymentActionRequest; response: BaseResponse }>;
   getIplReportSummary: ServiceStructure<{ body: IplReportRequest; response: BaseResponse<IplReportSummaryInterface> }>;
   loadIplCreditLedger: ServiceStructure<{ body: BaseRequest<IplCreditLedgerInterface>; response: BaseResponse<IplCreditLedgerInterface[]> }>;
+  getIplDashboard: ServiceStructure<{ body: { period?: string | null }; response: BaseResponse<IplDashboardInterface> }>;
+  getIplFinancialTrend: ServiceStructure<{ body: { year?: number | null }; response: BaseResponse<IplFinancialTrendInterface[]> }>;
 }

@@ -66,6 +66,27 @@ export interface IplReportRequest {
   family_no_kk?: string | null;
 }
 
+export interface IplDashboardInterface {
+  audience: "RESIDENT" | "MANAGEMENT";
+  period: string;
+  family_no_kk?: string | null;
+  summary: IplReportSummaryInterface;
+  pending_payment_count: number;
+  recent_bills: IplBillInterface[];
+  recent_payments: IplPaymentInterface[];
+}
+
+export interface IplFinancialTrendInterface {
+  month: number;
+  period: string;
+  label: string;
+  total_billed: number;
+  recognized_income: number;
+  cash_received: number;
+  outstanding_amount: number;
+  realization_percentage: number;
+}
+
 export interface IplCreditLedgerInterface {
   id?: string | null;
   family_id?: string | null;

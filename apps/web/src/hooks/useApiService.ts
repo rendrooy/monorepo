@@ -168,6 +168,8 @@ function getEndpointServiceKey(params: string): string {
         reverseIplPayment: "/operation/ipl/payment/reverse",
         getIplReportSummary: "/operation/ipl/report/summary",
         loadIplCreditLedger: "/operation/ipl/credit/load",
+        getIplDashboard: "/operation/ipl/dashboard",
+        getIplFinancialTrend: "/operation/ipl/dashboard/trend",
     }
 
     const url = endpoint[params];
