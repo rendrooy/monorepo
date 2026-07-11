@@ -26,6 +26,7 @@ export const tableNames = {
     notification: "homehub_revamp.t_notification",
     iplPayment: "homehub_revamp.t_ipl_payment",
     iplFamilyCredit: "homehub_revamp.t_ipl_family_credit",
+    iplCreditLedger: "homehub_revamp.t_ipl_credit_ledger",
 };
 
 export const locales = {

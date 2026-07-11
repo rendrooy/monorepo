@@ -7,6 +7,9 @@ import type {
   IplBillPublishResult,
   IplPaymentActionRequest,
   IplPaymentInterface,
+  IplCreditLedgerInterface,
+  IplReportRequest,
+  IplReportSummaryInterface,
 } from "@monorepo/types";
 import type { ServiceStructure } from "../ServiceType";
 
@@ -27,4 +30,6 @@ export interface IplBillingMapping {
   approveIplPayment: ServiceStructure<{ body: IplPaymentActionRequest; response: BaseResponse }>;
   rejectIplPayment: ServiceStructure<{ body: IplPaymentActionRequest; response: BaseResponse }>;
   reverseIplPayment: ServiceStructure<{ body: IplPaymentActionRequest; response: BaseResponse }>;
+  getIplReportSummary: ServiceStructure<{ body: IplReportRequest; response: BaseResponse<IplReportSummaryInterface> }>;
+  loadIplCreditLedger: ServiceStructure<{ body: BaseRequest<IplCreditLedgerInterface>; response: BaseResponse<IplCreditLedgerInterface[]> }>;
 }

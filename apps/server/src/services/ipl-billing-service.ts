@@ -147,6 +147,32 @@ export const publishBillBatchService = async (id?: string | null) => {
       const bill = inserted.rows[0];
       if (!bill) continue;
       generated += 1;
+      const creditResult = await client.query<{ balance: string }>(
+        `SELECT balance FROM ${tableNames.iplFamilyCredit} WHERE family_id = $1 FOR UPDATE`,
+        [family.id],
+      );
+      const currentCredit = Number(creditResult.rows[0]?.balance || 0);
+      const allocatedCredit = Math.min(currentCredit, Number(batch.amount || 0));
+      if (allocatedCredit > 0) {
+        const balanceResult = await client.query<{ balance: string }>(
+          `UPDATE ${tableNames.iplFamilyCredit}
+           SET balance = balance - $2, updated_time = now(), updated_by_id = $3
+           WHERE family_id = $1 RETURNING balance`,
+          [family.id, allocatedCredit, getCurrentAuth()?.user_id || null],
+        );
+        await client.query(
+          `UPDATE ${tableNames.iplBill}
+           SET paid_amount = $2, status = CASE WHEN $2 >= amount THEN 'PAID' ELSE 'PARTIALLY_PAID' END,
+               updated_time = now(), updated_by_id = $3 WHERE id = $1`,
+          [bill.id, allocatedCredit, getCurrentAuth()?.user_id || null],
+        );
+        await client.query(
+          `INSERT INTO ${tableNames.iplCreditLedger}
+           (family_id, bill_id, transaction_type, amount, balance_after, note, created_by_id)
+           VALUES ($1::uuid, $2::uuid, 'ALLOCATED', ($3::numeric * -1), $4::numeric, 'Alokasi otomatis ke tagihan baru', $5::uuid)`,
+          [family.id, bill.id, allocatedCredit, Number(balanceResult.rows[0]?.balance || 0), getCurrentAuth()?.user_id || null],
+        );
+      }
       await client.query(
         `INSERT INTO ${tableNames.notification}
            (user_id, type, title, message, reference_id, reference_url, created_by_id)
@@ -185,6 +211,16 @@ export const cancelBillBatchService = async (id?: string | null) => {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
+    const approvedPayments = await client.query(
+      `SELECT 1 FROM ${tableNames.iplPayment} payment
+       INNER JOIN ${tableNames.iplBill} bill ON bill.id = payment.bill_id
+       WHERE bill.batch_id = $1 AND payment.status = 'APPROVED' AND payment.is_deleted = false LIMIT 1`,
+      [id],
+    );
+    if (approvedPayments.rowCount) {
+      await client.query("ROLLBACK");
+      return { status: 409, message: "Batch dengan pembayaran approved tidak dapat dibatalkan", data: null };
+    }
     const updated = await client.query(
       `UPDATE ${tableNames.iplBillBatch} SET status = 'CANCELLED', updated_time = now(), updated_by_id = $2
        WHERE id = $1 AND status <> 'CANCELLED' AND is_deleted = false RETURNING id`,
@@ -194,9 +230,33 @@ export const cancelBillBatchService = async (id?: string | null) => {
       await client.query("ROLLBACK");
       return { status: 409, message: "Batch tagihan tidak dapat dibatalkan", data: null };
     }
+    const allocations = await client.query<{ id: string; family_id: string; bill_id: string; amount: string }>(
+      `SELECT ledger.id, ledger.family_id, ledger.bill_id, ledger.amount
+       FROM ${tableNames.iplCreditLedger} ledger
+       INNER JOIN ${tableNames.iplBill} bill ON bill.id = ledger.bill_id
+       WHERE bill.batch_id = $1 AND ledger.transaction_type = 'ALLOCATED'
+         AND NOT EXISTS (SELECT 1 FROM ${tableNames.iplCreditLedger} reversal WHERE reversal.related_ledger_id = ledger.id)`,
+      [id],
+    );
+    for (const allocation of allocations.rows) {
+      const restoredAmount = Math.abs(Number(allocation.amount));
+      const balance = await client.query<{ balance: string }>(
+        `INSERT INTO ${tableNames.iplFamilyCredit} (family_id, balance, created_by_id)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (family_id) DO UPDATE SET balance = ${tableNames.iplFamilyCredit}.balance + EXCLUDED.balance,
+           updated_time = now(), updated_by_id = EXCLUDED.created_by_id RETURNING balance`,
+        [allocation.family_id, restoredAmount, getCurrentAuth()?.user_id || null],
+      );
+      await client.query(
+        `INSERT INTO ${tableNames.iplCreditLedger}
+         (family_id, bill_id, related_ledger_id, transaction_type, amount, balance_after, note, created_by_id)
+         VALUES ($1, $2, $3, 'ALLOCATION_REVERSED', $4, $5, 'Pengembalian karena batch dibatalkan', $6)`,
+        [allocation.family_id, allocation.bill_id, allocation.id, restoredAmount, Number(balance.rows[0]?.balance || 0), getCurrentAuth()?.user_id || null],
+      );
+    }
     await client.query(
       `UPDATE ${tableNames.iplBill} SET status = 'CANCELLED', updated_time = now(), updated_by_id = $2
-       WHERE batch_id = $1 AND status = 'UNPAID' AND is_deleted = false`,
+       WHERE batch_id = $1 AND status <> 'CANCELLED' AND is_deleted = false`,
       [id, getCurrentAuth()?.user_id || null],
     );
     await client.query("COMMIT");
@@ -228,6 +288,9 @@ const loadBills = async (request: BaseRequest<IplBillInterface>, familyId?: stri
   const data = await pool.query<IplBillInterface>(
     `SELECT bill.*, f.no_kk AS family_no_kk, f.address AS family_address,
        GREATEST(bill.amount - bill.paid_amount, 0) AS remaining_amount,
+       COALESCE((SELECT SUM(-ledger.amount) FROM ${tableNames.iplCreditLedger} ledger
+        WHERE ledger.bill_id = bill.id AND ledger.transaction_type = 'ALLOCATED'
+          AND NOT EXISTS (SELECT 1 FROM ${tableNames.iplCreditLedger} reversal WHERE reversal.related_ledger_id = ledger.id)), 0) AS credit_applied_amount,
        (SELECT COUNT(*)::int FROM ${tableNames.iplPayment} p
         WHERE p.bill_id = bill.id AND p.status = 'PENDING' AND p.is_deleted = false) AS pending_payment_count
      FROM ${tableNames.iplBill} bill INNER JOIN ${tableNames.masterFamily} f ON f.id = bill.family_id

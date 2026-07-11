@@ -110,12 +110,19 @@ const applyApprovedPayment = async (client: PoolClient, paymentId: string) => {
     [bill.id, nextPaid, nextCredit, nextStatus, getCurrentAuth()?.user_id || null],
   );
   if (credit > 0) {
-    await client.query(
+    const creditBalance = await client.query<{ balance: string }>(
       `INSERT INTO ${tableNames.iplFamilyCredit} (family_id, balance, created_by_id)
        VALUES ($1, $2, $3)
        ON CONFLICT (family_id) DO UPDATE SET balance = ${tableNames.iplFamilyCredit}.balance + EXCLUDED.balance,
-         updated_time = now(), updated_by_id = EXCLUDED.created_by_id`,
+         updated_time = now(), updated_by_id = EXCLUDED.created_by_id
+       RETURNING balance`,
       [payment.family_id, credit, getCurrentAuth()?.user_id || null],
+    );
+    await client.query(
+      `INSERT INTO ${tableNames.iplCreditLedger}
+       (family_id, bill_id, payment_id, transaction_type, amount, balance_after, note, created_by_id)
+       VALUES ($1, $2, $3, 'EARNED', $4, $5, 'Kelebihan pembayaran', $6)`,
+      [payment.family_id, payment.bill_id, paymentId, credit, Number(creditBalance.rows[0]?.balance || 0), getCurrentAuth()?.user_id || null],
     );
   }
   return { payment, billNumber: bill.bill_number, allocated, credit };
@@ -266,7 +273,16 @@ export const reversePaymentService = async (id?: string | null, note?: string | 
     if (Number(payment.credit_amount || 0) > 0) {
       const credit = await client.query<{ balance: string }>(`SELECT balance FROM ${tableNames.iplFamilyCredit} WHERE family_id = $1 FOR UPDATE`, [payment.family_id]);
       if (Number(credit.rows[0]?.balance || 0) < Number(payment.credit_amount)) throw new Error("Saldo kredit sudah digunakan dan tidak dapat direversal");
-      await client.query(`UPDATE ${tableNames.iplFamilyCredit} SET balance = balance - $2, updated_time = now(), updated_by_id = $3 WHERE family_id = $1`, [payment.family_id, payment.credit_amount, getCurrentAuth()?.user_id || null]);
+      const nextBalance = await client.query<{ balance: string }>(`UPDATE ${tableNames.iplFamilyCredit} SET balance = balance - $2, updated_time = now(), updated_by_id = $3 WHERE family_id = $1 RETURNING balance`, [payment.family_id, payment.credit_amount, getCurrentAuth()?.user_id || null]);
+      await client.query(
+        `INSERT INTO ${tableNames.iplCreditLedger}
+         (family_id, bill_id, payment_id, related_ledger_id, transaction_type, amount, balance_after, note, created_by_id)
+         SELECT $1::uuid, $2::uuid, $3::uuid, ledger.id, 'EARNED_REVERSED', ($4::numeric * -1), $5::numeric, $6, $7::uuid
+         FROM ${tableNames.iplCreditLedger} ledger
+         WHERE ledger.payment_id = $3 AND ledger.transaction_type = 'EARNED'
+         ORDER BY ledger.created_time DESC LIMIT 1`,
+        [payment.family_id, payment.bill_id, payment.id, payment.credit_amount, Number(nextBalance.rows[0]?.balance || 0), note.trim(), getCurrentAuth()?.user_id || null],
+      );
     }
     await client.query(`UPDATE ${tableNames.iplBill} SET paid_amount = $2, credit_amount = $3, status = $4, updated_time = now(), updated_by_id = $5 WHERE id = $1`, [payment.bill_id, nextPaid, nextCredit, nextStatus, getCurrentAuth()?.user_id || null]);
     await client.query(`UPDATE ${tableNames.iplPayment} SET status = 'REVERSED', reversal_note = $2, reversed_time = now(), reversed_by_id = $3, updated_time = now(), updated_by_id = $3 WHERE id = $1`, [id, note.trim(), getCurrentAuth()?.user_id || null]);

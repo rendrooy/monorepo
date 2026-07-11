@@ -50,6 +50,36 @@ export interface IplPaymentActionRequest {
   note?: string | null;
 }
 
+export interface IplReportSummaryInterface {
+  total_billed: number;
+  cash_received: number;
+  recognized_income: number;
+  outstanding_amount: number;
+  pending_payment_amount: number;
+  family_credit_balance: number;
+  total_bill_count: number;
+  paid_bill_count: number;
+}
+
+export interface IplReportRequest {
+  period?: string | null;
+  family_no_kk?: string | null;
+}
+
+export interface IplCreditLedgerInterface {
+  id?: string | null;
+  family_id?: string | null;
+  family_no_kk?: string | null;
+  bill_id?: string | null;
+  bill_number?: string | null;
+  payment_id?: string | null;
+  transaction_type?: "EARNED" | "ALLOCATED" | "EARNED_REVERSED" | "ALLOCATION_REVERSED" | "REFUND";
+  amount?: number | null;
+  balance_after?: number | null;
+  note?: string | null;
+  created_time?: string | null;
+}
+
 export interface IplBillInterface {
   id?: string | null;
   batch_id?: string | null;
@@ -61,6 +91,7 @@ export interface IplBillInterface {
   amount?: number | null;
   paid_amount?: number | null;
   credit_amount?: number | null;
+  credit_applied_amount?: number | null;
   remaining_amount?: number | null;
   pending_payment_count?: number;
   note?: string | null;

@@ -39,6 +39,7 @@ import {
   approvePayment, createPayment, getPaymentProof, loadMyPayment,
   loadPayment, rejectPayment, reversePayment,
 } from "../controller/ipl-payment-controller";
+import { getIplReportSummary, loadIplCreditLedger } from "../controller/ipl-report-controller";
 
 const router = Router();
 
@@ -105,6 +106,8 @@ router.post('/operation/ipl/payment/approve', approvePayment);
 router.post('/operation/ipl/payment/reject', rejectPayment);
 router.post('/operation/ipl/payment/reverse', reversePayment);
 router.get('/operation/ipl/payment/:id/proof', getPaymentProof);
+router.post('/operation/ipl/report/summary', getIplReportSummary);
+router.post('/operation/ipl/credit/load', loadIplCreditLedger);
 router.post('/notification/load', loadNotification);
 router.post('/notification/read', readNotification);
 

@@ -23,6 +23,12 @@ INSERT INTO homehub_revamp.m_menu
 SELECT 'Verifikasi Payment', 'IPL_PAYMENT_VERIFY', 'verifikasi-payment', 'BadgeCheck', 2, parent.id, 2, true, false
 FROM parent WHERE NOT EXISTS (SELECT 1 FROM homehub_revamp.m_menu WHERE code = 'IPL_PAYMENT_VERIFY' AND is_deleted = false);
 
+WITH parent AS (SELECT id FROM homehub_revamp.m_menu WHERE code = 'IPL' AND is_deleted = false LIMIT 1)
+INSERT INTO homehub_revamp.m_menu
+  (name, code, path_url, icon, menu_level, parent_id, sort_order, is_active, is_deleted)
+SELECT 'Laporan IPL', 'IPL_REPORT', 'report', 'ChartNoAxesCombined', 2, parent.id, 3, true, false
+FROM parent WHERE NOT EXISTS (SELECT 1 FROM homehub_revamp.m_menu WHERE code = 'IPL_REPORT' AND is_deleted = false);
+
 WITH parent AS (SELECT id FROM homehub_revamp.m_menu WHERE code = 'OPERATION' AND is_deleted = false LIMIT 1)
 INSERT INTO homehub_revamp.m_menu
   (name, code, path_url, icon, menu_level, parent_id, sort_order, is_active, is_deleted)
@@ -42,7 +48,7 @@ WHERE role.code = 'ADMIN' AND role.is_deleted = false AND NOT EXISTS (
 
 INSERT INTO homehub_revamp.m_role_menu_permission (role_id, menu_id, permission_mask, is_active, is_deleted)
 SELECT role.id, menu.id, 63, true, false FROM homehub_revamp.m_role role
-JOIN homehub_revamp.m_menu menu ON menu.code IN ('OP_IPL', 'IPL_PAYMENT_VERIFY')
+JOIN homehub_revamp.m_menu menu ON menu.code IN ('OP_IPL', 'IPL_PAYMENT_VERIFY', 'IPL_REPORT')
 WHERE role.code = 'ADMIN' AND role.is_deleted = false AND NOT EXISTS (
   SELECT 1 FROM homehub_revamp.m_role_menu_permission p WHERE p.role_id = role.id AND p.menu_id = menu.id AND p.is_deleted = false
 );

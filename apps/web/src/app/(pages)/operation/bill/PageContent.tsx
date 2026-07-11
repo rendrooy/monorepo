@@ -109,6 +109,7 @@ export default function PageContent() {
                   body: (row) => money(row.amount),
                 },
                 { field: "paid_amount", header: "Dibayar", body: (row) => money(row.paid_amount) },
+                { field: "credit_applied_amount", header: "Saldo Digunakan", body: (row) => money(row.credit_applied_amount) },
                 { field: "remaining_amount", header: "Sisa", body: (row) => money(row.remaining_amount) },
                 {
                   field: "status",
