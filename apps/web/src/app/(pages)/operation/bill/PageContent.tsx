@@ -3,9 +3,10 @@
 import { AppDataTable } from "@/components/DataTable";
 import { useApiService } from "@/hooks";
 import { IplPaymentDialog } from "@/components/IplPaymentDialog";
+import { IplStatusBadge } from "@/components/IplStatusBadge";
 import { getAccessToken } from "@/utils/auth-storage";
+import { formatDate } from "@/utils/format-date";
 import type { IplBillInterface, IplPaymentInterface, Metadata } from "@monorepo/types";
-import { Badge } from "@monorepo/ui/components/badge";
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent } from "@monorepo/ui/components/card";
 import { Eye, ReceiptText, Upload } from "lucide-react";
@@ -114,17 +115,7 @@ export default function PageContent() {
                 {
                   field: "status",
                   header: "Status",
-                  body: (row) => (
-                    <Badge
-                      className={
-                        row.status === "UNPAID"
-                          ? "bg-red-50 text-red-700"
-                          : "bg-slate-100 text-slate-600"
-                      }
-                    >
-                      {row.status}
-                    </Badge>
-                  ),
+                  body: (row) => <IplStatusBadge status={row.status} />,
                 },
                 { field: "note", header: "Catatan" },
                 { header: "Aksi", body: (row) => <Button size="sm" variant="outline" disabled={row.status === "PAID" || row.status === "OVERPAID" || row.status === "CANCELLED" || Number(row.pending_payment_count) > 0} onClick={() => setSelectedBill(row)}><Upload className="h-4 w-4" />{Number(row.pending_payment_count) > 0 ? "Menunggu Verifikasi" : "Upload Bukti"}</Button> },
@@ -134,10 +125,10 @@ export default function PageContent() {
         </Card>
       )}
       <Card><CardContent className="pt-6"><h2 className="mb-4 text-lg font-semibold">Riwayat Pembayaran</h2><AppDataTable data={payments} showMeta={false} onMetaChange={() => undefined} columns={[
-        { field: "bill_number", header: "Tagihan" }, { field: "payment_date", header: "Tanggal" },
+        { field: "bill_number", header: "Tagihan" }, { field: "payment_date", header: "Tanggal", body: (row) => formatDate(row.payment_date) },
         { field: "amount", header: "Nominal", body: (row) => money(row.amount) },
         { field: "payment_method", header: "Metode" },
-        { field: "status", header: "Status", body: (row) => <Badge className={row.status === "APPROVED" ? "bg-emerald-50 text-emerald-700" : row.status === "REJECTED" ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"}>{row.status}</Badge> },
+        { field: "status", header: "Status", body: (row) => <IplStatusBadge status={row.status} /> },
         { field: "rejection_note", header: "Catatan Admin", body: (row) => row.rejection_note || row.reversal_note || "-" },
         { header: "Bukti", body: (row) => <Button size="icon" variant="ghost" title="Lihat bukti" onClick={() => openProof(row)}><Eye className="h-4 w-4" /></Button> },
       ]} /></CardContent></Card>

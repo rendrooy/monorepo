@@ -3,6 +3,7 @@
 import { AppDataTable } from "@/components/DataTable";
 import SwalDialog from "@/components/ConfirmationDialog";
 import { FilterPanel } from "@/components/FilterPanel";
+import { IplStatusBadge } from "@/components/IplStatusBadge";
 import { useApiService } from "@/hooks";
 import { getAuthMenu } from "@/utils/auth-storage";
 import { canAccessRoute } from "@/utils/permission";
@@ -11,7 +12,6 @@ import type {
   IplBillInterface,
   Metadata,
 } from "@monorepo/types";
-import { Badge } from "@monorepo/ui/components/badge";
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent } from "@monorepo/ui/components/card";
 import {
@@ -51,12 +51,6 @@ const money = (value?: number | null) =>
     currency: "IDR",
     maximumFractionDigits: 0,
   }).format(Number(value || 0));
-const badgeClass: Record<string, string> = {
-  DRAFT: "bg-amber-50 text-amber-700",
-  PUBLISHED: "bg-emerald-50 text-emerald-700",
-  CANCELLED: "bg-slate-100 text-slate-600",
-  UNPAID: "bg-red-50 text-red-700",
-};
 const monthCodes = [
   "JAN",
   "FEB",
@@ -338,11 +332,7 @@ export default function PageContent() {
                 {
                   field: "status",
                   header: "Status",
-                  body: (row) => (
-                    <Badge className={badgeClass[row.status || ""]}>
-                      {row.status}
-                    </Badge>
-                  ),
+                  body: (row) => <IplStatusBadge status={row.status} />,
                 },
                 {
                   header: "Aksi",
@@ -412,11 +402,7 @@ export default function PageContent() {
                 {
                   field: "status",
                   header: "Status",
-                  body: (row) => (
-                    <Badge className={badgeClass[row.status || ""]}>
-                      {row.status}
-                    </Badge>
-                  ),
+                  body: (row) => <IplStatusBadge status={row.status} />,
                 },
               ]}
             />

@@ -28,3 +28,10 @@ export const formatDateTime = (value?: string | Date | null): string => {
 
     return `${day} ${month} ${year} ${hour}:${minute}`;
 };
+
+export const formatDate = (value?: string | Date | null): string => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "-";
+    return `${String(date.getDate()).padStart(2, "0")} ${MONTHS_ID[date.getMonth()]} ${date.getFullYear()}`;
+};

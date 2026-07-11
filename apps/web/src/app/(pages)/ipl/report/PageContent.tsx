@@ -2,7 +2,9 @@
 
 import { AppDataTable } from "@/components/DataTable";
 import { FilterPanel } from "@/components/FilterPanel";
+import { IplStatusBadge } from "@/components/IplStatusBadge";
 import { useApiService } from "@/hooks";
+import { formatDateTime } from "@/utils/format-date";
 import { getAuthMenu } from "@/utils/auth-storage";
 import { canAccessRoute } from "@/utils/permission";
 import type {
@@ -11,7 +13,6 @@ import type {
   IplReportSummaryInterface,
   Metadata,
 } from "@monorepo/types";
-import { Badge } from "@monorepo/ui/components/badge";
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent } from "@monorepo/ui/components/card";
 import { Input } from "@monorepo/ui/components/input";
@@ -327,7 +328,7 @@ export default function PageContent() {
                 {
                   field: "status",
                   header: "Status",
-                  body: (row) => <Badge>{row.status}</Badge>,
+                  body: (row) => <IplStatusBadge status={row.status} />,
                 },
               ]}
             />
@@ -338,7 +339,7 @@ export default function PageContent() {
               meta={meta}
               onMetaChange={setMeta}
               columns={[
-                { field: "created_time", header: "Waktu" },
+                { field: "created_time", header: "Waktu", body: (row) => formatDateTime(row.created_time) },
                 { field: "family_no_kk", header: "No. KK" },
                 { field: "bill_number", header: "Tagihan" },
                 { field: "transaction_type", header: "Tipe" },
