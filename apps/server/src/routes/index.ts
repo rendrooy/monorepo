@@ -41,6 +41,8 @@ import {
 } from "../controller/ipl-payment-controller";
 import { getIplReportSummary, loadIplCreditLedger } from "../controller/ipl-report-controller";
 import { getIplDashboard, getIplFinancialTrend } from "../controller/ipl-dashboard-controller";
+import { approveUmkm, getUmkmCategories, getUmkmImage, loadMyUmkm, loadUmkmReview, rejectUmkm, resumeUmkm, saveUmkmDraft, submitUmkm, suspendUmkm } from "../controller/umkm-controller";
+import { approveSubscriptionPayment, createSubscription, getActivePlans, getMySubscriptions, getPaymentReviews, getPlans, getUmkmPaymentProof, paySubscription, rejectSubscriptionPayment, releaseUmkmSubscription, upsertPlan } from "../controller/umkm-subscription-controller";
 
 const router = Router();
 
@@ -111,6 +113,27 @@ router.post('/operation/ipl/report/summary', getIplReportSummary);
 router.post('/operation/ipl/credit/load', loadIplCreditLedger);
 router.post('/operation/ipl/dashboard', getIplDashboard);
 router.post('/operation/ipl/dashboard/trend', getIplFinancialTrend);
+router.post('/operation/umkm/categories', getUmkmCategories);
+router.post('/operation/umkm/my/load', loadMyUmkm);
+router.post('/operation/umkm/save', saveUmkmDraft);
+router.post('/operation/umkm/submit', submitUmkm);
+router.post('/operation/umkm/suspend', suspendUmkm);
+router.post('/operation/umkm/resume', resumeUmkm);
+router.post('/umkm/content/load', loadUmkmReview);
+router.post('/umkm/content/approve', approveUmkm);
+router.post('/umkm/content/reject', rejectUmkm);
+router.get('/umkm/revision/:id/image', getUmkmImage);
+router.post('/operation/umkm/subscription/plans', getActivePlans);
+router.post('/operation/umkm/subscription/my', getMySubscriptions);
+router.post('/operation/umkm/subscription/create', createSubscription);
+router.post('/operation/umkm/subscription/pay', paySubscription);
+router.post('/operation/umkm/subscription/release', releaseUmkmSubscription);
+router.post('/umkm/subscription/plan/load', getPlans);
+router.post('/umkm/subscription/plan/save', upsertPlan);
+router.post('/umkm/subscription/payment/load', getPaymentReviews);
+router.post('/umkm/subscription/payment/approve', approveSubscriptionPayment);
+router.post('/umkm/subscription/payment/reject', rejectSubscriptionPayment);
+router.get('/umkm/subscription/payment/:id/proof', getUmkmPaymentProof);
 router.post('/notification/load', loadNotification);
 router.post('/notification/read', readNotification);
 

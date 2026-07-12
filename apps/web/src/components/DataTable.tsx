@@ -44,7 +44,7 @@ type Props<T> = {
     showMeta?: boolean;
     columns: ColumnType<T>[];
 
-    onMetaChange: (meta: Metadata) => void;
+    onMetaChange?: (meta: Metadata) => void;
 };
 
 export function AppDataTable<T>({
@@ -53,7 +53,7 @@ export function AppDataTable<T>({
     meta,
     showMeta = true,
     columns,
-    onMetaChange,
+    onMetaChange = () => undefined,
 }: Props<T>) {
     const currentPage = meta?.page ?? 1;
     const pageSize = meta?.pageSize ?? 10;

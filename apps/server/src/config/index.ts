@@ -78,6 +78,10 @@ export const tableNames = {
     iplPayment: "t_ipl_payment",
     iplFamilyCredit: "t_ipl_family_credit",
     iplCreditLedger: "t_ipl_credit_ledger",
+    umkm: "m_umkm",
+    umkmRevision: "t_umkm_revision",
+    umkmSubscriptionPlan: "m_umkm_subscription_plan",
+    umkmSubscription: "t_umkm_subscription",
 };
 
 export const locales = {
