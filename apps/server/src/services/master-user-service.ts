@@ -1,4 +1,5 @@
 import { locales, tableNames } from '../config';
+import { logger } from '../config/logger';
 import type { BaseRequest, MasterRoleInterface, MasterUserInterface } from "@monorepo/types";
 import { findOneQuery, FindParams, JoinClause, findQuery, insertQuery, updateQuery, countQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
@@ -63,7 +64,7 @@ export const getUserService = async (request: MasterUserInterface) => {
         };
 
         const user = await findOneQuery(`${tableNames.masterUser} ${USER_ALIAS}`, queryParams);
-        console.info("getUserService user:", user);
+        logger.debug({ found: Boolean(user) }, "User lookup completed");
 
         if (user) {
             return { status: 200, message: locales.request_success, data: user };
@@ -157,10 +158,10 @@ export const createUserService = async (request: MasterUserInterface) => {
             is_active: params.is_active ?? true,
         };
         const newUser = await insertQuery(tableNames.masterUser, crateParams);
-        console.info("createUserService newUser:", newUser);
+        logger.info("User created");
         return { status: 201, message: locales.request_success, data: newUser };
     } catch (error) {
-        console.error("createUserService error:", error);
+        logger.error({ err: error }, "User creation failed");
         return { status: 500, message: locales.unable_to_handle_request, data: null };
     }
 };
@@ -189,10 +190,10 @@ export const updateUserService = async (request: MasterUserInterface) => {
             ...(password && { password }),
         };
         const updatedUser = await updateQuery(tableNames.masterUser, updateParams, { id: params.id });
-        console.info("updateUserService updatedUser:", updatedUser);
+        logger.info("User updated");
         return { status: 200, message: locales.request_success };
     } catch (error) {
-        console.error("updateUserService error:", error);
+        logger.error({ err: error }, "User update failed");
         return { status: 500, message: locales.unable_to_handle_request, data: null };
     }
 };
@@ -201,10 +202,10 @@ export const deleteUserService = async (request: MasterUserInterface) => {
     try {
         const params = request;
         const deletedUser = await updateQuery(tableNames.masterUser, { is_deleted: true }, { id: params.id });
-        console.info("deleteUserService deletedUser:", deletedUser);
+        logger.info("User deleted");
         return { status: 200, message: locales.request_success };
     } catch (error) {
-        console.error("deleteUserService error:", error);
+        logger.error({ err: error }, "User deletion failed");
         return { status: 500, message: locales.unable_to_handle_request, data: null };
     }
 };
@@ -299,7 +300,7 @@ export const loadUserRegistrationService = async (request: BaseRequest<MasterUse
             },
         };
     } catch (error) {
-        console.error("loadUserRegistrationService error:", error);
+        logger.error({ err: error }, "Registration list failed");
         return { status: 500, message: locales.unable_to_handle_request, data: null };
     }
 };
@@ -329,7 +330,7 @@ export const getUserRegistrationService = async (request: MasterUserInterface) =
 
         return { status: 200, message: locales.request_success, data };
     } catch (error) {
-        console.error("getUserRegistrationService error:", error);
+        logger.error({ err: error }, "Registration lookup failed");
         return { status: 500, message: locales.unable_to_handle_request, data: null };
     }
 };
@@ -387,7 +388,7 @@ export const approveUserRegistrationService = async (request: MasterUserInterfac
 
         return { status: 200, message: locales.request_success, data: updated };
     } catch (error) {
-        console.error("approveUserRegistrationService error:", error);
+        logger.error({ err: error }, "Registration approval failed");
         return { status: 500, message: locales.unable_to_handle_request, data: null };
     }
 };
@@ -416,7 +417,7 @@ export const rejectUserRegistrationService = async (request: MasterUserInterface
 
         return { status: 200, message: locales.request_success, data: updated };
     } catch (error) {
-        console.error("rejectUserRegistrationService error:", error);
+        logger.error({ err: error }, "Registration rejection failed");
         return { status: 500, message: locales.unable_to_handle_request, data: null };
     }
 };

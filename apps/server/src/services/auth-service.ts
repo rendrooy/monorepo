@@ -1,4 +1,5 @@
 import { locales, tableNames } from "../config";
+import { logger } from "../config/logger";
 import { findOneQuery, findQuery, insertQuery, type FindParams, type JoinClause } from "../config/query/query-runner";
 import { OperatorTypes, type Condition } from "../config/query/query-builder";
 import { signJwt } from "../utils/jwt";
@@ -357,7 +358,7 @@ export const registerService = async (
             },
         };
     } catch (error) {
-        console.error("registerService error:", error);
+        logger.error({ err: error }, "User registration failed");
         return { status: 500, message: locales.unable_to_handle_request, data: null };
     }
 };
@@ -396,7 +397,7 @@ export const loginService = async (
             },
         };
     } catch (error) {
-        console.error("loginService error:", error);
+        logger.error({ err: error }, "User login failed");
         return { status: 500, message: locales.unable_to_handle_request, data: null };
     }
 };
@@ -438,7 +439,7 @@ export const meService = async (
 
         return { status: 200, message: locales.request_success, data: toAuthUser(user) };
     } catch (error) {
-        console.error("meService error:", error);
+        logger.error({ err: error }, "Current user lookup failed");
         return { status: 500, message: locales.unable_to_handle_request, data: null };
     }
 };
@@ -451,7 +452,7 @@ export const authMenuService = async (
 
         return { status: 200, message: locales.request_success, data: buildMenuTree(menus) };
     } catch (error) {
-        console.error("authMenuService error:", error);
+        logger.error({ err: error }, "Authorized menu lookup failed");
         return { status: 500, message: locales.unable_to_handle_request, data: [] };
     }
 };

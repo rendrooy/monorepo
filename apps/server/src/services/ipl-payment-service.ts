@@ -203,10 +203,6 @@ const applyApprovedPayment = async (client: PoolClient, paymentId: string) => {
 };
 
 export const createPaymentService = async (request: IplPaymentInterface) => {
-  // console.log("createPaymentService", request);
-  // return {
-  //   "status": 201,
-  // }
   const auth = getCurrentAuth();
   const amount = Number(request.amount);
   if (

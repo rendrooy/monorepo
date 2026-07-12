@@ -1,7 +1,9 @@
-import { Pool } from "pg";
+import { Pool, type PoolClient } from "pg";
 import { Sequelize } from "sequelize";
 
 import { dbConnection } from "../config";
+import { logger } from "../config/logger";
+import { observeQuery } from "../utils/query-observer";
 
 interface DBConfig {
   connectionString?: string;
@@ -30,7 +32,7 @@ const sslConfig = shouldUseSsl(config.connectionString)
   ? { rejectUnauthorized: false }
   : undefined;
 
-export const pool = new Pool(
+const rawPool = new Pool(
   config.connectionString
     ? {
         connectionString: config.connectionString,
@@ -44,6 +46,41 @@ export const pool = new Pool(
         port: config.port || 5432,
       }
 );
+
+const instrumentClient = (client: PoolClient): PoolClient => new Proxy(client, {
+  get(target, property, receiver) {
+    if (property === "query") {
+      return (query: unknown, values?: unknown[]) => observeQuery(
+        "transaction",
+        query,
+        values,
+        () => target.query(query as never, values as never) as unknown as Promise<any>,
+      );
+    }
+    const value = Reflect.get(target, property, receiver);
+    return typeof value === "function" ? value.bind(target) : value;
+  },
+});
+
+export const pool: Pool = new Proxy(rawPool, {
+  get(target, property, receiver) {
+    if (property === "query") {
+      return (query: unknown, values?: unknown[]) => observeQuery(
+        "pool",
+        query,
+        values,
+        () => target.query(query as never, values as never) as unknown as Promise<any>,
+      );
+    }
+    if (property === "connect") {
+      return async () => instrumentClient(await target.connect());
+    }
+    const value = Reflect.get(target, property, receiver);
+    return typeof value === "function" ? value.bind(target) : value;
+  },
+}) as Pool;
+
+rawPool.on("error", (error) => logger.error({ err: error }, "Unexpected PostgreSQL pool error"));
 
 const sequelizeOptions = {
   dialect: "postgres" as const,

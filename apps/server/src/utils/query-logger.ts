@@ -1,14 +1,12 @@
 import type { PoolClient, QueryResult, QueryResultRow } from "pg";
 import { pool } from "../connection/db";
+import { loggerConfig, queryLogger } from "../config/logger";
 
 const formatSqlForLog = (query: string) => query.replace(/\s+/g, " ").trim();
 
 export const createQueryLogger = (scope: string) => {
   const logQuery = (label: string, query: string, values: unknown[] = []) => {
-    console.info(`[${scope}] ${label} SQL:`, formatSqlForLog(query));
-    if (values.length > 0) {
-      console.info(`[${scope}] ${label} values:`, values);
-    }
+    queryLogger.debug({ component: scope, operation: label, ...(loggerConfig.logSql ? { sql: formatSqlForLog(query) } : {}), ...(loggerConfig.logSqlParams ? { params: values } : {}) }, "Query prepared");
   };
 
   const poolQuery = async <T extends QueryResultRow = QueryResultRow>(

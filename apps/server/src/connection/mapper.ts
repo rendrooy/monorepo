@@ -1,5 +1,7 @@
 'use strict';
 
+import { logger } from "../config/logger";
+
 const resultMapper = <T = unknown>(result: { rows: T[]; }): T[] => {
     try {
         if (result.rows) {
@@ -11,7 +13,7 @@ const resultMapper = <T = unknown>(result: { rows: T[]; }): T[] => {
         }
         return [];
     } catch (error) {
-        console.log('Error: resultMapper => ', error);
+        logger.error({ err: error }, "Database result mapping failed");
         return [];
     }
 };

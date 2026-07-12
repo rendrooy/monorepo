@@ -54,3 +54,4 @@ apps/*/dist
 
 # private runtime uploads
 apps/server/storage/
+apps/server/logs/

@@ -1,4 +1,5 @@
 import { locales, tableNames } from '../config';
+import { logger } from '../config/logger';
 import type { BaseRequest, MasterMemberInterface } from "@monorepo/types";
 import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery, countQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
@@ -16,7 +17,7 @@ export const getMemberService = async (request: MasterMemberInterface) => {
         });
 
         const data = await findOneQuery(tableNames.masterMember, queryParams);
-        console.info("getMemberService Member:", data);
+        logger.debug({ found: Boolean(data) }, "Member lookup completed");
 
         if (data) {
             return {
@@ -73,7 +74,7 @@ export const loadMemberService = async (request: BaseRequest) => {
                 });
             }
         }
-        console.info("getMemberService conditionParams:", conditionParams);
+        logger.debug({ conditionCount: conditionParams.length }, "Member list prepared");
         const [data, total] = await Promise.all([
             findQuery(tableNames.masterMember, queryParams),
             countQuery(tableNames.masterMember, { conditions: conditionParams }),
@@ -107,7 +108,7 @@ export const createMemberService = async (request: MasterMemberInterface) => {
         const crateParams: QueryData = {
             ...request as MasterMemberInterface,
         }
-        console.info("createMemberService crate:", crateParams);
+        logger.debug({ fieldCount: Object.keys(crateParams).length }, "Member creation prepared");
         const newMember = await insertQuery(tableNames.masterMember, crateParams);
         return {
             status: 201,
@@ -115,7 +116,7 @@ export const createMemberService = async (request: MasterMemberInterface) => {
             data: newMember,
         };
     } catch (error) {
-        console.error("createMemberService error:", error);
+        logger.error({ err: error }, "Member creation failed");
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -131,7 +132,7 @@ export const updateMemberService = async (request: MasterMemberInterface) => {
         const updateParams: QueryData = {
             ...request as MasterMemberInterface,
         }
-        console.info("createMemberService update:", updateParams);
+        logger.debug({ fieldCount: Object.keys(updateParams).length }, "Member update prepared");
         const updatedData = await updateQuery(tableNames.masterMember, updateParams, { id: updateParams.id });
         return {
             status: 200,
@@ -139,7 +140,7 @@ export const updateMemberService = async (request: MasterMemberInterface) => {
             data: updatedData,
         };
     } catch (error) {
-        console.error("updateMemberService error:", error);
+        logger.error({ err: error }, "Member update failed");
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -154,14 +155,14 @@ export const deleteMemberService = async (request: MasterMemberInterface) => {
         const paramsQuery: QueryData = {
             is_deleted: true,
         }
-        console.info("createMemberService update:", paramsQuery);
+        logger.debug({ fieldCount: Object.keys(paramsQuery).length }, "Member deletion prepared");
         const deletedMember = await updateQuery(tableNames.masterMember, paramsQuery, { id: request.id });
         return {
             status: 200,
             message: locales.request_success,
         };
     } catch (error) {
-        console.error("deleteMemberService error:", error);
+        logger.error({ err: error }, "Member deletion failed");
         return {
             status: 500,
             message: locales.unable_to_handle_request,

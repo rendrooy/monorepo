@@ -5,6 +5,7 @@ import { pool } from "../../connection/db";
 import { createQueryLogger } from "../../utils/query-logger";
 import { tableNames } from "..";
 import { getCurrentAuth } from "../../utils/request-context";
+import { logger } from "../logger";
 
 const { logQuery } = createQueryLogger("query-runner");
 
@@ -108,7 +109,7 @@ export const findQuery = async <T = unknown>(
 
     return (resultMapper(result) || []) as T[];
   } catch (err) {
-    console.error("findQuery error:", err);
+    logger.error({ err, tableName }, "findQuery failed");
     return [];
   }
 };
@@ -154,7 +155,7 @@ export const insertQuery = async <T = unknown>(
 
     return result.rows?.[0] || null;
   } catch (error) {
-    console.error("insertQuery error:", error);
+    logger.error({ err: error, tableName }, "insertQuery failed");
     return null;
   }
 };
@@ -200,7 +201,7 @@ export const updateQuery = async <T = unknown>(
 
     return result.rows?.[0] || null;
   } catch (error) {
-    console.error("updateQuery error:", error);
+    logger.error({ err: error, tableName }, "updateQuery failed");
     return null;
   }
 };
@@ -231,7 +232,7 @@ export const countQuery = async (
     const result = await pool.query(query, conditionQuery.bindValues);
     return parseInt(result.rows?.[0]?.total || "0", 10);
   } catch (err) {
-    console.error("countQuery error:", err);
+    logger.error({ err, tableName }, "countQuery failed");
     return 0;
   }
 };
@@ -260,7 +261,7 @@ export const deleteQuery = async (
       message: "Delete Success",
     };
   } catch (error) {
-    console.error("deleteQuery error:", error);
+    logger.error({ err: error, tableName }, "deleteQuery failed");
     return null;
   }
 };

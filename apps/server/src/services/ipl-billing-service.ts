@@ -8,6 +8,7 @@ import type {
 import { pool } from "../connection/db";
 import { tableNames } from "../config";
 import { getCurrentAuth } from "../utils/request-context";
+import { logger } from "../config/logger";
 
 const PERIOD_PATTERN = /^(JAN|FEB|MAR|APR|MEI|JUN|JUL|AGU|SEP|OKT|NOV|DES)-\d{4}$/;
 
@@ -200,7 +201,7 @@ export const publishBillBatchService = async (id?: string | null) => {
     return { status: 200, message: "Tagihan berhasil diterbitkan", data };
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("publishBillBatchService error:", error);
+    logger.error({ err: error, batchId: id }, "Bill batch publication failed");
     return { status: 500, message: "Gagal menerbitkan tagihan", data: null };
   } finally {
     client.release();
@@ -263,7 +264,7 @@ export const cancelBillBatchService = async (id?: string | null) => {
     return { status: 200, message: "Batch tagihan berhasil dibatalkan", data: null };
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("cancelBillBatchService error:", error);
+    logger.error({ err: error, batchId: id }, "Bill batch cancellation failed");
     return { status: 500, message: "Gagal membatalkan tagihan", data: null };
   } finally {
     client.release();

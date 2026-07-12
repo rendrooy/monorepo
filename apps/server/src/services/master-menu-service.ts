@@ -1,4 +1,5 @@
 import { locales, tableNames } from "../config";
+import { logger } from "../config/logger";
 import type { BaseRequest, MasterMenuInterface } from "@monorepo/types";
 import { countQuery, FindParams, findOneQuery, findQuery, insertQuery, updateQuery } from "../config/query/query-runner";
 import { Condition, OperatorTypes, QueryData } from "../config/query/query-builder";
@@ -50,7 +51,7 @@ export const getMenuService = async (request: MasterMenuInterface) => {
             message: locales.resource_not_found,
         };
     } catch (error) {
-        console.error("getMenuService error:", error);
+        logger.error({ err: error }, "Menu lookup failed");
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -109,7 +110,7 @@ export const loadMenuService = async (request: BaseRequest<MasterMenuInterface>)
             },
         };
     } catch (error) {
-        console.error("loadMenuService error:", error);
+        logger.error({ err: error }, "Menu list failed");
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -128,7 +129,7 @@ export const createMenuService = async (request: MasterMenuInterface) => {
             data: newMenu,
         };
     } catch (error) {
-        console.error("createMenuService error:", error);
+        logger.error({ err: error }, "Menu creation failed");
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -153,7 +154,7 @@ export const updateMenuService = async (request: MasterMenuInterface) => {
             message: locales.request_success,
         };
     } catch (error) {
-        console.error("updateMenuService error:", error);
+        logger.error({ err: error }, "Menu update failed");
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -178,7 +179,7 @@ export const deleteMenuService = async (request: MasterMenuInterface) => {
             message: locales.request_success,
         };
     } catch (error) {
-        console.error("deleteMenuService error:", error);
+        logger.error({ err: error }, "Menu deletion failed");
         return {
             status: 500,
             message: locales.unable_to_handle_request,

@@ -1,4 +1,5 @@
 import { locales, tableNames } from '../config';
+import { logger } from '../config/logger';
 import type { BaseRequest, MasterRoleInterface, MasterRoleMenuPermissionInterface } from "@monorepo/types";
 import { findOneQuery, FindParams, findQuery, insertQuery, updateQuery, countQuery } from '../config/query/query-runner';
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
@@ -150,7 +151,7 @@ export const getRoleService = async (request: MasterRoleInterface) => {
         });
 
         const data = await findOneQuery<MasterRoleInterface>(tableNames.masterRole, queryParams);
-        console.info("getRoleService Role:", data);
+        logger.debug({ found: Boolean(data) }, "Role lookup completed");
 
         if (data) {
             const rolePermissions = await loadRolePermissions(data.id);
@@ -208,13 +209,13 @@ export const loadRoleService = async (request: BaseRequest<MasterRoleInterface>)
                 });
             }
         }
-        console.info("getRoleService conditionParams:", conditionParams);
+        logger.debug({ conditionCount: conditionParams.length }, "Role list prepared");
 
         const [data, total] = await Promise.all([
             findQuery(tableNames.masterRole, queryParams),
             countQuery(tableNames.masterRole, { conditions: conditionParams }),
         ]);
-        console.info("getRoleService role:", data);
+        logger.debug({ resultCount: data.length }, "Role list completed");
 
         return {
             status: 200,
@@ -246,14 +247,14 @@ export const createRoleService = async (request: MasterRoleInterface) => {
         }
 
         await syncRolePermissions(newRole?.id, params.role_permissions, true);
-        console.info("createRoleService newRole:", newRole);
+        logger.info({ roleId: newRole?.id }, "Role created");
         return {
             status: 201,
             message: locales.request_success,
             data: newRole,
         };
     } catch (error) {
-        console.error("createRoleService error:", error);
+        logger.error({ err: error }, "Role creation failed");
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -273,13 +274,13 @@ export const updateRoleService = async (request: MasterRoleInterface) => {
         }
 
         await syncRolePermissions(params.id, params.role_permissions);
-        console.info("updateRoleService updatedRole:", updatedData);
+        logger.info("Role updated");
         return {
             status: 200,
             message: locales.request_success,
         };
     } catch (error) {
-        console.error("updateRoleService error:", error);
+        logger.error({ err: error }, "Role update failed");
         return {
             status: 500,
             message: locales.unable_to_handle_request,
@@ -296,13 +297,13 @@ export const deleteRoleService = async (request: MasterRoleInterface) => {
             is_deleted: true,
         }
         const deletedRole = await updateQuery(tableNames.masterRole, paramsQuery, { id: params.id });
-        console.info("deleteRoleService deletedRole:", deletedRole);
+        logger.info("Role deleted");
         return {
             status: 200,
             message: locales.request_success,
         };
     } catch (error) {
-        console.error("deleteRoleService error:", error);
+        logger.error({ err: error }, "Role deletion failed");
         return {
             status: 500,
             message: locales.unable_to_handle_request,

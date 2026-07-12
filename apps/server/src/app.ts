@@ -1,13 +1,14 @@
 import cors from "cors";
 import express from "express";
-import morgan from "morgan";
 
 import routes from "./routes";
 import { errorMiddleware } from "./middleware/error.middleware";
+import { httpLogger, requestContextMiddleware } from "./middleware/request-logger.middleware";
 
 const app: express.Express = express();
 
-app.use(morgan("tiny"));
+app.use(httpLogger);
+app.use(requestContextMiddleware);
 
 app.use(express.json({ limit: "100mb" }));
 

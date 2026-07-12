@@ -1,3 +1,5 @@
+import { logger } from "../logger";
+
 export const resultMapper = <T = unknown>(result: { rows: T[]; }): T[] => {
     try {
         if (result.rows) {
@@ -9,7 +11,7 @@ export const resultMapper = <T = unknown>(result: { rows: T[]; }): T[] => {
         }
         return [];
     } catch (error) {
-        console.log('Error: resultMapper => ', error);
+        logger.error({ err: error }, "Query result mapping failed");
         return [];
     }
 };
