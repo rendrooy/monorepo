@@ -14,6 +14,8 @@ interface CallApiOptions {
     onFinally?: () => void;
 }
 
+const REQUEST_TIMEOUT_MS = 30_000;
+
 function getEmptyResponse<T extends ServiceKey>(): ServiceMapping[T]['response'] {
     return {
         data: {},
@@ -32,12 +34,15 @@ export function useApiService<T extends ServiceKey>(servicesKey: T) {
 
     const callApi = useCallback(
         async (body: ServiceMapping[T]["body"], options: CallApiOptions = {}) => {
+            const controller = new AbortController();
+            const timeout = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
             try {
                 setState((prev) => ({ ...prev, loading: true }));
                 const endpoint = getEndpointServiceKey(servicesKey)
                 const accessToken = getAccessToken();
                 const response = await fetch(`http://localhost:3001/v1${endpoint}`, {
                     method: "POST",
+                    signal: controller.signal,
                     headers: {
                         "Content-Type": "application/json",
                         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
@@ -75,14 +80,22 @@ export function useApiService<T extends ServiceKey>(servicesKey: T) {
                 })
                 options.onSuccess?.(typedData)
                 return typedData;
-            } catch {
-                const errorMessage = "Network Error"
+            } catch (error) {
+                const errorMessage = error instanceof DOMException && error.name === "AbortError"
+                    ? "Request timeout. Silakan coba kembali."
+                    : "Network Error";
+                const errorResponse = { status: 0, message: errorMessage, data: null };
                 setState((prev) => ({
                     ...prev,
                     loading: false,
                     error: errorMessage,
-                    data: getEmptyResponse()
+                    data: errorResponse as ServiceMapping[T]["response"]
                 }))
+                options.onError?.(errorResponse);
+                return errorResponse as ServiceMapping[T]["response"];
+            } finally {
+                window.clearTimeout(timeout);
+                options.onFinally?.();
             }
             // eslint-disable-next-line react-hooks/exhaustive-deps
         }, []
@@ -171,6 +184,7 @@ function getEndpointServiceKey(params: string): string {
         getIplDashboard: "/operation/ipl/dashboard",
         getIplFinancialTrend: "/operation/ipl/dashboard/trend",
         getUmkmCategories: "/operation/umkm/categories",
+        loadActiveUmkmAds: "/operation/umkm/ads",
         loadMyUmkm: "/operation/umkm/my/load",
         saveUmkmDraft: "/operation/umkm/save",
         submitUmkm: "/operation/umkm/submit",

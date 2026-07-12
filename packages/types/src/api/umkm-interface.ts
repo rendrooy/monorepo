@@ -12,3 +12,9 @@ export interface UmkmInterface {
   status?: UmkmStatus | UmkmRevisionStatus | null; review_note?: string | null; reviewed_time?: string | null; created_time?: string | null;
 }
 export interface UmkmReviewRequest { id?: string | null; note?: string | null; }
+export interface UmkmAdInterface {
+  subscription_id?: string | null; revision_id?: string | null; name?: string | null;
+  category?: UmkmCategory | null; category_label?: string | null; description?: string | null;
+  address?: string | null; whatsapp?: string | null; external_url?: string | null;
+  start_date?: string | null; end_date?: string | null;
+}

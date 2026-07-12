@@ -42,7 +42,7 @@ import {
 import { getIplReportSummary, loadIplCreditLedger } from "../controller/ipl-report-controller";
 import { getIplDashboard, getIplFinancialTrend } from "../controller/ipl-dashboard-controller";
 import { approveUmkm, getUmkmCategories, getUmkmImage, loadMyUmkm, loadUmkmReview, rejectUmkm, resumeUmkm, saveUmkmDraft, submitUmkm, suspendUmkm } from "../controller/umkm-controller";
-import { approveSubscriptionPayment, createSubscription, getActivePlans, getMySubscriptions, getPaymentReviews, getPlans, getUmkmPaymentProof, paySubscription, rejectSubscriptionPayment, releaseUmkmSubscription, upsertPlan } from "../controller/umkm-subscription-controller";
+import { approveSubscriptionPayment, createSubscription, getActivePlans, getActiveUmkmAds, getMySubscriptions, getPaymentReviews, getPlans, getUmkmPaymentProof, paySubscription, rejectSubscriptionPayment, releaseUmkmSubscription, upsertPlan } from "../controller/umkm-subscription-controller";
 
 const router = Router();
 
@@ -124,6 +124,7 @@ router.post('/umkm/content/approve', approveUmkm);
 router.post('/umkm/content/reject', rejectUmkm);
 router.get('/umkm/revision/:id/image', getUmkmImage);
 router.post('/operation/umkm/subscription/plans', getActivePlans);
+router.post('/operation/umkm/ads', getActiveUmkmAds);
 router.post('/operation/umkm/subscription/my', getMySubscriptions);
 router.post('/operation/umkm/subscription/create', createSubscription);
 router.post('/operation/umkm/subscription/pay', paySubscription);

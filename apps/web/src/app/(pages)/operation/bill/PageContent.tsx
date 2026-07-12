@@ -6,7 +6,11 @@ import { IplPaymentDialog } from "@/components/IplPaymentDialog";
 import { IplStatusBadge } from "@/components/IplStatusBadge";
 import { getAccessToken } from "@/utils/auth-storage";
 import { formatDate } from "@/utils/format-date";
-import type { IplBillInterface, IplPaymentInterface, Metadata } from "@monorepo/types";
+import type {
+  IplBillInterface,
+  IplPaymentInterface,
+  Metadata,
+} from "@monorepo/types";
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent } from "@monorepo/ui/components/card";
 import { Eye, ReceiptText, Upload } from "lucide-react";
@@ -23,7 +27,9 @@ const money = (value?: number | null) =>
 export default function PageContent() {
   const [data, setData] = useState<IplBillInterface[]>([]);
   const [payments, setPayments] = useState<IplPaymentInterface[]>([]);
-  const [selectedBill, setSelectedBill] = useState<IplBillInterface | null>(null);
+  const [selectedBill, setSelectedBill] = useState<IplBillInterface | null>(
+    null,
+  );
   const [meta, setMeta] = useState<Metadata>({
     page: 1,
     pageSize: 10,
@@ -31,7 +37,8 @@ export default function PageContent() {
   });
   const { callApi, loading } = useApiService("loadMyIplBill");
   const { callApi: loadPayments } = useApiService("loadMyIplPayment");
-  const { callApi: createPayment, loading: creatingPayment } = useApiService("createIplPayment");
+  const { callApi: createPayment, loading: creatingPayment } =
+    useApiService("createIplPayment");
   const load = useCallback(
     () =>
       callApi(
@@ -53,22 +60,44 @@ export default function PageContent() {
   }, [load]);
 
   const refreshPayments = useCallback(() => {
-    loadPayments({ params: {}, metadata: { page: 1, pageSize: 100 } }, { onSuccess: (response) => setPayments(response.data || []) });
+    loadPayments(
+      { params: {}, metadata: { page: 1, pageSize: 100 } },
+      { onSuccess: (response) => setPayments(response.data || []) },
+    );
   }, [loadPayments]);
 
-  useEffect(() => { refreshPayments(); }, [refreshPayments]);
+  useEffect(() => {
+    refreshPayments();
+  }, [refreshPayments]);
 
   const submitPayment = async (payment: IplPaymentInterface) => {
+    // console.log("submitPayment", payment);
     await createPayment(payment, {
-      onSuccess: () => { toast.success("Bukti pembayaran berhasil dikirim"); setSelectedBill(null); load(); refreshPayments(); },
-      onError: (error) => toast.error(error.message || "Bukti pembayaran gagal dikirim"),
+      onSuccess: () => {
+        toast.success("Bukti pembayaran berhasil dikirim");
+        setSelectedBill(null);
+        load();
+        refreshPayments();
+      },
+      onError: (error) =>
+        toast.error(error.message || "Bukti pembayaran gagal dikirim"),
     });
   };
 
   const openProof = async (payment: IplPaymentInterface) => {
-    const response = await fetch(`http://localhost:3001/v1/operation/ipl/payment/${payment.id}/proof`, { headers: { Authorization: `Bearer ${getAccessToken()}` } });
-    if (!response.ok) { toast.error("Bukti pembayaran tidak dapat dibuka"); return; }
-    window.open(URL.createObjectURL(await response.blob()), "_blank", "noopener,noreferrer");
+    const response = await fetch(
+      `http://localhost:3001/v1/operation/ipl/payment/${payment.id}/proof`,
+      { headers: { Authorization: `Bearer ${getAccessToken()}` } },
+    );
+    if (!response.ok) {
+      toast.error("Bukti pembayaran tidak dapat dibuka");
+      return;
+    }
+    window.open(
+      URL.createObjectURL(await response.blob()),
+      "_blank",
+      "noopener,noreferrer",
+    );
   };
 
   return (
@@ -109,30 +138,108 @@ export default function PageContent() {
                   header: "Nominal",
                   body: (row) => money(row.amount),
                 },
-                { field: "paid_amount", header: "Dibayar", body: (row) => money(row.paid_amount) },
-                { field: "credit_applied_amount", header: "Saldo Digunakan", body: (row) => money(row.credit_applied_amount) },
-                { field: "remaining_amount", header: "Sisa", body: (row) => money(row.remaining_amount) },
+                {
+                  field: "paid_amount",
+                  header: "Dibayar",
+                  body: (row) => money(row.paid_amount),
+                },
+                {
+                  field: "credit_applied_amount",
+                  header: "Saldo Digunakan",
+                  body: (row) => money(row.credit_applied_amount),
+                },
+                {
+                  field: "remaining_amount",
+                  header: "Sisa",
+                  body: (row) => money(row.remaining_amount),
+                },
                 {
                   field: "status",
                   header: "Status",
                   body: (row) => <IplStatusBadge status={row.status} />,
                 },
                 { field: "note", header: "Catatan" },
-                { header: "Aksi", body: (row) => <Button size="sm" variant="outline" disabled={row.status === "PAID" || row.status === "OVERPAID" || row.status === "CANCELLED" || Number(row.pending_payment_count) > 0} onClick={() => setSelectedBill(row)}><Upload className="h-4 w-4" />{Number(row.pending_payment_count) > 0 ? "Menunggu Verifikasi" : "Upload Bukti"}</Button> },
+                {
+                  header: "Aksi",
+                  body: (row) => (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={
+                        row.status === "PAID" ||
+                        row.status === "OVERPAID" ||
+                        row.status === "CANCELLED" ||
+                        Number(row.pending_payment_count) > 0
+                      }
+                      onClick={() => setSelectedBill(row)}
+                    >
+                      <Upload className="h-4 w-4" />
+                      {Number(row.pending_payment_count) > 0
+                        ? "Menunggu Verifikasi"
+                        : "Upload Bukti"}
+                    </Button>
+                  ),
+                },
               ]}
             />
           </CardContent>
         </Card>
       )}
-      <Card><CardContent className="pt-6"><h2 className="mb-4 text-lg font-semibold">Riwayat Pembayaran</h2><AppDataTable data={payments} showMeta={false} onMetaChange={() => undefined} columns={[
-        { field: "bill_number", header: "Tagihan" }, { field: "payment_date", header: "Tanggal", body: (row) => formatDate(row.payment_date) },
-        { field: "amount", header: "Nominal", body: (row) => money(row.amount) },
-        { field: "payment_method", header: "Metode" },
-        { field: "status", header: "Status", body: (row) => <IplStatusBadge status={row.status} /> },
-        { field: "rejection_note", header: "Catatan Admin", body: (row) => row.rejection_note || row.reversal_note || "-" },
-        { header: "Bukti", body: (row) => <Button size="icon" variant="ghost" title="Lihat bukti" onClick={() => openProof(row)}><Eye className="h-4 w-4" /></Button> },
-      ]} /></CardContent></Card>
-      <IplPaymentDialog open={selectedBill !== null} bills={data} selectedBill={selectedBill} loading={creatingPayment} onOpenChange={(open) => !open && setSelectedBill(null)} onSubmit={submitPayment} />
+      <Card>
+        <CardContent className="pt-6">
+          <h2 className="mb-4 text-lg font-semibold">Riwayat Pembayaran</h2>
+          <AppDataTable
+            data={payments}
+            showMeta={false}
+            onMetaChange={() => undefined}
+            columns={[
+              { field: "bill_number", header: "Tagihan" },
+              {
+                field: "payment_date",
+                header: "Tanggal",
+                body: (row) => formatDate(row.payment_date),
+              },
+              {
+                field: "amount",
+                header: "Nominal",
+                body: (row) => money(row.amount),
+              },
+              { field: "payment_method", header: "Metode" },
+              {
+                field: "status",
+                header: "Status",
+                body: (row) => <IplStatusBadge status={row.status} />,
+              },
+              {
+                field: "rejection_note",
+                header: "Catatan Admin",
+                body: (row) => row.rejection_note || row.reversal_note || "-",
+              },
+              {
+                header: "Bukti",
+                body: (row) => (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    title="Lihat bukti"
+                    onClick={() => openProof(row)}
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                ),
+              },
+            ]}
+          />
+        </CardContent>
+      </Card>
+      <IplPaymentDialog
+        open={selectedBill !== null}
+        bills={data}
+        selectedBill={selectedBill}
+        loading={creatingPayment}
+        onOpenChange={(open) => !open && setSelectedBill(null)}
+        onSubmit={submitPayment}
+      />
     </div>
   );
 }

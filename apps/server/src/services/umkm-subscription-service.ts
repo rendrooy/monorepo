@@ -170,6 +170,35 @@ export const loadMySubscriptions = async () => {
     );
     return { status: 200, message: "Request successful", data: result.rows };
 };
+
+export const loadActiveAds = async () => {
+    await pool.query(
+        `UPDATE ${tableNames.umkmSubscription} SET status='EXPIRED',updated_time=now()
+         WHERE status='ACTIVE' AND end_date<current_date AND is_deleted=false`,
+    );
+    const result = await pool.query(
+        `SELECT subscription.id AS subscription_id,revision.id AS revision_id,
+           revision.name,revision.category,
+           CASE revision.category
+             WHEN 'FOOD_BEVERAGE' THEN 'Makanan & Minuman' WHEN 'GROCERY' THEN 'Sembako'
+             WHEN 'FASHION' THEN 'Fashion' WHEN 'HEALTH_BEAUTY' THEN 'Kesehatan & Kecantikan'
+             WHEN 'SERVICE' THEN 'Jasa' WHEN 'CRAFT' THEN 'Kerajinan'
+             WHEN 'ELECTRONIC' THEN 'Elektronik' WHEN 'AUTOMOTIVE' THEN 'Otomotif'
+             WHEN 'AGRICULTURE' THEN 'Pertanian & Peternakan' WHEN 'EDUCATION' THEN 'Pendidikan'
+             WHEN 'PROPERTY' THEN 'Properti' ELSE 'Lainnya' END AS category_label,
+           revision.description,revision.address,revision.whatsapp,revision.external_url,
+           subscription.start_date,subscription.end_date
+         FROM ${tableNames.umkmSubscription} subscription
+         INNER JOIN ${tableNames.umkm} business ON business.id=subscription.umkm_id
+         INNER JOIN ${tableNames.umkmRevision} revision ON revision.id=subscription.revision_id
+         WHERE subscription.status='ACTIVE' AND subscription.start_date<=current_date
+           AND subscription.end_date>=current_date AND subscription.is_deleted=false
+           AND business.status='APPROVED' AND business.is_deleted=false
+           AND revision.status='APPROVED' AND revision.is_deleted=false
+         ORDER BY subscription.released_time DESC,subscription.created_time DESC`,
+    );
+    return { status: 200, message: "Request successful", data: result.rows };
+};
 export const submitPayment = async (r: UmkmSubscriptionInterface) => {
     let f;
     try {

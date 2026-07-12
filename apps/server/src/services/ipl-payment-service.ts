@@ -203,6 +203,10 @@ const applyApprovedPayment = async (client: PoolClient, paymentId: string) => {
 };
 
 export const createPaymentService = async (request: IplPaymentInterface) => {
+  // console.log("createPaymentService", request);
+  // return {
+  //   "status": 201,
+  // }
   const auth = getCurrentAuth();
   const amount = Number(request.amount);
   if (
@@ -223,6 +227,8 @@ export const createPaymentService = async (request: IplPaymentInterface) => {
   try {
     saved = await saveProof(request);
     await client.query("BEGIN");
+    await client.query("SET LOCAL lock_timeout = '5s'");
+    await client.query("SET LOCAL statement_timeout = '20s'");
     const billResult = await client.query<{
       id: string;
       family_id: string;

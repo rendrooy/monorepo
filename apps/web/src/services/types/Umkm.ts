@@ -1,7 +1,8 @@
-import type { BaseRequest, BaseResponse, UmkmCategoryOption, UmkmInterface, UmkmReviewRequest, UmkmSubscriptionInterface, UmkmSubscriptionPlanInterface, UmkmSubscriptionReviewRequest } from "@monorepo/types";
+import type { BaseRequest, BaseResponse, UmkmAdInterface, UmkmCategoryOption, UmkmInterface, UmkmReviewRequest, UmkmSubscriptionInterface, UmkmSubscriptionPlanInterface, UmkmSubscriptionReviewRequest } from "@monorepo/types";
 import type { ServiceStructure } from "../ServiceType";
 export interface UmkmMapping {
   getUmkmCategories: ServiceStructure<{body:Record<string,never>;response:BaseResponse<UmkmCategoryOption[]>}>;
+  loadActiveUmkmAds: ServiceStructure<{body:Record<string,never>;response:BaseResponse<UmkmAdInterface[]>}>;
   loadMyUmkm: ServiceStructure<{body:BaseRequest<UmkmInterface>;response:BaseResponse<UmkmInterface[]>}>;
   saveUmkmDraft: ServiceStructure<{body:UmkmInterface;response:BaseResponse<UmkmInterface>}>;
   submitUmkm: ServiceStructure<{body:UmkmInterface;response:BaseResponse}>;

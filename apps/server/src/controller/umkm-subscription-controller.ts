@@ -1,13 +1,14 @@
 import type { BaseRequest, UmkmSubscriptionInterface, UmkmSubscriptionPlanInterface, UmkmSubscriptionReviewRequest } from "@monorepo/types";
 import type { Request,Response } from "express";
 import { build } from "./app-response";
-import { choosePlan,getSubscriptionProof,loadMySubscriptions,loadPaymentReviews,loadPlans,releaseSubscription,reviewPayment,savePlan,submitPayment } from "../services/umkm-subscription-service";
+import { choosePlan,getSubscriptionProof,loadActiveAds,loadMySubscriptions,loadPaymentReviews,loadPlans,releaseSubscription,reviewPayment,savePlan,submitPayment } from "../services/umkm-subscription-service";
 type Body<T>=Request<Record<string,never>,unknown,T>;
 export const getActivePlans=async(_q:Request,s:Response)=>build(s,await loadPlans(true));
 export const getPlans=async(_q:Request,s:Response)=>build(s,await loadPlans());
 export const upsertPlan=async(q:Body<UmkmSubscriptionPlanInterface>,s:Response)=>build(s,await savePlan(q.body));
 export const createSubscription=async(q:Body<UmkmSubscriptionInterface>,s:Response)=>build(s,await choosePlan(q.body));
 export const getMySubscriptions=async(_q:Request,s:Response)=>build(s,await loadMySubscriptions());
+export const getActiveUmkmAds=async(_q:Request,s:Response)=>build(s,await loadActiveAds());
 export const paySubscription=async(q:Body<UmkmSubscriptionInterface>,s:Response)=>build(s,await submitPayment(q.body));
 export const getPaymentReviews=async(q:Body<BaseRequest<UmkmSubscriptionInterface>>,s:Response)=>build(s,await loadPaymentReviews(q.body));
 export const approveSubscriptionPayment=async(q:Body<UmkmSubscriptionReviewRequest>,s:Response)=>build(s,await reviewPayment(q.body.id||undefined,true,q.body.note));
