@@ -43,6 +43,7 @@ import { getIplReportSummary, loadIplCreditLedger } from "../controller/ipl-repo
 import { getIplDashboard, getIplFinancialTrend } from "../controller/ipl-dashboard-controller";
 import { approveUmkm, getUmkmCategories, getUmkmImage, loadMyUmkm, loadUmkmReview, rejectUmkm, resumeUmkm, saveUmkmDraft, submitUmkm, suspendUmkm } from "../controller/umkm-controller";
 import { approveSubscriptionPayment, createSubscription, getActivePlans, getActiveUmkmAds, getMySubscriptions, getPaymentReviews, getPlans, getUmkmPaymentProof, paySubscription, rejectSubscriptionPayment, releaseUmkmSubscription, upsertPlan } from "../controller/umkm-subscription-controller";
+import { cancelGuestVisit, checkInGuest, checkOutGuest, createGuestVisit, loadGuestGate, loadGuestHistory, loadMyGuestVisits, updateGuestVisit } from "../controller/guest-visit-controller";
 
 const router = Router();
 
@@ -135,6 +136,14 @@ router.post('/umkm/subscription/payment/load', getPaymentReviews);
 router.post('/umkm/subscription/payment/approve', approveSubscriptionPayment);
 router.post('/umkm/subscription/payment/reject', rejectSubscriptionPayment);
 router.get('/umkm/subscription/payment/:id/proof', getUmkmPaymentProof);
+router.post('/operation/guest/load', loadMyGuestVisits);
+router.post('/operation/guest/insert', createGuestVisit);
+router.post('/operation/guest/update', updateGuestVisit);
+router.post('/operation/guest/cancel', cancelGuestVisit);
+router.post('/security/guest/load', loadGuestGate);
+router.post('/security/guest/history', loadGuestHistory);
+router.post('/security/guest/check-in', checkInGuest);
+router.post('/security/guest/check-out', checkOutGuest);
 router.post('/notification/load', loadNotification);
 router.post('/notification/read', readNotification);
 

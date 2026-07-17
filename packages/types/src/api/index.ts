@@ -10,3 +10,4 @@ export * from "./auth-interface";
 export * from "./ipl-billing-interface";
 export * from "./umkm-interface";
 export * from "./umkm-subscription-interface";
+export * from "./guest-visit-interface";

@@ -203,6 +203,14 @@ function getEndpointServiceKey(params: string): string {
         loadUmkmPaymentReviews: "/umkm/subscription/payment/load",
         approveUmkmPayment: "/umkm/subscription/payment/approve",
         rejectUmkmPayment: "/umkm/subscription/payment/reject",
+        loadMyGuestVisits: "/operation/guest/load",
+        createGuestVisit: "/operation/guest/insert",
+        updateGuestVisit: "/operation/guest/update",
+        cancelGuestVisit: "/operation/guest/cancel",
+        loadGuestGate: "/security/guest/load",
+        loadGuestHistory: "/security/guest/history",
+        checkInGuest: "/security/guest/check-in",
+        checkOutGuest: "/security/guest/check-out",
     }
 
     const url = endpoint[params];

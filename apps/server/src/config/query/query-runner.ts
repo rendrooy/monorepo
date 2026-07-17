@@ -23,6 +23,9 @@ const auditedTables = new Set<string>([
   tableNames.iplFamilyCredit,
   tableNames.iplCreditLedger,
   tableNames.financialTransaction,
+  tableNames.guestVisit,
+  tableNames.guestVehicle,
+  tableNames.guestVisitHistory,
   tableNames.umkm,
   tableNames.umkmRevision,
 ]);
