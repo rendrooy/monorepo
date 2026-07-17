@@ -9,6 +9,7 @@ import type {
 import { tableNames } from "../config";
 import { pool } from "../connection/db";
 import { getCurrentAuth } from "../utils/request-context";
+import { postIncomeTransaction } from "./financial-transaction-service";
 
 const storageRoot = path.resolve(
     process.cwd(),
@@ -294,17 +295,26 @@ export const reviewPayment = async (
         await c.query("BEGIN");
         const x = (
             await c.query(
-                `SELECT s.*,b.owner_user_id FROM ${tableNames.umkmSubscription} s JOIN ${tableNames.umkm} b ON b.id=s.umkm_id WHERE s.id=$1 AND s.status='PENDING_PAYMENT_REVIEW' FOR UPDATE`,
+                `SELECT s.*,b.owner_user_id,b.family_id FROM ${tableNames.umkmSubscription} s JOIN ${tableNames.umkm} b ON b.id=s.umkm_id WHERE s.id=$1 AND s.status='PENDING_PAYMENT_REVIEW' FOR UPDATE`,
                 [id],
             )
         ).rows[0];
         if (!x) throw Error("Pembayaran tidak dapat diverifikasi");
-        if (approve)
+        if (approve) {
             await c.query(
                 `UPDATE ${tableNames.umkmSubscription} SET status='READY_TO_RELEASE',ready_time=now(),reviewed_time=now(),reviewed_by_id=$2,updated_time=now(),updated_by_id=$2 WHERE id=$1`,
                 [id, getCurrentAuth()?.user_id],
             );
-        else
+            await postIncomeTransaction(c, {
+                transactionType: "UMKM_ADS",
+                amount: Number(x.amount),
+                transactionDate: x.payment_date,
+                referenceType: "UMKM_SUBSCRIPTION",
+                referenceId: x.id,
+                familyId: x.family_id,
+                description: `Pembayaran iklan UMKM ${x.plan_name}`,
+            });
+        } else
             await c.query(
                 `UPDATE ${tableNames.umkmSubscription} SET status='PAYMENT_REJECTED',rejection_note=$2,reviewed_time=now(),reviewed_by_id=$3,updated_time=now(),updated_by_id=$3 WHERE id=$1`,
                 [id, note!.trim(), getCurrentAuth()?.user_id],

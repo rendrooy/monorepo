@@ -1,4 +1,4 @@
-import type { IplBillInterface, IplDashboardInterface, IplPaymentInterface, IplReportSummaryInterface } from "@monorepo/types";
+import type { FinancialIncomeSummaryInterface, FinancialTransactionInterface, IplBillInterface, IplDashboardInterface, IplPaymentInterface, IplReportSummaryInterface } from "@monorepo/types";
 import { tableNames } from "../config";
 import { pool } from "../connection/db";
 import { getCurrentAuth } from "../utils/request-context";
@@ -52,6 +52,20 @@ export const getIplDashboardService = async (period?: string | null) => {
     [selectedPeriod, familyId],
   );
   const summaryRow = summaryResult.rows[0];
+  const [periodCode, yearCode] = (selectedPeriod || "").split("-");
+  const monthNumber = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"].indexOf(periodCode) + 1;
+  const incomeFilter = monthNumber > 0 && Number(yearCode)
+    ? "AND EXTRACT(MONTH FROM transaction_date)=$1::int AND EXTRACT(YEAR FROM transaction_date)=$2::int"
+    : "";
+  const incomeValues = incomeFilter ? [monthNumber, Number(yearCode)] : [];
+  const incomeResult = await pool.query<FinancialIncomeSummaryInterface>(
+    `SELECT COALESCE(SUM(amount),0)::float8 AS total_income,
+       COALESCE(SUM(amount) FILTER (WHERE transaction_type='IPL'),0)::float8 AS ipl_income,
+       COALESCE(SUM(amount) FILTER (WHERE transaction_type='UMKM_ADS'),0)::float8 AS umkm_ads_income
+     FROM ${tableNames.financialTransaction}
+     WHERE direction='INCOME' AND status='POSTED' AND is_deleted=false ${incomeFilter}`,
+    incomeValues,
+  );
 
   const bills = await pool.query<IplBillInterface>(
     `SELECT bill.*, family.no_kk AS family_no_kk, family.address AS family_address,
@@ -75,6 +89,13 @@ export const getIplDashboardService = async (period?: string | null) => {
      ORDER BY payment.created_time DESC LIMIT 5`,
     [selectedPeriod, familyId],
   );
+  const transactions = await pool.query<FinancialTransactionInterface>(
+    `SELECT id,transaction_type,direction,amount,transaction_date,status,description
+     FROM ${tableNames.financialTransaction}
+     WHERE direction='INCOME' AND status='POSTED' AND is_deleted=false ${incomeFilter}
+     ORDER BY transaction_date DESC,created_time DESC LIMIT 5`,
+    incomeValues,
+  );
 
   const data: IplDashboardInterface = {
     audience: resident ? "RESIDENT" : "MANAGEMENT",
@@ -89,6 +110,12 @@ export const getIplDashboardService = async (period?: string | null) => {
     pending_payment_count: Number(summaryRow?.pending_payment_count || 0),
     recent_bills: bills.rows,
     recent_payments: payments.rows,
+    income_summary: {
+      total_income: Number(incomeResult.rows[0]?.total_income || 0),
+      ipl_income: Number(incomeResult.rows[0]?.ipl_income || 0),
+      umkm_ads_income: Number(incomeResult.rows[0]?.umkm_ads_income || 0),
+    },
+    recent_transactions: transactions.rows,
   };
   return { status: 200, message: "Request successful", data };
 };
@@ -110,25 +137,31 @@ export const getIplFinancialTrendService = async (year?: number | null) => {
        FROM ${tableNames.iplBill}
        WHERE is_deleted = false AND status <> 'CANCELLED' AND RIGHT(period, 4) = $1::text
        GROUP BY period
-     ), payment_summary AS (
-       SELECT bill.period, SUM(payment.amount)::float8 AS cash_received
-       FROM ${tableNames.iplPayment} payment
-       INNER JOIN ${tableNames.iplBill} bill ON bill.id = payment.bill_id
-       WHERE payment.is_deleted = false AND payment.status = 'APPROVED' AND RIGHT(bill.period, 4) = $1::text
-       GROUP BY bill.period
+     ), transaction_summary AS (
+       SELECT EXTRACT(MONTH FROM transaction_date)::int AS month_number,
+         SUM(amount)::float8 AS total_income,
+         SUM(amount) FILTER (WHERE transaction_type='IPL')::float8 AS ipl_income,
+         SUM(amount) FILTER (WHERE transaction_type='UMKM_ADS')::float8 AS umkm_ads_income
+       FROM ${tableNames.financialTransaction}
+       WHERE direction='INCOME' AND status='POSTED' AND is_deleted=false
+         AND EXTRACT(YEAR FROM transaction_date)=$1::int
+       GROUP BY EXTRACT(MONTH FROM transaction_date)
      )
      SELECT months.month_number::int AS month,
        months.month_code || '-' || $1::text AS period,
        months.month_code AS label,
        COALESCE(bill.total_billed, 0)::float8 AS total_billed,
        COALESCE(bill.recognized_income, 0)::float8 AS recognized_income,
-       COALESCE(payment.cash_received, 0)::float8 AS cash_received,
+       COALESCE(income.total_income, 0)::float8 AS cash_received,
+       COALESCE(income.total_income, 0)::float8 AS total_income,
+       COALESCE(income.ipl_income, 0)::float8 AS ipl_income,
+       COALESCE(income.umkm_ads_income, 0)::float8 AS umkm_ads_income,
        COALESCE(bill.outstanding_amount, 0)::float8 AS outstanding_amount,
        CASE WHEN COALESCE(bill.total_billed, 0) > 0
          THEN ROUND((bill.recognized_income / bill.total_billed * 100)::numeric, 2)::float8 ELSE 0 END AS realization_percentage
      FROM months
      LEFT JOIN bill_summary bill ON bill.period = months.month_code || '-' || $1::text
-     LEFT JOIN payment_summary payment ON payment.period = months.month_code || '-' || $1::text
+     LEFT JOIN transaction_summary income ON income.month_number=months.month_number
      ORDER BY months.month_number`,
     [selectedYear],
   );
@@ -139,4 +172,5 @@ const emptyDashboard = (period: string, resident: boolean): IplDashboardInterfac
   audience: resident ? "RESIDENT" : "MANAGEMENT", period, family_no_kk: null,
   summary: { total_billed: 0, cash_received: 0, recognized_income: 0, outstanding_amount: 0, pending_payment_amount: 0, family_credit_balance: 0, total_bill_count: 0, paid_bill_count: 0 },
   pending_payment_count: 0, recent_bills: [], recent_payments: [],
+  income_summary: { total_income: 0, ipl_income: 0, umkm_ads_income: 0 }, recent_transactions: [],
 });

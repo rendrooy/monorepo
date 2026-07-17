@@ -82,6 +82,7 @@ export const tableNames = {
     umkmRevision: "t_umkm_revision",
     umkmSubscriptionPlan: "m_umkm_subscription_plan",
     umkmSubscription: "t_umkm_subscription",
+    financialTransaction: "t_financial_transaction",
 };
 
 export const locales = {

@@ -6,6 +6,7 @@ import type { PoolClient } from "pg";
 import { tableNames } from "../config";
 import { pool } from "../connection/db";
 import { getCurrentAuth } from "../utils/request-context";
+import { postIncomeTransaction, reverseIncomeTransaction } from "./financial-transaction-service";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const residentRoles = new Set(["WARGA", "WRG"]);
@@ -176,6 +177,15 @@ const applyApprovedPayment = async (client: PoolClient, paymentId: string) => {
       getCurrentAuth()?.user_id || null,
     ],
   );
+  await postIncomeTransaction(client, {
+    transactionType: "IPL",
+    amount,
+    transactionDate: payment.payment_date!,
+    referenceType: "IPL_PAYMENT",
+    referenceId: paymentId,
+    familyId: payment.family_id,
+    description: `Pembayaran IPL ${bill.bill_number}`,
+  });
   if (credit > 0) {
     const creditBalance = await client.query<{ balance: string }>(
       `INSERT INTO ${tableNames.iplFamilyCredit} (family_id, balance, created_by_id)
@@ -553,6 +563,7 @@ export const reversePaymentService = async (
       `UPDATE ${tableNames.iplPayment} SET status = 'REVERSED', reversal_note = $2, reversed_time = now(), reversed_by_id = $3, updated_time = now(), updated_by_id = $3 WHERE id = $1`,
       [id, note.trim(), getCurrentAuth()?.user_id || null],
     );
+    await reverseIncomeTransaction(client, "IPL_PAYMENT", payment.id!, note.trim());
     await notifyFamily(
       client,
       payment.family_id,

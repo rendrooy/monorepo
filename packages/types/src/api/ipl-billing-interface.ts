@@ -74,6 +74,24 @@ export interface IplDashboardInterface {
   pending_payment_count: number;
   recent_bills: IplBillInterface[];
   recent_payments: IplPaymentInterface[];
+  income_summary: FinancialIncomeSummaryInterface;
+  recent_transactions: FinancialTransactionInterface[];
+}
+
+export interface FinancialIncomeSummaryInterface {
+  total_income: number;
+  ipl_income: number;
+  umkm_ads_income: number;
+}
+
+export interface FinancialTransactionInterface {
+  id?: string | null;
+  transaction_type?: "IPL" | "UMKM_ADS" | "DONATION" | "OTHER";
+  direction?: "INCOME" | "EXPENSE";
+  amount?: number | null;
+  transaction_date?: string | null;
+  status?: "POSTED" | "REVERSED";
+  description?: string | null;
 }
 
 export interface IplFinancialTrendInterface {
@@ -85,6 +103,9 @@ export interface IplFinancialTrendInterface {
   cash_received: number;
   outstanding_amount: number;
   realization_percentage: number;
+  total_income: number;
+  ipl_income: number;
+  umkm_ads_income: number;
 }
 
 export interface IplCreditLedgerInterface {
