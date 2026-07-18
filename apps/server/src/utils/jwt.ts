@@ -1,14 +1,15 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import type { AuthTokenPayload } from "@monorepo/types";
+import { jwtConfig } from "../config";
 
-const JWT_SECRET = process.env.JWT_SECRET || "homehub-dev-secret";
-const DEFAULT_EXPIRES_IN_SECONDS = Number(process.env.JWT_EXPIRES_IN_SECONDS || 60 * 60 * 8);
+const JWT_SECRET = jwtConfig.secret;
+const DEFAULT_EXPIRES_IN_SECONDS = jwtConfig.expiresInSeconds;
 
 const encodeBase64Url = (value: unknown) =>
     Buffer.from(JSON.stringify(value)).toString("base64url");
 
 const signValue = (value: string) =>
-    createHmac("sha256", JWT_SECRET).update(value).digest("base64url");
+    createHmac("sha256", JWT_SECRET!).update(value).digest("base64url");
 
 export const signJwt = (
     payload: Omit<AuthTokenPayload, "iat" | "exp">,

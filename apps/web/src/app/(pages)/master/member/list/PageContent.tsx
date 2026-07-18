@@ -151,6 +151,10 @@ export default function PageContent() {
 
             <FilterPanel
                 onSubmit={() => {
+                    if (filterForm.values.nik && !/^\d{16}$/.test(filterForm.values.nik)) {
+                        toast.error("Filter NIK harus tepat 16 digit");
+                        return;
+                    }
                     setFilterParams(filterForm.values);
                 }}
                 onReset={() => {
@@ -174,7 +178,7 @@ export default function PageContent() {
                         id="nik"
                         className="mt-2"
                         value={filterForm.values.nik ?? ""}
-                        placeholder="Masukan Filter NIK"
+                        placeholder="Masukkan 16 digit NIK"
                         onChange={filterForm.handleChange}
                     />
                 </div>

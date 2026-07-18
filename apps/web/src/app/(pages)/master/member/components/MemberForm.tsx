@@ -41,8 +41,8 @@ export const memberValidationSchema = Yup.object({
     name: Yup.string().required("Nama wajib diisi").min(3, "Minimal 3 karakter"),
     nik: Yup.string()
         .required("NIK wajib diisi")
-        .matches(/^\d+$/, "NIK harus angka")
-        .length(16, "NIK harus 16 digit"),
+        .test("nik-format", "NIK harus 16 digit", (value) =>
+            /^\d{16}$/.test(value || "") || /^\*{12}\d{4}$/.test(value || "")),
     phone: Yup.string()
         .required("No HP wajib diisi")
         .matches(/^\d+$/, "No HP harus angka")

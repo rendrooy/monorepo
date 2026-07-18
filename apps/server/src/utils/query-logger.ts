@@ -6,7 +6,8 @@ const formatSqlForLog = (query: string) => query.replace(/\s+/g, " ").trim();
 
 export const createQueryLogger = (scope: string) => {
   const logQuery = (label: string, query: string, values: unknown[] = []) => {
-    queryLogger.debug({ component: scope, operation: label, ...(loggerConfig.logSql ? { sql: formatSqlForLog(query) } : {}), ...(loggerConfig.logSqlParams ? { params: values } : {}) }, "Query prepared");
+    const containsNik = /\bnik(?:_|\b)/i.test(query);
+    queryLogger.debug({ component: scope, operation: label, ...(loggerConfig.logSql ? { sql: formatSqlForLog(query) } : {}), ...(loggerConfig.logSqlParams ? { params: containsNik ? "[REDACTED]" : values } : {}) }, "Query prepared");
   };
 
   const poolQuery = async <T extends QueryResultRow = QueryResultRow>(

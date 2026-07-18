@@ -21,6 +21,7 @@ export const observeQuery = async <T extends QueryResult>(
 ): Promise<T> => {
   const started = performance.now();
   const sql = normalizeSql(query);
+  const containsNik = /\bnik(?:_|\b)/i.test(sql);
   try {
     const result = await execute();
     const durationMs = Math.round((performance.now() - started) * 100) / 100;
@@ -30,7 +31,7 @@ export const observeQuery = async <T extends QueryResult>(
       durationMs,
       rowCount: result.rowCount,
       ...(loggerConfig.logSql ? { sql } : {}),
-      ...(loggerConfig.logSqlParams ? { params: sanitizeParams(values) } : {}),
+      ...(loggerConfig.logSqlParams ? { params: containsNik ? "[REDACTED]" : sanitizeParams(values) } : {}),
     };
     if (durationMs >= loggerConfig.slowQueryMs) queryLogger.warn(payload, "Slow query detected");
     else queryLogger.debug(payload, "Query completed");

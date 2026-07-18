@@ -4,6 +4,8 @@ import { findOneQuery, findQuery, insertQuery, type FindParams, type JoinClause 
 import { OperatorTypes, type Condition } from "../config/query/query-builder";
 import { signJwt } from "../utils/jwt";
 import { hashPassword, verifyPassword } from "../utils/password";
+import { createNikLookupHash } from "../utils/nik-crypto";
+
 import type {
     AuthLoginRequest,
     AuthLoginResponse,
@@ -261,11 +263,11 @@ const findMemberByNik = async (nik?: string | null) => {
     }
 
     return findOneQuery<MasterMemberInterface>(tableNames.masterMember, {
-        selectedColumns: "id, nik, name",
+        selectedColumns: "id, name",
         conditions: [
             {
-                column: "nik",
-                value: nik,
+                column: "nik_lookup_hash",
+                value: createNikLookupHash(nik),
                 operator: OperatorTypes.EQUAL,
             },
             {
@@ -283,7 +285,7 @@ const findDefaultResidentRole = async () =>
         conditions: [
             {
                 column: "code",
-                value: "WARGA",
+                value: "WRG",
                 operator: OperatorTypes.EQUAL,
             },
             {
@@ -305,6 +307,9 @@ export const registerService = async (
 
         if (!nik || !username || !email || !password) {
             return { status: 400, message: "Data registrasi belum lengkap", data: null };
+        }
+        if (!/^\d{16}$/.test(nik)) {
+            return { status: 400, message: "NIK harus terdiri dari 16 digit", data: null };
         }
 
         const member = await findMemberByNik(nik);

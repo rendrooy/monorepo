@@ -5,6 +5,7 @@ import { findOneQuery, FindParams, JoinClause, findQuery, insertQuery, updateQue
 import { Condition, OperatorTypes, QueryData } from '../config/query/query-builder';
 import { hashPassword, isPasswordHashed } from '../utils/password';
 import { getCurrentAuth } from '../utils/request-context';
+import { createNikLookupHash } from '../utils/nik-crypto';
 
 const USER_ALIAS = "u";
 const ROLE_ALIAS = "r";
@@ -33,7 +34,7 @@ const selectedColumns = [
     `${ROLE_ALIAS}.name AS role_name`,
     `${USER_ALIAS}.member_id`,
     `${MEMBER_ALIAS}.name AS member_name`,
-    `${MEMBER_ALIAS}.nik AS member_nik`,
+    `CASE WHEN ${MEMBER_ALIAS}.nik_last4 IS NULL THEN NULL ELSE '************' || ${MEMBER_ALIAS}.nik_last4 END AS member_nik`,
     `${USER_ALIAS}.registration_status`,
     `${USER_ALIAS}.approved_time`,
     `${USER_ALIAS}.approved_by_id`,
@@ -266,9 +267,9 @@ export const loadUserRegistrationService = async (request: BaseRequest<MasterUse
 
         if (params?.member_nik) {
             conditions.push({
-                column: `${MEMBER_ALIAS}.nik`,
-                value: params.member_nik,
-                operator: OperatorTypes.LIKE,
+                column: `${MEMBER_ALIAS}.nik_lookup_hash`,
+                value: createNikLookupHash(params.member_nik),
+                operator: OperatorTypes.EQUAL,
             });
         }
 

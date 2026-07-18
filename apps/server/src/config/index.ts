@@ -57,12 +57,19 @@ export const timeConfig = {
 };
 
 export const dbConnection = {
-    connectionString: process.env.DATABASE_URL || "postgresql://postgres:NxI8S0CQv8k4gZLn@db.erxkctaqtmqpxlgjznkj.supabase.co:5432/postgres",
-    user: process.env.DB_USER || 'postgres',
-    host: process.env.DB_HOST || 'db.erxkctaqtmqpxlgjznkj.supabase.co',
-    database: process.env.DB_NAME || 'postgres',
-    password: process.env.DB_PASSWORD || 'NxI8S0CQv8k4gZLn',
+    connectionString: process.env.DB_URL,
+    user: process.env.DB_USER || "",
+    host: process.env.DB_HOST || "",
+    database: process.env.DB_NAME || "",
+    password: process.env.DB_PASSWORD || "",
     port: Number(process.env.DB_PORT || 5432), // Port default PostgreSQL
+};
+
+// if (!jwtSecret) throw new Error("JWT_SECRET wajib dikonfigurasi");
+
+export const jwtConfig = {
+    secret: process.env.JWT_SECRET,
+    expiresInSeconds: Number(process.env.JWT_EXPIRES_IN_SECONDS || 60 * 60 * 8),
 };
 
 export const tableNames = {

@@ -70,7 +70,7 @@ export const dropdownMemberService = async (request: DropdownRequest) => {
         }
 
         const queryParams: FindParams = {
-            selectedColumns: "id, name, nik",
+            selectedColumns: "id, name, nik_last4",
             conditions,
             limit: 100,
             offset: 0,
@@ -83,7 +83,7 @@ export const dropdownMemberService = async (request: DropdownRequest) => {
             data: data.map((item) => ({
                 value: String(item.id ?? ""),
                 label: String(item.name ?? ""),
-                nik: item.nik ? String(item.nik) : null,
+                nik: item.nik_last4 ? `************${String(item.nik_last4)}` : null,
             })),
         };
     } catch {

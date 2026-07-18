@@ -28,7 +28,7 @@ export default function RegisterPage() {
     const [password, setPassword] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
 
-    const canSubmit = nik && username && email && password;
+    const canSubmit = /^\d{16}$/.test(nik) && username && email && password;
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -68,9 +68,12 @@ export default function RegisterPage() {
                             <Input
                                 id="nik"
                                 name="nik"
+                                inputMode="numeric"
+                                autoComplete="off"
+                                maxLength={16}
                                 placeholder="Masukkan NIK yang terdaftar"
                                 value={nik}
-                                onChange={(event) => setNik(event.target.value)}
+                                onChange={(event) => setNik(event.target.value.replace(/\D/g, "").slice(0, 16))}
                             />
                         </div>
 

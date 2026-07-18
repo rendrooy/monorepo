@@ -40,7 +40,7 @@ const assignMemberToFamily = async (
 
 const loadFamilyMembers = async (familyId: string) =>
   findQuery<NonNullable<MasterFamilyInterface["family_members"]>[number]>(tableNames.masterMember, {
-    selectedColumns: "id AS member_id, name AS member_name, nik AS member_nik, family_relation",
+    selectedColumns: "id AS member_id, name AS member_name, CASE WHEN nik_last4 IS NULL THEN NULL ELSE '************' || nik_last4 END AS member_nik, family_relation",
     conditions: [
       { column: "family_id", value: familyId },
       { column: "is_deleted", value: false },
