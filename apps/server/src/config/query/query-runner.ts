@@ -1,4 +1,4 @@
-import { queryOption, buildConditionQuery, buildOrderQuery } from "./query-builder";
+import { queryOption, buildConditionQuery, buildOrderQuery, OperatorTypes } from "./query-builder";
 import type { Condition, QueryData } from "./query-builder";
 import { resultMapper } from "./result-mapper";
 import { pool } from "../../connection/db";
@@ -6,8 +6,56 @@ import { createQueryLogger } from "../../utils/query-logger";
 import { tableNames } from "..";
 import { getCurrentAuth } from "../../utils/request-context";
 import { logger } from "../logger";
+import { tenantScopedTableNames } from "../data-ownership";
 
 const { logQuery } = createQueryLogger("query-runner");
+
+const getTableScope = (tableName: string) => {
+  const parts = tableName.trim().split(/\s+/);
+  const qualifiedName = parts[0].replace(/"/g, "");
+  const baseTable = qualifiedName.split(".").pop() || qualifiedName;
+  const alias = parts.length > 1 ? parts[parts.length - 1] : undefined;
+  return { alias, baseTable };
+};
+
+const withTenantConditions = (tableName: string, conditions: Condition[] = []): Condition[] => {
+  const auth = getCurrentAuth();
+  const { alias, baseTable } = getTableScope(tableName);
+
+  if (!auth || !tenantScopedTableNames.has(baseTable)) {
+    return conditions;
+  }
+
+  if (!auth.tenant_id) {
+    return [
+      ...conditions,
+      {
+        column: alias ? `${alias}.tenant_id` : "tenant_id",
+        operator: OperatorTypes.IS_NULL,
+      },
+    ];
+  }
+
+  return [
+    ...conditions,
+    {
+      column: alias ? `${alias}.tenant_id` : "tenant_id",
+      operator: OperatorTypes.EQUAL,
+      value: auth.tenant_id,
+    },
+  ];
+};
+
+const withTenantOnWrite = (tableName: string, params: QueryData): QueryData => {
+  const auth = getCurrentAuth();
+  const { baseTable } = getTableScope(tableName);
+
+  if (!auth || !tenantScopedTableNames.has(baseTable)) {
+    return params;
+  }
+
+  return { ...params, tenant_id: auth.tenant_id ?? null };
+};
 
 const auditedTables = new Set<string>([
   tableNames.masterUser,
@@ -33,7 +81,7 @@ const auditedTables = new Set<string>([
 const withAuditOnInsert = (tableName: string, params: QueryData): QueryData => {
   const auth = getCurrentAuth();
 
-  if (!auth?.user_id || !auditedTables.has(tableName) || params.created_by_id) {
+  if (!auth?.user_id || auth.identity_type === "PLATFORM" || !auditedTables.has(tableName) || params.created_by_id) {
     return params;
   }
 
@@ -46,7 +94,7 @@ const withAuditOnInsert = (tableName: string, params: QueryData): QueryData => {
 const withAuditOnUpdate = (tableName: string, params: QueryData): QueryData => {
   const auth = getCurrentAuth();
 
-  if (!auth?.user_id || !auditedTables.has(tableName) || params.updated_by_id) {
+  if (!auth?.user_id || auth.identity_type === "PLATFORM" || !auditedTables.has(tableName) || params.updated_by_id) {
     return params;
   }
 
@@ -87,7 +135,7 @@ export const findQuery = async <T = unknown>(
   try {
     const limit = Number(params.limit || queryOption.limit);
 
-    const conditionQuery = buildConditionQuery(params.conditions);
+    const conditionQuery = buildConditionQuery(withTenantConditions(tableName, params.conditions));
     const orderQuery = buildOrderQuery(params.order);
     const selectedColumns = params.selectedColumns || "*";
 
@@ -141,7 +189,7 @@ export const insertQuery = async <T = unknown>(
   params: QueryData
 ): Promise<T | null> => {
   try {
-    const auditedParams = withAuditOnInsert(tableName, params);
+    const auditedParams = withTenantOnWrite(tableName, withAuditOnInsert(tableName, params));
     const columns = Object.keys(auditedParams);
     const values = Object.values(auditedParams);
 
@@ -174,22 +222,26 @@ export const updateQuery = async <T = unknown>(
 ): Promise<T | null> => {
   try {
     const auditedParams = withAuditOnUpdate(tableName, params);
+    const scopedConditions = withTenantOnWrite(tableName, conditions);
     const setKeys = Object.keys(auditedParams);
-    const whereKeys = Object.keys(conditions);
+    const whereEntries = Object.entries(scopedConditions);
 
     const setClause = setKeys
       .map((key, i) => `${key} = $${i + 1}`)
       .join(", ");
 
-    const whereClause = whereKeys
-      .map(
-        (key, i) => `${key} = $${setKeys.length + i + 1}`
-      )
+    const whereValues: unknown[] = [];
+    const whereClause = whereEntries
+      .map(([key, value]) => {
+        if (value === null) return `${key} IS NULL`;
+        whereValues.push(value);
+        return `${key} = $${setKeys.length + whereValues.length}`;
+      })
       .join(" AND ");
 
     const values = [
       ...Object.values(auditedParams),
-      ...Object.values(conditions),
+      ...whereValues,
     ];
 
     const query = `
@@ -218,7 +270,7 @@ export const countQuery = async (
   params: Pick<FindParams, "conditions" | "joins">
 ): Promise<number> => {
   try {
-    const conditionQuery = buildConditionQuery(params.conditions);
+    const conditionQuery = buildConditionQuery(withTenantConditions(tableName, params.conditions));
 
     const joinClause = (params.joins ?? [])
       .map((j) => `${j.type ?? "LEFT"} JOIN ${j.table} ${j.alias} ON ${j.on}`)
@@ -249,7 +301,7 @@ export const deleteQuery = async (
   params: { conditions?: Condition[] }
 ) => {
   try {
-    const conditionQuery = buildConditionQuery(params.conditions);
+    const conditionQuery = buildConditionQuery(withTenantConditions(tableName, params.conditions));
 
     const query = `
       DELETE FROM ${tableName}

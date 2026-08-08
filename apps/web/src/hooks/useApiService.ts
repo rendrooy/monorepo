@@ -211,6 +211,11 @@ function getEndpointServiceKey(params: string): string {
         loadGuestHistory: "/security/guest/history",
         checkInGuest: "/security/guest/check-in",
         checkOutGuest: "/security/guest/check-out",
+        getTenantBillingSummary: "/platform-billing/summary",
+        loadTenantInvoices: "/platform-billing/invoice/load",
+        requestTenantPlanChange: "/platform-billing/plan/change",
+        createTenantSubscriptionPayment: "/platform-billing/payment/create",
+        loadPlatformPlansForTenant: "/platform-billing/plan/load",
     }
 
     const url = endpoint[params];

@@ -22,5 +22,5 @@ export const getPaymentProof = async (req: Request<{ id: string }>, res: Respons
   }
   res.type(proof.mime);
   res.setHeader("Content-Disposition", `inline; filename*=UTF-8''${encodeURIComponent(proof.name)}`);
-  res.sendFile(proof.path);
+  res.send(proof.body);
 };

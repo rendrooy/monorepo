@@ -59,7 +59,14 @@ const options: pino.LoggerOptions = {
     const context = getRequestContext();
     return {
       ...(context?.requestId ? { requestId: context.requestId } : {}),
-      ...(context?.auth?.user_id ? { userId: context.auth.user_id, roleCode: context.auth.role_code } : {}),
+      ...(context?.auth?.user_id
+        ? {
+            userId: context.auth.user_id,
+            roleCode: context.auth.role_code,
+            identityType: context.auth.identity_type,
+            tenantId: context.auth.tenant_id,
+          }
+        : {}),
     };
   },
 };

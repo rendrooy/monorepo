@@ -63,6 +63,7 @@ export const dbConnection = {
     database: process.env.DB_NAME || "",
     password: process.env.DB_PASSWORD || "",
     port: Number(process.env.DB_PORT || 5432), // Port default PostgreSQL
+    schema: process.env.DB_SCHEMA || "public",
 };
 
 // if (!jwtSecret) throw new Error("JWT_SECRET wajib dikonfigurasi");
@@ -70,6 +71,28 @@ export const dbConnection = {
 export const jwtConfig = {
     secret: process.env.JWT_SECRET || "secret",
     expiresInSeconds: Number(process.env.JWT_EXPIRES_IN_SECONDS || 60 * 60 * 8),
+};
+
+export const platformJwtConfig = {
+    secret: process.env.PLATFORM_JWT_SECRET || `${jwtConfig.secret}:platform`,
+    expiresInSeconds: Number(process.env.PLATFORM_JWT_EXPIRES_IN_SECONDS || 60 * 60 * 4),
+};
+
+export const objectStorageConfig = {
+    endpoint: process.env.SUPABASE_STORAGE_ENDPOINT || "",
+    region: process.env.SUPABASE_STORAGE_REGION || "",
+    accessKeyId: process.env.SUPABASE_STORAGE_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.SUPABASE_STORAGE_SECRET_ACCESS_KEY || "",
+    privateBucket: process.env.SUPABASE_STORAGE_PRIVATE_BUCKET || "homehub-private",
+    publicBucket: process.env.SUPABASE_STORAGE_PUBLIC_BUCKET || "homehub-public",
+};
+
+export const runtimeConfig = {
+    corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:3000").split(",").map((value) => value.trim()).filter(Boolean),
+    schedulerEnabled: process.env.PLATFORM_SCHEDULER_ENABLED === "true",
+    schedulerPollMs: Math.max(Number(process.env.PLATFORM_SCHEDULER_POLL_MS || 60_000), 10_000),
+    shutdownTimeoutMs: Math.max(Number(process.env.SHUTDOWN_TIMEOUT_MS || 10_000), 1_000),
+    trustProxy: process.env.TRUST_PROXY === "true",
 };
 
 export const tableNames = {
@@ -90,9 +113,25 @@ export const tableNames = {
     umkmSubscriptionPlan: "m_umkm_subscription_plan",
     umkmSubscription: "t_umkm_subscription",
     financialTransaction: "t_financial_transaction",
+    fileObject: "t_file_object",
     guestVisit: "t_guest_visit",
     guestVehicle: "t_guest_vehicle",
     guestVisitHistory: "t_guest_visit_history",
+    tenant: "m_tenant",
+    tenantSetting: "m_tenant_setting",
+    tenantArea: "m_tenant_area",
+    platformUser: "m_platform_user",
+    platformRole: "m_platform_role",
+    platformPermission: "m_platform_permission",
+    platformFeature: "m_platform_feature",
+    platformPlan: "m_platform_plan",
+    platformPlanEntitlement: "m_platform_plan_entitlement",
+    platformRolePermission: "m_platform_role_permission",
+    auditLog: "t_audit_log",
+    tenantSubscription: "t_tenant_subscription",
+    tenantInvoice: "t_tenant_invoice",
+    tenantSubscriptionPayment: "t_tenant_subscription_payment",
+    platformJobRun: "t_platform_job_run",
 };
 
 export const locales = {

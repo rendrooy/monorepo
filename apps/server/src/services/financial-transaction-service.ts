@@ -1,6 +1,7 @@
 import type { PoolClient } from "pg";
 import { tableNames } from "../config";
 import { getCurrentAuth } from "../utils/request-context";
+import { addTenantScope, getCurrentTenantId } from "../utils/tenant-scope";
 
 type IncomeTransaction = {
   transactionType: "IPL" | "UMKM_ADS" | "DONATION" | "OTHER";
@@ -29,11 +30,12 @@ export const postIncomeTransaction = async (
   transaction: IncomeTransaction,
 ) => client.query(
   `INSERT INTO ${tableNames.financialTransaction}
-   (transaction_type,direction,amount,transaction_date,status,reference_type,reference_id,
+   (tenant_id,transaction_type,direction,amount,transaction_date,status,reference_type,reference_id,
     family_id,description,posted_by_id,created_by_id)
-   VALUES ($1,'INCOME',$2,$3,'POSTED',$4,$5,$6,$7,$8,$8)
+   VALUES ($1,$2,'INCOME',$3,$4,'POSTED',$5,$6,$7,$8,$9,$9)
    ON CONFLICT (reference_type,reference_id,direction) DO NOTHING`,
   [
+    getCurrentTenantId(),
     transaction.transactionType,
     transaction.amount,
     toDateOnly(transaction.transactionDate),
@@ -51,10 +53,16 @@ export const reverseIncomeTransaction = async (
   referenceId: string,
   note: string,
 ) => client.query(
-  `UPDATE ${tableNames.financialTransaction}
+  (() => {
+    const values: unknown[] = [referenceType, referenceId, getCurrentAuth()?.user_id || null, note];
+    const tenantScope = addTenantScope(values);
+    return {
+      text: `UPDATE ${tableNames.financialTransaction}
    SET status='REVERSED',reversed_time=now(),reversed_by_id=$3,reversal_note=$4,
        updated_time=now(),updated_by_id=$3
    WHERE reference_type=$1 AND reference_id=$2 AND direction='INCOME'
-     AND status='POSTED' AND is_deleted=false`,
-  [referenceType, referenceId, getCurrentAuth()?.user_id || null, note],
+     AND status='POSTED' AND is_deleted=false AND ${tenantScope}`,
+      values,
+    };
+  })(),
 );

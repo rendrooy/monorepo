@@ -8,6 +8,7 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "strict": true,
+    "types": ["node"],
     "noImplicitAny": true,
     "removeComments": true,
     "rootDir": "./src",

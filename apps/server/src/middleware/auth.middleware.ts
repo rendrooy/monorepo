@@ -26,6 +26,11 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
         return;
     }
 
+    if (payload.identity_type === "PLATFORM") {
+        res.status(403).json({ status: 403, message: "Token platform tidak berlaku pada route tenant", data: null });
+        return;
+    }
+
     (req as AuthenticatedRequest).auth = payload;
     runWithAuthContext(payload, next);
 };

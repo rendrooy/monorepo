@@ -31,6 +31,7 @@ export interface IplPaymentInterface {
   payment_method?: IplPaymentMethod | null;
   reference_number?: string | null;
   note?: string | null;
+  proof_file_id?: string | null;
   proof_original_name?: string | null;
   proof_mime_type?: string | null;
   proof_size?: number | null;

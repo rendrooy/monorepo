@@ -12,8 +12,10 @@ export const httpLogger = pinoHttp({
     res.setHeader("x-request-id", requestId);
     return requestId;
   },
-  customProps(req: Request & { auth?: { user_id?: string; role_code?: string } }) {
-    return req.auth ? { userId: req.auth.user_id, roleCode: req.auth.role_code } : {};
+  customProps(req: Request & { auth?: { user_id?: string; role_code?: string; tenant_id?: string | null } }) {
+    return req.auth
+      ? { userId: req.auth.user_id, roleCode: req.auth.role_code, tenantId: req.auth.tenant_id }
+      : {};
   },
   serializers: {
     req(req) { return { id: req.id, method: req.method, url: req.url }; },

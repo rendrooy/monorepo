@@ -11,6 +11,7 @@ export interface AuthRegisterRequest {
     username?: string | null;
     email?: string | null;
     password?: string | null;
+    tenant_slug?: string | null;
 }
 
 export interface AuthUserInterface {
@@ -22,6 +23,9 @@ export interface AuthUserInterface {
     role_code?: string | null;
     member_id?: string | null;
     member_name?: string | null;
+    tenant_id?: string | null;
+    tenant_name?: string | null;
+    tenant_status?: "ACTIVE" | "EXPIRED" | "SUSPENDED" | null;
 }
 
 export interface AuthLoginResponse {
@@ -37,6 +41,8 @@ export interface AuthTokenPayload {
     email?: string | null;
     role_id?: string | null;
     role_code?: string | null;
+    identity_type?: "PLATFORM" | "TENANT";
+    tenant_id?: string | null;
     iat?: number;
     exp?: number;
 }

@@ -9,6 +9,7 @@ import { tableNames } from "../config";
 import { pool } from "../connection/db";
 import { getCurrentAuth } from "../utils/request-context";
 import { hasMenuPermission, PERMISSION } from "../utils/rbac";
+import { addTenantScope, getCurrentTenantId } from "../utils/tenant-scope";
 
 const REPORT_MENU = "OP_GUEST_REPORT";
 const GATE_MENU = "SECURITY_GUEST_GATE";
@@ -27,8 +28,9 @@ const getUserFamilyId = async (userId?: string | null) => {
   const result = await pool.query<{ family_id: string | null }>(
     `SELECT member.family_id FROM ${tableNames.masterUser} users
      LEFT JOIN ${tableNames.masterMember} member ON member.id=users.member_id
-     WHERE users.id=$1 AND users.is_deleted=false`,
-    [userId],
+     WHERE users.id=$1 AND users.is_deleted=false
+       AND users.tenant_id IS NOT DISTINCT FROM $2::uuid`,
+    [userId, getCurrentTenantId()],
   );
   return result.rows[0]?.family_id || null;
 };
@@ -83,8 +85,8 @@ const insertVehicles = async (
   for (const vehicle of vehicles) {
     await client.query(
       `INSERT INTO ${tableNames.guestVehicle}
-       (guest_visit_id,plate_number,vehicle_type,vehicle_brand,vehicle_color,created_by_id)
-       VALUES($1,$2,$3,$4,$5,$6)`,
+       (tenant_id,guest_visit_id,plate_number,vehicle_type,vehicle_brand,vehicle_color,created_by_id)
+       VALUES($7,$1,$2,$3,$4,$5,$6)`,
       [
         visitId,
         vehicle.plate_number,
@@ -92,6 +94,7 @@ const insertVehicles = async (
         vehicle.vehicle_brand,
         vehicle.vehicle_color,
         getCurrentAuth()?.user_id,
+        getCurrentTenantId(),
       ],
     );
   }
@@ -106,27 +109,30 @@ const addHistory = (
 ) =>
   client.query(
     `INSERT INTO ${tableNames.guestVisitHistory}
-     (guest_visit_id,action,previous_status,current_status,created_by_id) VALUES($1,$2,$3,$4,$5)`,
-    [visitId, action, previous, current, getCurrentAuth()?.user_id],
+     (tenant_id,guest_visit_id,action,previous_status,current_status,created_by_id)
+     VALUES($6,$1,$2,$3,$4,$5)`,
+    [visitId, action, previous, current, getCurrentAuth()?.user_id, getCurrentTenantId()],
   );
 
 const notifyGate = (client: PoolClient, visitId: string, guestName: string) =>
   client.query(
-    `INSERT INTO ${tableNames.notification}(user_id,type,title,message,reference_id,reference_url,created_by_id)
-   SELECT DISTINCT users.id,'GUEST_VISIT_SUBMITTED','Tamu akan datang',$2,$1::uuid,
+    `INSERT INTO ${tableNames.notification}(tenant_id,user_id,type,title,message,reference_id,reference_url,created_by_id)
+   SELECT DISTINCT $6::uuid,users.id,'GUEST_VISIT_SUBMITTED','Tamu akan datang',$2,$1::uuid,
      '/security/guest-gate',$3::uuid
    FROM ${tableNames.masterUser} users
    INNER JOIN ${tableNames.masterRoleMenuPermission} permission ON permission.role_id=users.role_id
    INNER JOIN ${tableNames.masterMenu} menu ON menu.id=permission.menu_id
    WHERE menu.code=$4 AND (permission.permission_mask & $5)=$5
      AND permission.is_active=true AND permission.is_deleted=false
-     AND users.is_active=true AND users.is_deleted=false`,
+     AND users.is_active=true AND users.is_deleted=false
+     AND users.tenant_id IS NOT DISTINCT FROM $6::uuid`,
     [
       visitId,
       `${guestName} telah dilaporkan dan akan berkunjung.`,
       getCurrentAuth()?.user_id,
       GATE_MENU,
       PERMISSION.READ,
+      getCurrentTenantId(),
     ],
   );
 
@@ -139,12 +145,13 @@ const notifyFamily = (
   message: string,
 ) =>
   client.query(
-    `INSERT INTO ${tableNames.notification}(user_id,type,title,message,reference_id,reference_url,created_by_id)
-   SELECT DISTINCT users.id,$3,$4,$5,$2::uuid,'/operation/guest',$6::uuid
+    `INSERT INTO ${tableNames.notification}(tenant_id,user_id,type,title,message,reference_id,reference_url,created_by_id)
+   SELECT DISTINCT $7::uuid,users.id,$3,$4,$5,$2::uuid,'/operation/guest',$6::uuid
    FROM ${tableNames.masterUser} users
    INNER JOIN ${tableNames.masterMember} member ON member.id=users.member_id
-   WHERE member.family_id=$1 AND users.is_active=true AND users.is_deleted=false`,
-    [familyId, visitId, type, title, message, getCurrentAuth()?.user_id],
+   WHERE member.family_id=$1 AND users.is_active=true AND users.is_deleted=false
+     AND users.tenant_id IS NOT DISTINCT FROM $7::uuid`,
+    [familyId, visitId, type, title, message, getCurrentAuth()?.user_id, getCurrentTenantId()],
   );
 
 const vehicleSelect = `COALESCE(jsonb_agg(jsonb_build_object(
@@ -157,17 +164,13 @@ const loadVisits = async (
   menuCode: string,
   familyId?: string | null,
 ) => {
-  // if (!(await hasMenuPermission(menuCode, PERMISSION.READ))) {
-  //   return {
-  //     status: 403,
-  //     message: "Anda tidak memiliki permission READ",
-  //     data: [],
-  //   };
-  // }
+  if (!(await hasMenuPermission(menuCode, PERMISSION.READ))) {
+    return { status: 403, message: "Anda tidak memiliki permission READ", data: [] };
+  }
   const { page, pageSize, offset } = paging(request);
   const params = request.params || {};
   const values: unknown[] = [];
-  const where = ["visit.is_deleted=false"];
+  const where = ["visit.is_deleted=false", addTenantScope(values, "visit.tenant_id")];
   if (familyId) {
     values.push(familyId);
     where.push(`visit.family_id=$${values.length}`);
@@ -210,12 +213,8 @@ const loadVisits = async (
 export const loadMyGuestVisitsService = async (
   request: BaseRequest<GuestVisitInterface>,
 ) => {
-  // if (!(await hasMenuPermission(REPORT_MENU, PERMISSION.READ)))
-  //   return {
-  //     status: 403,
-  //     message: "Anda tidak memiliki permission READ",
-  //     data: [],
-  //   };
+  if (!(await hasMenuPermission(REPORT_MENU, PERMISSION.READ)))
+    return { status: 403, message: "Anda tidak memiliki permission READ", data: [] };
   const familyId = await getUserFamilyId(getCurrentAuth()?.user_id);
   if (!familyId)
     return {
@@ -235,12 +234,8 @@ export const loadGuestHistoryService = (
 ) => loadVisits(request, HISTORY_MENU);
 
 export const createGuestVisitService = async (request: GuestVisitInterface) => {
-  // if (!(await hasMenuPermission(REPORT_MENU, PERMISSION.ADD)))
-  //   return {
-  //     status: 403,
-  //     message: "Anda tidak memiliki permission ADD",
-  //     data: null,
-  //   };
+  if (!(await hasMenuPermission(REPORT_MENU, PERMISSION.ADD)))
+    return { status: 403, message: "Anda tidak memiliki permission ADD", data: null };
   const familyId = await getUserFamilyId(getCurrentAuth()?.user_id);
   if (!familyId)
     return {
@@ -254,9 +249,9 @@ export const createGuestVisitService = async (request: GuestVisitInterface) => {
     await client.query("BEGIN");
     const result = await client.query<{ id: string }>(
       `INSERT INTO ${tableNames.guestVisit}
-       (family_id,reported_by_id,guest_name,guest_phone,visit_purpose,planned_arrival_time,
-        planned_departure_time,status,created_by_id)
-       VALUES($1,$2,$3,$4,$5,$6,$7,'SUBMITTED',$2) RETURNING id`,
+       (tenant_id,family_id,reported_by_id,guest_name,guest_phone,visit_purpose,planned_arrival_time,
+         planned_departure_time,status,created_by_id)
+       VALUES($8,$1,$2,$3,$4,$5,$6,$7,'SUBMITTED',$2) RETURNING id`,
       [
         familyId,
         getCurrentAuth()?.user_id,
@@ -265,6 +260,7 @@ export const createGuestVisitService = async (request: GuestVisitInterface) => {
         request.visit_purpose!.trim(),
         arrival,
         departure,
+        getCurrentTenantId(),
       ],
     );
     const id = result.rows[0]!.id;
@@ -290,12 +286,8 @@ export const createGuestVisitService = async (request: GuestVisitInterface) => {
 };
 
 export const updateGuestVisitService = async (request: GuestVisitInterface) => {
-  // if (!(await hasMenuPermission(REPORT_MENU, PERMISSION.EDIT)))
-  //   return {
-  //     status: 403,
-  //     message: "Anda tidak memiliki permission EDIT",
-  //     data: null,
-  //   };
+  if (!(await hasMenuPermission(REPORT_MENU, PERMISSION.EDIT)))
+    return { status: 403, message: "Anda tidak memiliki permission EDIT", data: null };
   const familyId = await getUserFamilyId(getCurrentAuth()?.user_id);
   const client = await pool.connect();
   try {
@@ -304,7 +296,8 @@ export const updateGuestVisitService = async (request: GuestVisitInterface) => {
     const result = await client.query(
       `UPDATE ${tableNames.guestVisit} SET guest_name=$3,guest_phone=$4,visit_purpose=$5,
        planned_arrival_time=$6,planned_departure_time=$7,updated_time=now(),updated_by_id=$2
-       WHERE id=$1 AND family_id=$8 AND status='SUBMITTED' AND is_deleted=false RETURNING id`,
+       WHERE id=$1 AND family_id=$8 AND status='SUBMITTED' AND is_deleted=false
+         AND tenant_id IS NOT DISTINCT FROM $9::uuid RETURNING id`,
       [
         request.id,
         getCurrentAuth()?.user_id,
@@ -314,12 +307,14 @@ export const updateGuestVisitService = async (request: GuestVisitInterface) => {
         arrival,
         departure,
         familyId,
+        getCurrentTenantId(),
       ],
     );
     if (!result.rowCount) throw new Error("Laporan tidak dapat diubah");
     await client.query(
-      `DELETE FROM ${tableNames.guestVehicle} WHERE guest_visit_id=$1`,
-      [request.id],
+      `DELETE FROM ${tableNames.guestVehicle}
+       WHERE guest_visit_id=$1 AND tenant_id IS NOT DISTINCT FROM $2::uuid`,
+      [request.id, getCurrentTenantId()],
     );
     await insertVehicles(client, request.id!, vehicles);
     await addHistory(client, request.id!, "UPDATED", "SUBMITTED", "SUBMITTED");
@@ -343,12 +338,8 @@ export const updateGuestVisitService = async (request: GuestVisitInterface) => {
 };
 
 export const cancelGuestVisitService = async (id?: string | null) => {
-  // if (!(await hasMenuPermission(REPORT_MENU, PERMISSION.ACTION)))
-  //   return {
-  //     status: 403,
-  //     message: "Anda tidak memiliki permission ACTION",
-  //     data: null,
-  //   };
+  if (!(await hasMenuPermission(REPORT_MENU, PERMISSION.ACTION)))
+    return { status: 403, message: "Anda tidak memiliki permission ACTION", data: null };
   const familyId = await getUserFamilyId(getCurrentAuth()?.user_id);
   const client = await pool.connect();
   try {
@@ -356,8 +347,8 @@ export const cancelGuestVisitService = async (id?: string | null) => {
     const result = await client.query(
       `UPDATE ${tableNames.guestVisit} SET status='CANCELED',canceled_time=now(),canceled_by_id=$3,
        updated_time=now(),updated_by_id=$3 WHERE id=$1 AND family_id=$2 AND status='SUBMITTED'
-       AND is_deleted=false RETURNING id`,
-      [id, familyId, getCurrentAuth()?.user_id],
+       AND is_deleted=false AND tenant_id IS NOT DISTINCT FROM $4::uuid RETURNING id`,
+      [id, familyId, getCurrentAuth()?.user_id, getCurrentTenantId()],
     );
     if (!result.rowCount) throw new Error("Laporan tidak dapat dibatalkan");
     await addHistory(client, id!, "CANCELED", "SUBMITTED", "CANCELED");
@@ -381,12 +372,8 @@ const changeGateStatus = async (
   from: GuestVisitStatus,
   to: GuestVisitStatus,
 ) => {
-  // if (!(await hasMenuPermission(GATE_MENU, PERMISSION.ACTION)))
-  // return {
-  //   status: 403,
-  //   message: "Anda tidak memiliki permission ACTION",
-  //   data: null,
-  // };
+  if (!(await hasMenuPermission(GATE_MENU, PERMISSION.ACTION)))
+    return { status: 403, message: "Anda tidak memiliki permission ACTION", data: null };
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -400,8 +387,9 @@ const changeGateStatus = async (
     }>(
       `UPDATE ${tableNames.guestVisit} SET status=$2,${timeColumn}=now(),${byColumn}=$3,
        updated_time=now(),updated_by_id=$3 WHERE id=$1 AND status=$4 AND is_deleted=false
+       AND tenant_id IS NOT DISTINCT FROM $5::uuid
        RETURNING family_id,guest_name`,
-      [id, to, getCurrentAuth()?.user_id, from],
+      [id, to, getCurrentAuth()?.user_id, from, getCurrentTenantId()],
     );
     const visit = result.rows[0];
     if (!visit)

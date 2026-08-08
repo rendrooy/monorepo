@@ -5,7 +5,7 @@ import { pool } from "../connection/db";
 import { getCurrentAuth } from "../utils/request-context";
 import { createNikLookupHash, isMaskedNik, toNikStorage } from "../utils/nik-crypto";
 
-const safeColumns = `id,name,address,phone,blood_type,sex,bod,boc,profession,religion,
+const safeColumns = `id,tenant_id,name,address,phone,blood_type,sex,bod,boc,profession,religion,
   family_relation,family_id,created_time,updated_time,created_by_id,updated_by_id,is_deleted,
   CASE WHEN nik_last4 IS NULL THEN NULL ELSE '************' || nik_last4 END AS nik`;
 
@@ -27,12 +27,21 @@ const databaseError = (error: unknown, fallback: string) => {
     : { status: 500, message: fallback, data: null };
 };
 
+const appendTenantCondition = (values: unknown[], column = "tenant_id"): string => {
+  const auth = getCurrentAuth();
+  if (!auth?.tenant_id) return `${column} IS NULL`;
+  values.push(auth.tenant_id);
+  return `${column}=$${values.length}`;
+};
+
 export const getMemberService = async (request: MasterMemberInterface) => {
   try {
+    const values: unknown[] = [request.id];
+    const tenantCondition = appendTenantCondition(values);
     const result = await pool.query<MasterMemberInterface>(
       `SELECT ${safeColumns} FROM ${tableNames.masterMember}
-       WHERE id=$1 AND is_deleted=false LIMIT 1`,
-      [request.id],
+       WHERE id=$1 AND ${tenantCondition} AND is_deleted=false LIMIT 1`,
+      values,
     );
     return result.rows[0]
       ? { status: 200, message: locales.request_success, data: result.rows[0] }
@@ -49,7 +58,7 @@ export const loadMemberService = async (request: BaseRequest<MasterMemberInterfa
     const page = Math.max(Number(request.metadata?.page || 1), 1);
     const pageSize = Math.min(Math.max(Number(request.metadata?.pageSize || 100), 1), 100);
     const values: unknown[] = [];
-    const where = ["is_deleted=false"];
+    const where = ["is_deleted=false", appendTenantCondition(values)];
     if (params.name?.trim()) { values.push(`%${params.name.trim()}%`); where.push(`name ILIKE $${values.length}`); }
     if (params.religion?.trim()) { values.push(`%${params.religion.trim()}%`); where.push(`religion ILIKE $${values.length}`); }
     if (params.nik?.trim()) { values.push(createNikLookupHash(params.nik)); where.push(`nik_lookup_hash=$${values.length}`); }
@@ -75,7 +84,12 @@ export const loadMemberService = async (request: BaseRequest<MasterMemberInterfa
 export const createMemberService = async (request: MasterMemberInterface) => {
   try {
     if (!request.nik || isMaskedNik(request.nik)) return { status: 400, message: "NIK wajib diisi", data: null };
-    const values = { ...memberValues(request), ...toNikStorage(request.nik), created_by_id: getCurrentAuth()?.user_id };
+    const values = {
+      ...memberValues(request),
+      ...toNikStorage(request.nik),
+      created_by_id: getCurrentAuth()?.user_id,
+      tenant_id: getCurrentAuth()?.tenant_id ?? null,
+    };
     const columns = Object.keys(values);
     const result = await pool.query<MasterMemberInterface>(
       `INSERT INTO ${tableNames.masterMember}(${columns.join(",")})
@@ -96,10 +110,12 @@ export const updateMemberService = async (request: MasterMemberInterface) => {
     if (request.nik && !isMaskedNik(request.nik)) Object.assign(values, toNikStorage(request.nik));
     values.updated_time = new Date(); values.updated_by_id = getCurrentAuth()?.user_id;
     const columns = Object.keys(values);
+    const queryValues = [...Object.values(values), request.id];
+    const tenantCondition = appendTenantCondition(queryValues);
     const result = await pool.query<{ id: string }>(
       `UPDATE ${tableNames.masterMember} SET ${columns.map((column, index) => `${column}=$${index + 1}`).join(",")}
-       WHERE id=$${columns.length + 1} AND is_deleted=false RETURNING id`,
-      [...Object.values(values), request.id],
+       WHERE id=$${columns.length + 1} AND ${tenantCondition} AND is_deleted=false RETURNING id`,
+      queryValues,
     );
     return result.rows[0]
       ? getMemberService({ id: result.rows[0].id })
@@ -111,9 +127,12 @@ export const updateMemberService = async (request: MasterMemberInterface) => {
 };
 
 export const deleteMemberService = async (request: MasterMemberInterface) => {
+  const values: unknown[] = [request.id, getCurrentAuth()?.user_id];
+  const tenantCondition = appendTenantCondition(values);
   await pool.query(
-    `UPDATE ${tableNames.masterMember} SET is_deleted=true,updated_time=now(),updated_by_id=$2 WHERE id=$1`,
-    [request.id, getCurrentAuth()?.user_id],
+    `UPDATE ${tableNames.masterMember} SET is_deleted=true,updated_time=now(),updated_by_id=$2
+     WHERE id=$1 AND ${tenantCondition}`,
+    values,
   );
   return { status: 200, message: locales.delete_success };
 };

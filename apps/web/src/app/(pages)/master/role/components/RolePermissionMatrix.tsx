@@ -25,6 +25,8 @@ const FULL_PERMISSION_MASK = PERMISSION_COLUMNS.reduce(
 
 type RolePermissionMatrixProps = {
     disabled?: boolean;
+    loadingMenus?: boolean;
+    menus?: MasterMenuInterface[];
     permissions?: MasterRoleMenuPermissionInterface[];
     onChange: (permissions: MasterRoleMenuPermissionInterface[]) => void;
 };
@@ -131,14 +133,19 @@ function buildGroupedRows(rows: PermissionRow[]): GroupedPermissionRow[] {
 
 export function RolePermissionMatrix({
     disabled = false,
+    loadingMenus = false,
+    menus: providedMenus,
     permissions = [],
     onChange,
 }: RolePermissionMatrixProps) {
-    const { callApi: callLoadMenu, loading } = useApiService("loadDataMenu");
-    const [menus, setMenus] = useState<MasterMenuInterface[]>([]);
+    const { callApi: callLoadMenu, loading: loadingTenantMenus } = useApiService("loadDataMenu");
+    const [tenantMenus, setTenantMenus] = useState<MasterMenuInterface[]>([]);
     const loadedRef = useRef(false);
+    const menus = providedMenus ?? tenantMenus;
+    const loading = providedMenus === undefined ? loadingTenantMenus : loadingMenus;
 
     const loadMenus = useCallback(async () => {
+        if (providedMenus !== undefined) return;
         if (loadedRef.current) return;
 
         loadedRef.current = true;
@@ -157,15 +164,15 @@ export function RolePermissionMatrix({
             },
             {
                 onSuccess(response: BaseResponse<MasterMenuInterface[]>) {
-                    setMenus(response.data ?? []);
+                    setTenantMenus(response.data ?? []);
                 },
                 onError() {
                     loadedRef.current = false;
-                    setMenus([]);
+                    setTenantMenus([]);
                 },
             },
         );
-    }, [callLoadMenu]);
+    }, [callLoadMenu, providedMenus]);
 
     useEffect(() => {
         loadMenus();

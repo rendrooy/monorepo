@@ -10,6 +10,9 @@ export interface MasterUserInterface {
   member_id?: string | null;
   member_name?: string | null; // joined from m_member.name
   member_nik?: string | null;
+  tenant_id?: string | null;
+  tenant_name?: string | null;
+  tenant_status?: "ACTIVE" | "EXPIRED" | "SUSPENDED" | null;
   registration_status?: "PENDING" | "APPROVED" | "REJECTED" | string | null;
   approved_time?: Date | string | null;
   approved_by_id?: string | null;
