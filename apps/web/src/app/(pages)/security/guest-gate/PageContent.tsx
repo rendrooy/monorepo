@@ -2,6 +2,7 @@
 
 import SwalDialog from "@/components/ConfirmationDialog";
 import { AppDataTable } from "@/components/DataTable";
+import { FilterPanel } from "@/components/FilterPanel";
 import { GuestVisitDetailDialog } from "@/components/GuestVisitDetailDialog";
 import { GuestVisitStatusBadge } from "@/components/GuestVisitStatusBadge";
 import { useApiService } from "@/hooks";
@@ -16,6 +17,7 @@ import type {
 import { Button } from "@monorepo/ui/components/button";
 import { Card, CardContent } from "@monorepo/ui/components/card";
 import { Input } from "@monorepo/ui/components/input";
+import { Label } from "@monorepo/ui/components/label";
 import {
   Select,
   SelectContent,
@@ -35,6 +37,8 @@ export default function PageContent() {
     total: 0,
   });
   const [status, setStatus] = useState<GuestVisitStatus>("SUBMITTED");
+  const [appliedStatus, setAppliedStatus] =
+    useState<GuestVisitStatus>("SUBMITTED");
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [detail, setDetail] = useState<GuestVisitInterface | null>(null);
@@ -53,7 +57,7 @@ export default function PageContent() {
   const reload = useCallback(
     () =>
       load(
-        { params: { status, search: query }, metadata: meta },
+        { params: { status: appliedStatus, search: query }, metadata: meta },
         {
           onSuccess: (response) => {
             setData(response.data || []);
@@ -64,7 +68,7 @@ export default function PageContent() {
           },
         },
       ),
-    [load, meta.page, meta.pageSize, query, status],
+    [appliedStatus, load, meta.page, meta.pageSize, query],
   );
   useEffect(() => {
     reload();
@@ -95,41 +99,50 @@ export default function PageContent() {
           Cocokkan tamu dan kendaraan sebelum memberikan akses masuk.
         </p>
       </div>
-      <div className="flex flex-col gap-3 sm:flex-row">
-        <div className="flex flex-1 gap-2">
+      <FilterPanel
+        title="Filter Tamu"
+        columns={2}
+        submitLabel="Terapkan"
+        onSubmit={() => {
+          setQuery(search.trim());
+          setAppliedStatus(status);
+          setMeta((current) => ({ ...current, page: 1 }));
+        }}
+        onReset={() => {
+          setSearch("");
+          setQuery("");
+          setStatus("SUBMITTED");
+          setAppliedStatus("SUBMITTED");
+          setMeta((current) => ({ ...current, page: 1 }));
+        }}
+      >
+        <div>
+          <Label htmlFor="guest-gate-search">Pencarian</Label>
           <Input
+            id="guest-gate-search"
+            className="mt-2"
             value={search}
             placeholder="Cari nama, alamat, no. KK, atau plat"
             startAdornment={<Search className="h-4 w-4" />}
             onChange={(event) => setSearch(event.target.value)}
-            onKeyDown={(event) => event.key === "Enter" && setQuery(search)}
           />
-          <Button
-            variant="outline"
-            onClick={() => {
-              setQuery(search);
-              setMeta((current) => ({ ...current, page: 1 }));
-            }}
-          >
-            Cari
-          </Button>
         </div>
-        <Select
-          value={status}
-          onValueChange={(value) => {
-            setStatus(value as GuestVisitStatus);
-            setMeta((current) => ({ ...current, page: 1 }));
-          }}
-        >
-          <SelectTrigger className="w-full sm:w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="SUBMITTED">Menunggu Kedatangan</SelectItem>
-            <SelectItem value="CHECKED_IN">Sedang Berkunjung</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        <div>
+          <Label htmlFor="guest-gate-status">Status Kunjungan</Label>
+          <Select
+            value={status}
+            onValueChange={(value) => setStatus(value as GuestVisitStatus)}
+          >
+            <SelectTrigger id="guest-gate-status" className="mt-2 w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="SUBMITTED">Menunggu Kedatangan</SelectItem>
+              <SelectItem value="CHECKED_IN">Sedang Berkunjung</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </FilterPanel>
       <Card>
         <CardContent className="pt-6">
           <AppDataTable

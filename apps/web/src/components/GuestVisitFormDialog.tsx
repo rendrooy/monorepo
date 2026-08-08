@@ -197,29 +197,32 @@ export function GuestVisitFormDialog({
                 </div>
                 <div>
                   <Label>Jenis</Label>
-                  <Select
-                    value={vehicle.vehicle_type || "CAR"}
-                    onValueChange={(value) =>
-                      updateVehicle(
-                        vehicle.key,
-                        "vehicle_type",
-                        value as GuestVehicleType,
-                      )
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="CAR">Mobil</SelectItem>
-                      <SelectItem value="MOTORCYCLE">Motor</SelectItem>
-                      <SelectItem value="OTHER">Lainnya</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="mt-3">
+                    <Select
+                      value={vehicle.vehicle_type || "CAR"}
+                      onValueChange={(value) =>
+                        updateVehicle(
+                          vehicle.key,
+                          "vehicle_type",
+                          value as GuestVehicleType,
+                        )
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="CAR">Mobil</SelectItem>
+                        <SelectItem value="MOTORCYCLE">Motor</SelectItem>
+                        <SelectItem value="OTHER">Lainnya</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div>
                   <Label>Merek</Label>
                   <Input
+                    className="mt-3"
                     value={vehicle.vehicle_brand || ""}
                     onChange={(event) =>
                       updateVehicle(
@@ -233,6 +236,7 @@ export function GuestVisitFormDialog({
                 <div>
                   <Label>Warna</Label>
                   <Input
+                    className="mt-3"
                     value={vehicle.vehicle_color || ""}
                     onChange={(event) =>
                       updateVehicle(

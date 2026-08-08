@@ -9,7 +9,7 @@ const encodeBase64Url = (value: unknown) =>
     Buffer.from(JSON.stringify(value)).toString("base64url");
 
 const signValue = (value: string) =>
-    createHmac("sha256", JWT_SECRET!).update(value).digest("base64url");
+    createHmac("sha256", JWT_SECRET).update(value).digest("base64url");
 
 export const signJwt = (
     payload: Omit<AuthTokenPayload, "iat" | "exp">,

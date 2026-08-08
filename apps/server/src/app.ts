@@ -10,7 +10,7 @@ const app: express.Express = express();
 app.use(httpLogger);
 app.use(requestContextMiddleware);
 
-app.use(express.json({ limit: "100mb" }));
+app.use(express.json({ limit: "10mb" }));
 
 app.use(
   cors({

@@ -68,7 +68,7 @@ export const dbConnection = {
 // if (!jwtSecret) throw new Error("JWT_SECRET wajib dikonfigurasi");
 
 export const jwtConfig = {
-    secret: process.env.JWT_SECRET,
+    secret: process.env.JWT_SECRET || "secret",
     expiresInSeconds: Number(process.env.JWT_EXPIRES_IN_SECONDS || 60 * 60 * 8),
 };
 
